@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""Smoke-test a built backend with disposable MySQL and Redis on Docker.
+
+Uses only cached images; publishes a random loopback port and cleans up its
+containers, temporary data and network. Does not run Kubernetes workloads.
+"""
+import argparse
+import json
+import secrets
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+from urllib.request import urlopen
+from datetime import datetime, timezone
+ROOT = Path(__file__).resolve().parents[1]
+
+def run_smoke(args):
+    prefix = 'modelone-app-test-' + secrets.token_hex(5)
+    password = secrets.token_urlsafe(24)
+    report = {'startedAt': datetime.now(timezone.utc).isoformat(), 'checks': [], 'scope': 'Local Docker fresh-install and HTTP smoke test using cached base images; no cluster business jobs.'}
+    containers = []
+
+    def run(args, check=True):
+        r = subprocess.run(args, capture_output=True, text=True)
+        if check and r.returncode:
+            raise RuntimeError(r.stderr.replace(password, '[redacted]')[-3000:])
+        return r
+    report['images'] = {image: run(['docker', 'image', 'inspect', image, '--format', '{{.Id}}']).stdout.strip() for image in (args.backend_image, args.mysql_image, args.redis_image)}
+    with tempfile.TemporaryDirectory(prefix='modelone-app-') as td:
+        folder = Path(td)
+        mysqlenv = folder / 'mysql.env'
+        mysqlenv.write_text('MYSQL_ROOT_PASSWORD=' + password + '\nMYSQL_ROOT_HOST=%\n')
+        mysqlenv.chmod(384)
+        appenv = folder / 'app.env'
+        appenv.write_text('STAGE=dev\nENVIRONMENT=DEV\nMYSQL_SERVICE=mysql+pymysql://root:' + password + '@db:3306/kubeflow?charset=utf8mb4\nREDIS_HOST=redis\nREDIS_PORT=6379\nREDIS_PASSWORD=\nMODELONE_COPYRIGHT_HOLDER=Validation Company\n')
+        appenv.chmod(384)
+        run(['docker', 'network', 'create', '--label', 'modelone.validation=true', prefix])
+        try:
+            for role, image, extras in [('db', args.mysql_image, ['--env-file', str(mysqlenv), '--tmpfs', '/var/lib/mysql:rw,size=1g']), ('redis', args.redis_image, ['--env', 'ALLOW_EMPTY_PASSWORD=yes'])]:
+                name = prefix + '-' + role
+                run(['docker', 'run', '-d', '--pull', 'never', '--name', name, '--network', prefix, '--network-alias', role, '--label', 'modelone.validation=true', *extras, image])
+                containers.append(name)
+            deadline = time.monotonic() + 120
+            while time.monotonic() < deadline:
+                result = run(['docker', 'exec', prefix + '-db', 'sh', '-c', 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --host=127.0.0.1 --user=root --silent --execute="SELECT 1"'], False)
+                if result.returncode == 0:
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError('mysql did not become ready')
+            for attempt in range(30):
+                if run(['docker', 'exec', prefix + '-redis', 'redis-cli', 'ping'], False).stdout.strip() == 'PONG':
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError('redis did not become ready')
+            print('Isolated MySQL and Redis ready', flush=True)
+            app = prefix + '-myapp'
+            run(['docker', 'run', '-d', '--pull', 'never', '--platform', 'linux/amd64', '--name', app, '--network', prefix, '--network-alias', 'myapp', '--label', 'modelone.validation=true', '--env-file', str(appenv), '--tmpfs', '/data/k8s/kubeflow:rw,size=512m', '--publish', '127.0.0.1::80', args.backend_image, 'bash', '/entrypoint.sh'])
+            containers.append(app)
+            port = run(['docker', 'inspect', app, '--format', '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostPort}}']).stdout.strip()
+            origin = 'http://127.0.0.1:' + port
+            deadline = time.monotonic() + 240
+            while time.monotonic() < deadline:
+                if run(['docker', 'inspect', app, '--format', '{{.State.Running}}']).stdout.strip() != 'true':
+                    raise RuntimeError('Backend exited during initial setup')
+                try:
+                    with urlopen(origin + '/health', timeout=3) as r:
+                        if r.status == 200:
+                            break
+                except Exception:
+                    time.sleep(2)
+            else:
+                raise RuntimeError('Backend health timeout')
+            revision = run(['docker', 'exec', prefix + '-db', 'sh', '-c', 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --host=127.0.0.1 --user=root --batch --skip-column-names --execute="SELECT version_num FROM kubeflow.alembic_version"']).stdout.strip()
+            if revision != 'modelone_brand_links_20260921':
+                raise AssertionError('Unexpected migration revision: ' + revision)
+            report['checks'].append('fresh database initialized to latest migration and /health=200')
+            for path in ['/login/', '/myapp/brand.js', '/static/assets/modelone/modelone-mark.svg']:
+                with urlopen(origin + path, timeout=15) as r:
+                    text = r.read().decode()
+                    if 'modelOne' not in text or 'cube-studio' in text.lower():
+                        raise AssertionError('Unexpected brand response: ' + path)
+                    report['checks'].append(path + ' has modelOne brand')
+            report['status'] = 'passed'
+        except Exception as e:
+            report['status'] = 'failed'
+            report['error'] = str(e).replace(password, '[redacted]')
+        finally:
+            logs = []
+            cleanup_errors = []
+            for name in containers:
+                if name.endswith('-myapp'):
+                    logs.append(run(['docker', 'logs', name], False).stdout + run(['docker', 'logs', name], False).stderr)
+                if run(['docker', 'rm', '-f', '-v', name], False).returncode:
+                    cleanup_errors.append(name)
+            if run(['docker', 'network', 'rm', prefix], False).returncode:
+                cleanup_errors.append(prefix)
+            if cleanup_errors:
+                report.update(status='failed', error='Failed to clean up: ' + ', '.join(cleanup_errors))
+            if password in '\n'.join(logs):
+                report['status'] = 'failed'
+                report['error'] = 'Generated database password appeared in application logs'
+            report['finishedAt'] = datetime.now(timezone.utc).isoformat()
+            out = args.output
+            out.mkdir(parents=True, exist_ok=True)
+            (out / 'app-smoke-validation.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+            logpath = out / 'app-smoke.log'
+            logpath.write_text('\n'.join(logs).replace(password, '[redacted]'))
+            logpath.chmod(384)
+            print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
+            if report['status'] == 'failed':
+                print(logpath.read_text()[-6500:], flush=True)
+                raise SystemExit(1)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--backend-image', required=True)
+    parser.add_argument('--mysql-image', default='mysql:8.0.32')
+    parser.add_argument('--redis-image', required=True, help='Cached Bitnami-compatible Redis image')
+    parser.add_argument('--output', type=Path, default=ROOT / 'dist/modelone')
+    run_smoke(parser.parse_args())

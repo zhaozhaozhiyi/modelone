@@ -4,6 +4,8 @@
 
 准备 Python 3.11（构建和检查工具）、Node.js 20、Docker Compose、kubectl、SQLAlchemy 和 PyYAML。运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
 
+生产部署还需处理[安全检查记录](security-review.md)中的认证阻断项。当前脚本默认配置不能作为企业安全配置使用。
+
 ```sh
 python3 scripts/generate_brand.py
 python3 scripts/test_modelone.py
@@ -35,6 +37,8 @@ python3 scripts/render_deployment.py --release
 
 渲染文件中的挂载路径指向当前源码目录，不是可移机使用的独立安装包。先构建并推送企业后端和前端镜像。后端构建参数 `MODELONE_IMAGE_PREFIX` 当前作为前缀使用，传入时需包含尾随 `/`；基础镜像必须已同步。
 
+也可通过 `MODELONE_BACKEND_BASE_IMAGE` 指定完整的企业后端基础镜像，通过 `MODELONE_NGINX_IMAGE` 指定企业 Nginx 镜像。构建会清理基础镜像中已有的产品静态目录后复制当前产物，保留 PWA 清单，并在 `/usr/share/licenses/modelone/LICENSE` 附带原许可证。后端镜像内包含 Docker 运行配置，部署时仍可用挂载文件覆盖。
+
 ```sh
 docker compose -f dist/modelone/compose.yaml config --quiet
 docker compose -f dist/modelone/compose.yaml up -d
@@ -53,3 +57,17 @@ kubectl -n infra rollout status deployment/kubeflow-dashboard
 ```
 
 正式域名和 TLS 证书需要在实际入口网关配置并验证。当前未配置目标集群，尚未执行上述集群命令。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
+
+## 本地隔离容器验证
+
+先完成镜像构建；以下测试只使用本机已有镜像，不拉取或推送远程仓库。临时容器只公开随机回环端口，测试结束清理自己的容器、临时数据和网络，不操作已有环境。
+
+```sh
+python3 scripts/test_modelone_mysql.py --image <已缓存的MySQL-8.0镜像>
+python3 scripts/test_modelone_frontend_image.py --image <本地构建的前端镜像>
+python3 scripts/test_modelone_app.py --backend-image <本地构建的后端镜像> --mysql-image <已缓存的MySQL-8.0镜像> --redis-image <已缓存的兼容Bitnami配置的Redis镜像>
+```
+
+MySQL 测试额外需要 PyMySQL、mysql 和 mysqldump 客户端；测试实例使用原生密码认证以兼容旧客户端，不改变企业服务器认证配置。应用测试使用本地开发启动方式，验证空库初始化到最新迁移、健康检查、登录页、公开品牌配置及品牌图标；它不运行 Notebook、训练或推理任务，也不验证企业认证。前端测试检查三个入口的实际 HTTP 静态响应，并放入测试 source map 验证拒绝规则。
+
+报告为 `dist/modelone/mysql-validation.json`、`frontend-image-validation.json` 和 `app-smoke-validation.json`。通过后仍须对正式企业镜像、目标数据库和 Kubernetes 集群复测。

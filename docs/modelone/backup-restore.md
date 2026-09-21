@@ -15,4 +15,8 @@ sha256sum metadata.sql > metadata.sql.sha256
 
 升级失败时优先保留现场日志和失败库副本，再按已验证的恢复流程切回。恢复会覆盖目标实例数据，正式操作需要明确目标和维护窗口。本项目尚未在企业环境执行备份恢复演练。
 
-自动化工具：`scripts/backup_modelone.py --client-config <文件> --output <备份.sql>` 创建备份和 SHA-256；`scripts/restore_modelone.py --client-config <文件> --database <空恢复库> --backup <备份.sql>` 先校验，增加 `--apply` 才导入。恢复工具拒绝覆盖非空数据库。客户端配置须为 600 权限。这两个工具尚未进行真实 MySQL 演练。
+自动化工具：`scripts/backup_modelone.py --client-config <文件> --output <备份.sql>` 创建备份和 SHA-256；`scripts/restore_modelone.py --client-config <文件> --database <空恢复库> --backup <备份.sql>` 先校验，增加 `--apply` 才导入。恢复工具拒绝覆盖非空数据库。客户端配置须为 600 权限。
+
+2026-09-21 已在本地隔离 MySQL 8.0.46 上验证这两个工具：备份、只读恢复预览、精确恢复原记录、非空目标拒绝和损坏备份拒绝均通过。数据库使用临时存储和随机凭据，测试后容器及网络自动清理。此验证使用四张代表性表，不替代企业全量数据库、持久卷和恢复时间目标演练。
+
+可重复运行 `python3 scripts/test_modelone_mysql.py --image <已缓存的MySQL-8.0镜像>`。需要 Docker、SQLAlchemy、PyMySQL、mysql 和 mysqldump；脚本不自动拉取镜像，不接触已有数据库。报告输出到 `dist/modelone/mysql-validation.json`。
