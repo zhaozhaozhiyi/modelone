@@ -70,6 +70,12 @@ class BrandTests(unittest.TestCase):
             text = (ROOT / relative).read_text(encoding='utf-8')
             self.assertIn('<title>{{ brand.title }}</title>', text, relative)
 
+    def test_legacy_theme_examples_use_the_shared_brand_name(self):
+        for relative in ('myapp/templates/myapp/theme.html', 'myapp/templates/myapp/paper-theme.html'):
+            text = (ROOT / relative).read_text(encoding='utf-8')
+            self.assertIn('{{ brand.name }}', text, relative)
+            self.assertNotRegex(text, r'ForkedCosmo|Bootstrap theme|Project name|>Brand<')
+
     def test_repository_form_uses_shared_registry_default(self):
         source = (ROOT / 'myapp/views/view_images.py').read_text(encoding='utf-8')
         self.assertIn("conf.get('REPOSITORY_ORG') or 'modelone/'", source)
