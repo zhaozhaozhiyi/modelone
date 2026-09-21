@@ -100,8 +100,6 @@ class Myauthdbview(AuthDBView):
 
             # 密码加密
             password = form.password.data
-            print("The message was: ", password)
-
             # 根据用户名登录
             user = self.appbuilder.sm.find_user(username=username)
             if user is None:
@@ -179,5 +177,4 @@ class Myauthdbview(AuthDBView):
         g.user = None
         logout_user()
         return redirect(login_url)
-
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 rm -f /home/myapp/myapp/static/mnt
 mkdir -p /data/k8s/kubeflow/pipeline/workspace
