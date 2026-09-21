@@ -15,7 +15,7 @@ if __name__ == "__main__":
     spark = SparkSession.builder \
         .appName("PythonPi") \
         .master("k8s://https://kubernetes.default:443") \
-        .config("spark.kubernetes.container.image", "ccr.ccs.tencentyun.com/cube-studio/spark-operator:spark-v3.1.1") \
+        .config("spark.kubernetes.container.image", "modelone/spark-operator:spark-v3.1.1") \
         .config("spark.executor.instances", "2") \
         .config("spark.kubernetes.namespace", "pipeline") \
         .config("spark.kubernetes.authenticate.driver.serviceAccountName", "kubeflow-pipeline") \

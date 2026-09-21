@@ -80,7 +80,7 @@ spec:
         - command:
             - ./event_exporter
           env: []
-          image: ccr.ccs.tencentyun.com/cube-studio/event-exporter
+          image: modelone/event-exporter
           imagePullPolicy: IfNotPresent
           name: event-exporter
           ports:

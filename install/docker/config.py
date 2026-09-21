@@ -10,6 +10,7 @@ from dateutil import tz
 
 from flask_appbuilder.security.manager import AUTH_DB
 from myapp.stats_logger import DummyStatsLogger
+from myapp.brand import BRAND, brand_asset, image_repository, resolve_resources
 
 
 # Realtime stats logger, a StatsD implementation exists
@@ -56,17 +57,19 @@ FLASK_USE_RELOAD = True
 # Myapp allows server-side python stacktraces to be surfaced to the
 # user when this feature is on. This may has security implications
 # and it's more secure to turn it off in production settings.
-SHOW_STACKTRACE = True
+SHOW_STACKTRACE = False
 
 
 # ------------------------------
 # GLOBALS FOR APP Builder
 # ------------------------------
 # 应用名
-APP_NAME = "CubeStudio"
+APP_NAME = BRAND["name"]
+APP_TITLE = BRAND["title"]
+APP_DESCRIPTION = BRAND["description"]
 
 # 图标
-APP_ICON = "/static/assets/images/myapp-logo.png"
+APP_ICON = BRAND["logo_url"]
 APP_ICON_WIDTH = 126
 
 # 配置logo点击后的跳转链接，例如'/welcome'  会跳转到'/myapp/welcome'
@@ -541,9 +544,9 @@ class CeleryConfig(object):
     }
 
  # 帮助文档地址，显示在web导航栏
-DOCUMENTATION_URL='https://github.com/data-infra/cube-studio/wiki'
-BUG_REPORT_URL = 'https://github.com/data-infra/cube-studio/issues/new'
-GIT_URL = 'https://github.com/data-infra/cube-studio/tree/main'
+DOCUMENTATION_URL = BRAND["help_url"]
+BUG_REPORT_URL = BRAND["support_url"]
+GIT_URL = ''
 AI_ASSISTANT_URL=''
 
 ROBOT_PERMISSION_ROLES=[]   # 角色黑名单
@@ -679,28 +682,28 @@ SERVICE_PIPELINE_JAEGER='tracing.service'
 HUBSECRET = ['hubsecret']
 
 # 私有仓库的组织名，如果完全内网环境，修改为自己的内网
-REPOSITORY_ORG='ccr.ccs.tencentyun.com/cube-studio/'
+REPOSITORY_ORG = image_repository('')
 # 私有仓库的组织名，用户在线构建的镜像自动推送这个组织下面
-PUSH_REPOSITORY_ORG='ccr.ccs.tencentyun.com/cube-studio/'
+PUSH_REPOSITORY_ORG = image_repository('')
 
 # 用户常用默认镜像
-USER_IMAGE = 'ccr.ccs.tencentyun.com/cube-studio/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9'
+USER_IMAGE = image_repository('ubuntu-gpu:cuda11.8.0-cudnn8-python3.9')
 # notebook每个pod使用的用户账号
 JUPYTER_ACCOUNTS=''
 HUBSECRET_NAMESPACE=[PIPELINE_NAMESPACE,AUTOML_NAMESPACE,NOTEBOOK_NAMESPACE,SERVICE_NAMESPACE,AIHUB_NAMESPACE]
 
 # notebook使用的镜像
 NOTEBOOK_IMAGES=[
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:vscode-ubuntu-cpu-base', 'vscode（cpu）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:vscode-ubuntu-gpu-base', 'vscode（gpu）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu22.04', 'jupyter（cpu）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu22.04-cuda11.8.0-cudnn8','jupyter（gpu）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu-bigdata', 'jupyter（bigdata）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu-machinelearning', 'jupyter（machinelearning）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu-deeplearning', 'jupyter（deeplearning）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:enterprise-jupyter-ubuntu-cpu-pro', 'jupyter-conda-pro（商业版）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:enterprise-matlab-ubuntu-deeplearning', 'matlab（商业版）'],
-    ['ccr.ccs.tencentyun.com/cube-studio/notebook:enterprise-rstudio-ubuntu-bigdata', 'rstudio（商业版）'],
+    [image_repository('notebook:vscode-ubuntu-cpu-base'), 'vscode（cpu）'],
+    [image_repository('notebook:vscode-ubuntu-gpu-base'), 'vscode（gpu）'],
+    [image_repository('notebook:jupyter-ubuntu22.04'), 'jupyter（cpu）'],
+    [image_repository('notebook:jupyter-ubuntu22.04-cuda11.8.0-cudnn8'),'jupyter（gpu）'],
+    [image_repository('notebook:jupyter-ubuntu-bigdata'), 'jupyter（bigdata）'],
+    [image_repository('notebook:jupyter-ubuntu-machinelearning'), 'jupyter（machinelearning）'],
+    [image_repository('notebook:jupyter-ubuntu-deeplearning'), 'jupyter（deeplearning）'],
+    [image_repository('notebook:enterprise-jupyter-ubuntu-cpu-pro'), 'jupyter-conda-pro'],
+    [image_repository('notebook:enterprise-matlab-ubuntu-deeplearning'), 'matlab'],
+    [image_repository('notebook:enterprise-rstudio-ubuntu-bigdata'), 'rstudio'],
 ]
 
 # 定时检查大小的目录列表。需要再celery中启动检查任务
@@ -721,7 +724,7 @@ ARCHIVES_HOST_PATH = "/data/k8s/kubeflow/pipeline/archives"
 # prometheus地址
 PROMETHEUS = 'prometheus-k8s.monitoring:9090'
 # nni默认镜像
-NNI_IMAGES='ccr.ccs.tencentyun.com/cube-studio/nni:20250601'
+NNI_IMAGES='modelone/nni:20250601'
 
 # 数据集的存储地址
 DATASET_SAVEPATH = '/dataset/'
@@ -738,7 +741,7 @@ STORE_CONFIG = {
 
 K8S_DASHBOARD_CLUSTER = '/k8s/dashboard/cluster/'  #
 K8S_DASHBOARD_USER = '/k8s/dashboard/user1/'  #
-BLACK_PORT = [10250]   # 黑名单端口，CubeStudio将不会占用这些端口，10250是kubelet的端口。
+BLACK_PORT = [10250]   # 黑名单端口，modelOne将不会占用这些端口，10250是kubelet的端口。
 
 K8S_NETWORK_MODE = 'iptables'   # iptables ipvs
 NOTEBOOK_EXCLUSIVE = False   # notebook 启动是否独占资源
@@ -769,21 +772,21 @@ ALL_LINKS=[
 
 # 推理服务的各种配置
 INFERNENCE_IMAGES={
-    "tfserving":['ccr.ccs.tencentyun.com/cube-studio/tfserving:2.14.1-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.14.1','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.13.1-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.13.1','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.12.2-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.12.2','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.11.1-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.11.1','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.10.1-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.10.1','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.9.3-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.9.3','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.8.4-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.8.4','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.7.4-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.7.4','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.6.5-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.6.5','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.5.4-gpu','ccr.ccs.tencentyun.com/cube-studio/tfserving:2.5.4'],
-    'torch-server':['ccr.ccs.tencentyun.com/cube-studio/torchserve:0.9.0-gpu','ccr.ccs.tencentyun.com/cube-studio/torchserve:0.9.0-cpu','ccr.ccs.tencentyun.com/cube-studio/torchserve:0.8.2-gpu','ccr.ccs.tencentyun.com/cube-studio/torchserve:0.8.2-cpu','ccr.ccs.tencentyun.com/cube-studio/torchserve:0.7.1-gpu','ccr.ccs.tencentyun.com/cube-studio/torchserve:0.7.1-cpu'],
-    'onnxruntime':['ccr.ccs.tencentyun.com/cube-studio/onnxruntime:latest','ccr.ccs.tencentyun.com/cube-studio/onnxruntime:latest-cuda'],
-    'triton-server':['ccr.ccs.tencentyun.com/cube-studio/tritonserver:24.01-py3','ccr.ccs.tencentyun.com/cube-studio/tritonserver:23.12-py3','ccr.ccs.tencentyun.com/cube-studio/tritonserver:22.12-py3','ccr.ccs.tencentyun.com/cube-studio/tritonserver:21.12-py3','ccr.ccs.tencentyun.com/cube-studio/tritonserver:20.12-py3']
+    "tfserving":['modelone/tfserving:2.14.1-gpu','modelone/tfserving:2.14.1','modelone/tfserving:2.13.1-gpu','modelone/tfserving:2.13.1','modelone/tfserving:2.12.2-gpu','modelone/tfserving:2.12.2','modelone/tfserving:2.11.1-gpu','modelone/tfserving:2.11.1','modelone/tfserving:2.10.1-gpu','modelone/tfserving:2.10.1','modelone/tfserving:2.9.3-gpu','modelone/tfserving:2.9.3','modelone/tfserving:2.8.4-gpu','modelone/tfserving:2.8.4','modelone/tfserving:2.7.4-gpu','modelone/tfserving:2.7.4','modelone/tfserving:2.6.5-gpu','modelone/tfserving:2.6.5','modelone/tfserving:2.5.4-gpu','modelone/tfserving:2.5.4'],
+    'torch-server':['modelone/torchserve:0.9.0-gpu','modelone/torchserve:0.9.0-cpu','modelone/torchserve:0.8.2-gpu','modelone/torchserve:0.8.2-cpu','modelone/torchserve:0.7.1-gpu','modelone/torchserve:0.7.1-cpu'],
+    'onnxruntime':['modelone/onnxruntime:latest','modelone/onnxruntime:latest-cuda'],
+    'triton-server':['modelone/tritonserver:24.01-py3','modelone/tritonserver:23.12-py3','modelone/tritonserver:22.12-py3','modelone/tritonserver:21.12-py3','modelone/tritonserver:20.12-py3']
 }
 
 CONTAINER_CLI='docker'   # 或者 docker nerdctl
 
 DOCKER_IMAGES='docker:23.0.4'
-NERDCTL_IMAGES='ccr.ccs.tencentyun.com/cube-studio/nerdctl:1.7.2'
+NERDCTL_IMAGES='modelone/nerdctl:1.7.2'
 DOCKER_SOCKET = '/var/run/docker.sock(hostpath):/var/run/docker.sock'
 CONTAINERD_SOCKET = '/etc/containerd/(hostpath):/etc/containerd/,/run/containerd/containerd.sock(hostpath):/run/containerd/containerd.sock'
 # CONTAINERD_SOCKET = '/var/lib/rancher/rke2/agent/etc/containerd/(hostpath):/etc/containerd/,/run/k3s/containerd/containerd.sock(hostpath):/run/containerd/containerd.sock'
 
-WAIT_POD_IMAGES='ccr.ccs.tencentyun.com/cube-studio/wait-pod:v1'
+WAIT_POD_IMAGES='modelone/wait-pod:v1'
 # notebook，pipeline镜像拉取策略
 IMAGE_PULL_POLICY='Always'    # IfNotPresent   Always
 
@@ -848,3 +851,8 @@ CLUSTERS={
 
 
 HOST = CLUSTERS[ENVIRONMENT].get('HOST',None)
+
+# Resolve all default runtime image catalogs through the enterprise registry.
+for _key in ("NNI_IMAGES", "INFERNENCE_IMAGES", "NERDCTL_IMAGES", "WAIT_POD_IMAGES"):
+    if _key in globals():
+        globals()[_key] = resolve_resources(globals()[_key])

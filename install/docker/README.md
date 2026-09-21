@@ -26,25 +26,25 @@
 
 # 本地调试
 
-参考视频：https://cube-studio.oss-cn-hangzhou.aliyuncs.com/video/dev.mp4
+参考视频：/static/assets/modelone/video/dev.mp4
 
 ## 镜像构建（可忽略）
 
 ```
 构建基础镜像（包含基础环境）
-docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:base-python3.9 -f install/docker/Dockerfile-base .
+docker build --network=host -t modelone/kubeflow-dashboard:base-python3.9 -f install/docker/Dockerfile-base .
 
 使用基础镜像构建生产镜像
-docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:2026.06.01 -f install/docker/Dockerfile .
+docker build --network=host -t modelone/kubeflow-dashboard:2026.06.01 -f install/docker/Dockerfile .
 
 构建frontend镜像
-docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend:2026.06.01 -f install/docker/dockerFrontend/Dockerfile .
+docker build --network=host -t modelone/kubeflow-dashboard-frontend:2026.06.01 -f install/docker/dockerFrontend/Dockerfile .
 ```
 
 ## 镜像拉取(如果你不参与开发可以直接使用线上镜像)
 ```
-docker pull ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:2026.06.01
-docker pull ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend:2026.06.01
+docker pull modelone/kubeflow-dashboard:2026.06.01
+docker pull modelone/kubeflow-dashboard-frontend:2026.06.01
 ```
 
 ## deploy myapp (docker-compose)
@@ -59,7 +59,7 @@ docker pull ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend:2026.
 需要安装下面的环境包, python 3.9.16
 
 ```bash
-pip3 install --upgrade setuptools pip 
+pip3 install --upgrade setuptools pip
 pip3 install -r requirements.txt
 ```
 或者使用conda
@@ -99,7 +99,7 @@ docker-compose -f docker-compose.yml  up
 
 需要先在k8s开发集群部署一遍CubeStudio，然后才能在本地连接并调度
 
-![k8s配置](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/image/localk8s.jpg)
+![k8s配置](/static/assets/modelone/docs/image/localk8s.jpg)
 
 3) 修改minio地址
 
@@ -109,7 +109,7 @@ docker-compose -f docker-compose.yml  up
 
 前端代码可以在本机上开发调试  也 可以在容器内编译。如果你不是前端开发人员，建议使用容器内编译，这样你的电脑就不需要配置前端环境。
 
-window 电脑前端开发：https://cube-studio.oss-cn-hangzhou.aliyuncs.com/video/window-frontend-dev.mp4
+window 电脑前端开发：/static/assets/modelone/video/window-frontend-dev.mp4
 
 #### 前端代码目录
 
@@ -210,7 +210,7 @@ docker build --network=host -t xx.xx.xx/xx/kubeflow-dashboard-frontend:xx -f ins
 ```
 然后线上infra命令空间修改kubeflow-dashboard-frontend的deployment的镜像名换为你自己构建的
 
-![在这里插入图片描述](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/c9c8665aba0844f088416b776b10a1d4.png)
+![在这里插入图片描述](/static/assets/modelone/docs/csdn_image/c9c8665aba0844f088416b776b10a1d4.png)
 
 ### 后端镜像升级
 
@@ -220,12 +220,12 @@ docker build --network=host -t xx.xx.xx/xx/kubeflow-dashboard:xx -f install/dock
 ```
 然后线上infra命令空间修改kubeflow-dashboard的deployment的镜像名换为你自己构建的
 
-![在这里插入图片描述](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/3bbabe70cf954bb78b91331e113bf103.png)
+![在这里插入图片描述](/static/assets/modelone/docs/csdn_image/3bbabe70cf954bb78b91331e113bf103.png)
 
 ## Q&A
 1） 如果构建镜像过程中因为网络问题失败，可以通过新增pip国内镜像地址来解决。
 
-在cube-studio/install/docker中新建pip.conf，输入以下内容: 
+在modelone/install/docker中新建pip.conf，输入以下内容:
 ```
 [global]
 index-url = http://mirrors.aliyun.com/pypi/simple/
@@ -234,7 +234,7 @@ extra-index-url = https://mirrors.aliyun.com/pypi/simple/
 [install]
 trusted-host=mirrors.aliyun.com
 ```
-然后在cube-studio/install/docker/Dockerfile-base中增加:
+然后在modelone/install/docker/Dockerfile-base中增加:
 
 ```
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple

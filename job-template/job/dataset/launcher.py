@@ -130,7 +130,7 @@ if __name__ == "__main__":
         if args.partition:
             args.save_dir=f'/mnt/{KFJ_CREATOR}/dataset/{args.name}/{args.version}/{args.partition}'
     # print("{} args: {}".format(__file__, args))
-    if args.src_type=='cube-studio' or args.src_type=='当前平台':
+    if args.src_type in ('modelone', 'cube-studio', '当前平台'):
         download(**args.__dict__)
     elif args.src_type=='huggingface':
         command = f'huggingface-cli download --repo-type dataset --resume-download {args.name} --revision {args.version} --local-dir {args.save_dir} --local-dir-use-symlinks False'

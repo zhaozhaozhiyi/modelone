@@ -1,10 +1,10 @@
 # xgboost 模板
 描述：单机xgb训练，支持训练预测。
 
-镜像：ccr.ccs.tencentyun.com/cube-studio/xgb:20230801 
+镜像：modelone/xgb:20230801
 
 
-启动参数：  
+启动参数：
 ```bash
 {
     "训练推理": {

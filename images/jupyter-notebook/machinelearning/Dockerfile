@@ -1,8 +1,9 @@
-FROM ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu22.04
+ARG MODELONE_IMAGE_PREFIX
+FROM ${MODELONE_IMAGE_PREFIX}modelone/notebook:jupyter-ubuntu22.04
 
 RUN apt-get update && apt install -y lsof
 
-RUN mkdir -p /examples/ && git clone https://github.com/data-infra/cube-studio.git && cp -r cube-studio/aihub/machine-learning/* /examples/ && rm -rf cube-studio
+COPY modelone-examples/ /examples/
 
 # 爬虫包
 RUN pip install pyquery requests lxml beautifulsoup4 \

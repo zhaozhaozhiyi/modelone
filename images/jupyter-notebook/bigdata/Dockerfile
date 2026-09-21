@@ -1,4 +1,5 @@
-FROM ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu22.04
+ARG MODELONE_IMAGE_PREFIX
+FROM ${MODELONE_IMAGE_PREFIX}modelone/notebook:jupyter-ubuntu22.04
 
 MAINTAINER hamawhite
 ARG SPARK_HADOOP_VERSION=3.2

@@ -61,7 +61,7 @@
 ### 3.2 镜像与仓库
 
 - **模板镜像**：Launcher 所在镜像，例如  
-  `ccr.ccs.tencentyun.com/cube-studio/volcano:20230601`
+  `modelone/volcano:20230601`
 - 若使用私有仓库，需先在 **训练 → 仓库** 中配置账号，并在 **训练 → 镜像** 中添加该镜像。
 
 ### 3.3 环境变量
@@ -137,9 +137,9 @@ Launcher 会创建/删除 Volcano Job CRD 及查看 Pod 事件，需要具备对
       "require": 0,
       "choice": [],
       "range": "",
-      "default": "ccr.ccs.tencentyun.com/cube-studio/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9",
+      "default": "modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9",
       "placeholder": "",
-      "describe": "Worker 镜像，直接运行你代码的环境镜像。不填则使用模板默认镜像。<a href='https://github.com/data-infra/cube-studio/tree/main/images'>基础镜像</a>",
+      "describe": "Worker 镜像，直接运行你代码的环境镜像。不填则使用模板默认镜像。<a href='https://github.com/data-infra/modelone/tree/main/images'>基础镜像</a>",
       "editable": 1
     }
   }

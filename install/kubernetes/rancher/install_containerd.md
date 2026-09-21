@@ -203,7 +203,7 @@ mkdir -p /opt/cni/bin /etc/cni/net.d/
 
 # 下载 CNI 插件 amd，可能网络问题下载失败，记得删除旧文件，重新下载几次
 wget https://githubfast.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz
-# wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/containerd/cni-plugins-linux-amd64-v1.1.1.tgz
+# wget /static/assets/modelone/install/containerd/cni-plugins-linux-amd64-v1.1.1.tgz
 tar -C /opt/cni/bin -xzvf cni-plugins-linux-amd64-v1.1.1.tgz
 
 修正containerd 的配置

@@ -1,5 +1,5 @@
 
-# docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/colossalai:cuda-11.3-rdma-python3.9-pytorch1.12-colossalai-0.3.1 .
+# docker build --network=host -t modelone/colossalai:cuda-11.3-rdma-python3.9-pytorch1.12-colossalai-0.3.1 .
 
 FROM hpcaitech/cuda-conda:11.3
 

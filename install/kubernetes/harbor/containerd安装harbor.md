@@ -1,7 +1,7 @@
 # 通过nerdctl离线安装Harbor仓库。
 ```
 # 下载离线安装包
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/harbor/harbor-offline-installer-v2.3.4.tgz
+wget /static/assets/modelone/harbor/harbor-offline-installer-v2.3.4.tgz
 
 # 解压并拷贝至/usr/local/目录下
 

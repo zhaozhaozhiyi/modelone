@@ -1,9 +1,9 @@
 # ray-sklearn 模板
-描述：基于ray的分布式能力，实现sklearn机器学习模型的分布式训练。  
+描述：基于ray的分布式能力，实现sklearn机器学习模型的分布式训练。
 
-镜像：ccr.ccs.tencentyun.com/cube-studio/sklearn_estimator:v1  
+镜像：modelone/sklearn_estimator:v1
 
-环境变量：  
+环境变量：
 ```bash
 NO_RESOURCE_CHECK=true
 TASK_RESOURCE_CPU=2
@@ -11,7 +11,7 @@ TASK_RESOURCE_MEMORY=4G
 TASK_RESOURCE_GPU=0
 ```
 
-启动参数：  
+启动参数：
 ```bash
 {
     "shell": {

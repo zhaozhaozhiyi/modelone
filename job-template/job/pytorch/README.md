@@ -9,7 +9,7 @@ demo.py
 
 # 分布式原理
 
-![图片 1](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/3668d971ed971c60008e20d81f62dc88.png)
+![图片 1](/static/assets/modelone/docs/csdn_image/3668d971ed971c60008e20d81f62dc88.png)
 
 ### 基本原则
 每个进程的rank是不能一样的，进程总数目是为WORLD_SIZE，master只能是rank=0
@@ -67,7 +67,7 @@ dist.init_process_group('nccl')
 其中gpu由于是整卡占用，需要调整任务的部分参数和代码，提高gpu显存占用率和gpu使用率
 ## 平台监控
 通过监控按钮，可以进入查看任务运行的资源使用率，对于资源使用超标，可以手动配置增加资源。
-![tapd_20424693_1635928300_4](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/52ab165a918d1394aa7cede43f1907ff.png)
+![tapd_20424693_1635928300_4](/static/assets/modelone/docs/csdn_image/52ab165a918d1394aa7cede43f1907ff.png)
 自己监控利用率
 ```bash
 watch nvidia-smi
@@ -76,7 +76,7 @@ pip install gpustat
 watch --color -n1 gpustat -cpu
 ```
 ## gpu利用率低的原因
-![tapd_20424693_1635939945_56](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/efc600cfb5df2c134687e8dcb3b28162.png)
+![tapd_20424693_1635939945_56](/static/assets/modelone/docs/csdn_image/efc600cfb5df2c134687e8dcb3b28162.png)
 
 核心：cpu操作慢，进而阻塞了gpu的计算
 
@@ -104,7 +104,7 @@ watch --color -n1 gpustat -cpu
 # 多进程共享gpu
 通过多进程共享单机的方式，提高gpu的利用率概念图。
 
-![图片 1](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/1a9708a90022440d64617ceae3b4f7e1.png)
+![图片 1](/static/assets/modelone/docs/csdn_image/1a9708a90022440d64617ceae3b4f7e1.png)
 
 
 

@@ -32,7 +32,7 @@ lsmod | grep br_netfilter
 # rancher server 内自带的镜像
 ```bash
 mkdir -p /data/rancher/k3s/agent/images/
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/k3s-airgap-images.tar -O /data/rancher/k3s/agent/images/k3s-airgap-images.tar
+wget /static/assets/modelone/install/k3s-airgap-images.tar -O /data/rancher/k3s/agent/images/k3s-airgap-images.tar
 
 # docker run --rm --entrypoint "" -v $(pwd):/output rancher/rancher:v2.8.5 cp /var/lib/rancher/k3s/agent/images/k3s-airgap-images.tar /output/k3s-airgap-images.tar
 # cp k3s-airgap-images.tar /data/rancher/k3s/agent/images/

@@ -1,5 +1,6 @@
+ARG MODELONE_IMAGE_PREFIX
 # 这个下面包含了rayproject/ray:nightly  和  rayproject/ray:nightly-aarch64
-FROM ccr.ccs.tencentyun.com/cube-studio/ray:nightly
+FROM ${MODELONE_IMAGE_PREFIX}modelone/ray:nightly
 USER root
 ARG TARGETARCH
 ENV TZ=Asia/Shanghai

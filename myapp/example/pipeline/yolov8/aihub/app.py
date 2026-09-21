@@ -31,7 +31,7 @@ class YOLOV8_Model(Model,LabelStudio_ML_Backend):
     field="机器视觉"  # [机器视觉，听觉，自然语言，多模态，大模型]
     scenes="图像识别"
     status='online'
-    images = 'ccr.ccs.tencentyun.com/cube-studio/yolov8:20250801'
+    images = 'modelone/yolov8:20250801'
     version='v20241001'
     pic='example.jpg'  # 离线图片，作为模型的样式图，330*180尺寸比例
     # 和train函数的输入参数对应，并且会对接显示到pipeline的模板参数中
@@ -58,7 +58,7 @@ class YOLOV8_Model(Model,LabelStudio_ML_Backend):
         {
             "label": "示例一描述",
             "input": {
-                "image": "https://cube-studio.oss-cn-hangzhou.aliyuncs.com/pipeline/media-download/train2014/COCO_train2014_000000000597.jpg"
+                "image": "/static/assets/modelone/pipeline/media-download/train2014/COCO_train2014_000000000597.jpg"
             }
         }
     ]
@@ -71,7 +71,7 @@ class YOLOV8_Model(Model,LabelStudio_ML_Backend):
             dataset_dir = save_dataset_dir
         os.makedirs(dataset_dir,exist_ok=True)
         if not os.path.exists("coco.zip"):
-            os.system("wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/pipeline/coco.zip")
+            os.system("wget /static/assets/modelone/pipeline/coco.zip")
         os.system(f'unzip -n -o -d {dataset_dir} coco.zip')
         os.system('rm coco.zip')
 

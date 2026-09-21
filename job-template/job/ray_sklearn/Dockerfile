@@ -1,5 +1,5 @@
 #FROM rayproject/ray:nightly
-#FROM ccr.ccs.tencentyun.com/cube-studio/ray:gpu
+#FROM modelone/ray:gpu
 ARG BASE_IMAGE=rayproject/ray:nightly-py39-cpu
 FROM ${BASE_IMAGE}
 USER root

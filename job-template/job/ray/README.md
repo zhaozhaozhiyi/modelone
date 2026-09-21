@@ -49,7 +49,7 @@
 
 ### 2.1 启动参数（job_template_args）
 
-- **镜像**：`ccr.ccs.tencentyun.com/cube-studio/ray:gpu-20250301`（以实际 init-job-template 为准）。
+- **镜像**：`modelone/ray:gpu-20250301`（以实际 init-job-template 为准）。
 - **账号**：`kubeflow-pipeline`。
 - 环境变量示例（用于资源与节点调度）：
   - `NO_RESOURCE_CHECK=true`
@@ -72,7 +72,7 @@ Launcher 通过命令行参数接收配置，平台会把「任务模板参数�
 ```json
 "job_template_args": {
   "分布式任务": {
-    "images": { "type": "str", "item_type": "image", "label": "镜像", "require": 0, "default": "ccr.ccs.tencentyun.com/cube-studio/ray:gpu-20250301", ... },
+    "images": { "type": "str", "item_type": "image", "label": "镜像", "require": 0, "default": "modelone/ray:gpu-20250301", ... },
     "--workdir": { "type": "str", "item_type": "workdir", "label": "启动目录", "require": 1, "default": "/mnt/{{creator}}/pipeline/example/ray/", ... },
     "--init": { "type": "str", "item_type": "workdir", "label": "初始化脚本", "require": 0, "default": "", ... },
     "--command": { "type": "str", "item_type": "str", "label": "启动命令", "require": 1, "default": "python demo.py", ... },

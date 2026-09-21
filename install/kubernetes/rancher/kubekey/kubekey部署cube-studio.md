@@ -67,7 +67,7 @@ free -m
 ```shell
 # 离线安装
 # amd64版本
-# wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/kubekey-v3.1.10-linux-amd64 -O /usr/bin/kk
+# wget /static/assets/modelone/install/kubekey-v3.1.10-linux-amd64 -O /usr/bin/kk
 # chmod +x /usr/bin/kk
 
 # 在线安装

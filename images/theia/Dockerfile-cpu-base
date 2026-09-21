@@ -1,6 +1,7 @@
-# docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/notebook:vscode-ubuntu-cpu-base -f Dockerfile-cpu-base .
+ARG MODELONE_IMAGE_PREFIX
+# docker build --network=host -t modelone/notebook:vscode-ubuntu-cpu-base -f Dockerfile-cpu-base .
 
-FROM ccr.ccs.tencentyun.com/cube-studio/theia-python:latest
+FROM ${MODELONE_IMAGE_PREFIX}modelone/theia-python:latest
 
 USER root
 # 安装中文，和基础的apt工具包

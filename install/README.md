@@ -1,7 +1,7 @@
 
 # 平台基础架构
 
-![输入图片说明](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/image/infra.png) 
+![输入图片说明](/static/assets/modelone/docs/image/infra.png)
 
 完整的平台包含
  - 1、机器的标准化
@@ -56,13 +56,13 @@
    - 深度学习镜像：训练机器选择V100机器，推理机器选择T4机器，每张gpu卡配置大于20核cpu，比如4张卡的服务器建议大于80核cpu
    - 大模型镜像：训练机器学习H800机器，推理机器A100机器，每张gpu卡配置大于20核cpu，比如4张卡的服务器建议大于80核cpu
    - 不要只有gpu训练机器，推荐配置纯cpu服务器
- - 所有机器磁盘：>=1T 单机磁盘容量要求不大，仅做镜像容器的的存储  
+ - 所有机器磁盘：>=1T 单机磁盘容量要求不大，仅做镜像容器的的存储
  - IB/RDMA网络：自动安装机器驱动和IB卡，若无可忽略
  - 系统：ubuntu 20.04 ubuntu 22.04 ubuntu 24.04 或者centos7.9或者centos8
 
 平台完成部署之后如下:
 
-![在这里插入图片描述](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/image/danjibushuxiaoguo.png)
+![在这里插入图片描述](/static/assets/modelone/docs/image/danjibushuxiaoguo.png)
 
 # 本地开发
 

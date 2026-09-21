@@ -336,4 +336,4 @@
 }
 ```
 
-镜像：`ccr.ccs.tencentyun.com/cube-studio/deploy-service:20240601`
+镜像：`modelone/deploy-service:20240601`

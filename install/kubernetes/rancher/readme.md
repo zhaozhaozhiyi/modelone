@@ -95,7 +95,7 @@ reboot
 
 ```bash
 # 清理历史部署痕迹
-cd cube-studio/install/kubernetes/rancher/
+cd modelone/install/kubernetes/rancher/
 sh reset_docker.sh
 进程关闭会有时延。
 执行后
@@ -163,7 +163,7 @@ sudo docker run -d --privileged --restart=unless-stopped -p 443:443 --name=myran
 
 注意：选择1.28版本的k8s。
 
-![在这里插入图片描述](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/40e54f2faac34cd296a2d3780ade491f.jpeg)
+![在这里插入图片描述](/static/assets/modelone/docs/csdn_image/40e54f2faac34cd296a2d3780ade491f.jpeg)
 
 
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/img_convert/54178d3992b4da762afbfea90b02941d.jpeg)
@@ -275,7 +275,7 @@ services部分的示例（注意缩进对齐）
 
 部署完成后，集群的状态会变为"Active"，之后就可以下载kubeconfig文件，连接k8s集群了。
 
-![在这里插入图片描述](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/1f0f669880ee4b3bb166bcf35ca7f6a5.png)
+![在这里插入图片描述](/static/assets/modelone/docs/csdn_image/1f0f669880ee4b3bb166bcf35ca7f6a5.png)
 
 ## 机器重启 rancher 无法打开的 问题
 
@@ -345,9 +345,9 @@ docker restart webhookxxxxxx
 重启完webhook还要等几分钟，因为webhook要创建证书啥的
 ```
 
-![image.png](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/43568bbaabe5059f49d0439597ac33bb.png)
+![image.png](/static/assets/modelone/docs/csdn_image/43568bbaabe5059f49d0439597ac33bb.png)
 
-![image.png](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/16dd1fed7936f7a797c99f443a7e07f8.png)
+![image.png](/static/assets/modelone/docs/csdn_image/16dd1fed7936f7a797c99f443a7e07f8.png)
 
 api-server报错 webhook不可用导致Kubernetes Service 的 Endpoint 丢失
 
@@ -367,7 +367,7 @@ docker restart 集群webhook
 kubectl get
 validatingwebhookconfigurations,mutatingwebhookconfigurations
 
-![image.png](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/docs/csdn_image/d3ef103b643d896c97029eab92638492.png)
+![image.png](/static/assets/modelone/docs/csdn_image/d3ef103b643d896c97029eab92638492.png)
 
 k3s内部容器需要先稳定打开平台
 

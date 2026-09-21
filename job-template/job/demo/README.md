@@ -1,5 +1,5 @@
 # demo 模板
-镜像：ccr.ccs.tencentyun.com/cube-studio/demo:20230505
+镜像：modelone/demo:20230505
 
 参数
 ```bash

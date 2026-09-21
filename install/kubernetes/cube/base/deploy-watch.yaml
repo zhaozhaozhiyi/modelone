@@ -49,7 +49,7 @@ spec:
         - name: hubsecret
       containers:
         - name: kubeflow-watch-workflow
-          image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
+          image: modelone/kubeflow-dashboard
           imagePullPolicy: Always  # IfNotPresent
           workingDir: /home/myapp
           command: ["supervisord", "-c", "/home/myapp/myapp/tools/supervisord.conf"]

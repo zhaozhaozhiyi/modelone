@@ -61,7 +61,7 @@ model-register 用于将训练完成后保存的模型**注册到平台的模型
 使用与当前版本匹配的镜像，例如：
 
 ```text
-ccr.ccs.tencentyun.com/cube-studio/model_register:20230501
+modelone/model_register:20230501
 ```
 
 （实际镜像以你们仓库与版本为准。）

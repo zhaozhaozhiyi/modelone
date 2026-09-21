@@ -47,7 +47,7 @@ Hugging Face 相关环境（如镜像内或模板中可配置）：
 使用与当前版本匹配的镜像，例如：
 
 ```text
-ccr.ccs.tencentyun.com/cube-studio/model_download:20250301
+modelone/model_download:20250301
 ```
 
 （实际以你们仓库与版本为准。）

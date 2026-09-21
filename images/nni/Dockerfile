@@ -1,12 +1,13 @@
+ARG MODELONE_IMAGE_PREFIX
 
-# docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/nni:20250601  --build-arg TARGETARCH=amd64 .
+# docker build --network=host -t modelone/nni:20250601  --build-arg TARGETARCH=amd64 .
 
-# docker run --name nni -it -v $PWD:/app -p 8888:8888 ccr.ccs.tencentyun.com/cube-studio/nni:20250601 bash
-# docker run --name nni -it -p 8888:8888 ccr.ccs.tencentyun.com/cube-studio/nni:20250601 bash
+# docker run --name nni -it -v $PWD:/app -p 8888:8888 modelone/nni:20250601 bash
+# docker run --name nni -it -p 8888:8888 modelone/nni:20250601 bash
 
 ARG TARGETARCH
 
-FROM ccr.ccs.tencentyun.com/cube-studio/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9-${TARGETARCH}
+FROM ${MODELONE_IMAGE_PREFIX}modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9-${TARGETARCH}
 
 ENV DEBIAN_FRONTEND=noninteractive
 # 安装启动sshd

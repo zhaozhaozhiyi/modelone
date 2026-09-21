@@ -72,7 +72,7 @@ systemctl restart docker
 ```bash
 github地址
 wget https://githubfast.com/goharbor/harbor/releases/download/v2.11.1/harbor-offline-installer-v2.11.1.tgz
-# wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/harbor-offline-installer-v2.11.1.tgz
+# wget /static/assets/modelone/install/harbor-offline-installer-v2.11.1.tgz
 解压
 tar xf harbor-offline-installer-v2.11.1.tgz -C /usr/local/
 cd /usr/local/harbor

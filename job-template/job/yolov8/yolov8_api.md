@@ -70,7 +70,7 @@
 
 ```python
 import requests, base64, json
-image_path = "https://cube-studio.oss-cn-hangzhou.aliyuncs.com/pipeline/media-download/train2014/COCO_train2014_000000000597.jpg"
+image_path = "/static/assets/modelone/pipeline/media-download/train2014/COCO_train2014_000000000597.jpg"
 url = "http://xx.xx.xx.xx/predict"
 data = {"image": base64.b64encode(open(image_path, "rb").read()).decode('utf-8')}
 headers = {'Content-Type': 'application/json'}

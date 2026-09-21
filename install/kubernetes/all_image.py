@@ -3,7 +3,7 @@ import os,re
 # 所需要的所有镜像
 kubeflow = [
     'mysql:8.0.32',  # 数据库
-    'ccr.ccs.tencentyun.com/cube-studio/redis:7.4',  # 缓存
+    'modelone/redis:7.4',  # 缓存
     "busybox:1.36.0",
     "kubeflow/training-operator:v1-8a066f9",  # 分布式训练
     'alpine:3.10',
@@ -11,7 +11,7 @@ kubeflow = [
 
 kubernetes_dashboard = [
     'kubernetesui/dashboard:v2.6.1',  # k8s dashboard
-    'ccr.ccs.tencentyun.com/cube-studio/k8s-dashboard:v2.6.0',
+    'modelone/k8s-dashboard:v2.6.0',
     'kubernetesui/metrics-scraper:v1.0.8',  # k8s dashboard 上的指标监控
 ]
 
@@ -26,11 +26,11 @@ new_prometheus = [
 
     'quay.io/prometheus-operator/prometheus-config-reloader:v0.46.0',  # prometheus配置翻译
     "quay.io/prometheus-operator/prometheus-operator:v0.46.0",  # prometheus 部署工具
-    'ccr.ccs.tencentyun.com/cube-studio/kube-rbac-proxy:0.14.1',  # 指标
+    'modelone/kube-rbac-proxy:0.14.1',  # 指标
     'carlosedp/addon-resizer:v1.8.4',  # 指标
 
     'grafana/grafana:9.5.20',  # 监控看板
-    "ccr.ccs.tencentyun.com/cube-studio/prometheus-adapter:v0.9.1",  # peometheus指标翻译为自定义指标
+    "modelone/prometheus-adapter:v0.9.1",  # peometheus指标翻译为自定义指标
 ]
 
 istio = [
@@ -51,61 +51,61 @@ pipeline = [
 ]
 cube_studio = [
     # 前后端
-    'ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend:2026.06.01',
-    'ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:2026.06.01',
+    'modelone/kubeflow-dashboard-frontend:2026.06.01',
+    'modelone/kubeflow-dashboard:2026.06.01',
     # notebook基础镜像
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:vscode-ubuntu-cpu-base',
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:vscode-ubuntu-gpu-base',
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu22.04',
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu22.04-cuda11.8.0-cudnn8',
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu-cpu-1.0.0',
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu-bigdata',
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu-machinelearning',
-    'ccr.ccs.tencentyun.com/cube-studio/notebook:jupyter-ubuntu-deeplearning',
+    'modelone/notebook:vscode-ubuntu-cpu-base',
+    'modelone/notebook:vscode-ubuntu-gpu-base',
+    'modelone/notebook:jupyter-ubuntu22.04',
+    'modelone/notebook:jupyter-ubuntu22.04-cuda11.8.0-cudnn8',
+    'modelone/notebook:jupyter-ubuntu-cpu-1.0.0',
+    'modelone/notebook:jupyter-ubuntu-bigdata',
+    'modelone/notebook:jupyter-ubuntu-machinelearning',
+    'modelone/notebook:jupyter-ubuntu-deeplearning',
     # 超参搜索的镜像
-    'ccr.ccs.tencentyun.com/cube-studio/nni:20250601',
+    'modelone/nni:20250601',
     # 内部服务镜像
     "phpmyadmin:5.2.1",
-    # "ccr.ccs.tencentyun.com/cube-studio/patrikx3:latest",
+    # "modelone/patrikx3:latest",
     # "mongo-express:0.54.0",
-    # "ccr.ccs.tencentyun.com/cube-studio/neo4j:4.4",
+    # "modelone/neo4j:4.4",
     # "dpage/pgadmin4",
     # "elasticsearch:7.12.1"
     # 推理服务的镜像
 
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.14.1-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.14.1',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.13.1-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.13.1',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.12.2-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.12.2',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.11.1-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.11.1',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.10.1-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.10.1',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.9.3-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.9.3',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.8.4-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.8.4',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.7.4-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.7.4',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.6.5-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.6.5',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.5.4-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.5.4',
-    'ccr.ccs.tencentyun.com/cube-studio/tfserving:2.3.4',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tritonserver:21.12-py3',
-    # 'ccr.ccs.tencentyun.com/cube-studio/tritonserver:21.09-py3',
-    'ccr.ccs.tencentyun.com/cube-studio/tritonserver:22.07-py3',
-    'ccr.ccs.tencentyun.com/cube-studio/torchserve:0.7.1-cpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/torchserve:0.9.0-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/torchserve:0.9.0-cpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/torchserve:0.8.2-gpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/torchserve:0.8.2-cpu',
-    # 'ccr.ccs.tencentyun.com/cube-studio/torchserve:0.7.1-gpu',
-    'ccr.ccs.tencentyun.com/cube-studio/torchserve:0.7.1-cpu'
-    # 'ccr.ccs.tencentyun.com/cube-studio/onnxruntime:latest',
-    # 'ccr.ccs.tencentyun.com/cube-studio/onnxruntime:latest-cuda',
+    # 'modelone/tfserving:2.14.1-gpu',
+    # 'modelone/tfserving:2.14.1',
+    # 'modelone/tfserving:2.13.1-gpu',
+    # 'modelone/tfserving:2.13.1',
+    # 'modelone/tfserving:2.12.2-gpu',
+    # 'modelone/tfserving:2.12.2',
+    # 'modelone/tfserving:2.11.1-gpu',
+    # 'modelone/tfserving:2.11.1',
+    # 'modelone/tfserving:2.10.1-gpu',
+    # 'modelone/tfserving:2.10.1',
+    # 'modelone/tfserving:2.9.3-gpu',
+    # 'modelone/tfserving:2.9.3',
+    # 'modelone/tfserving:2.8.4-gpu',
+    # 'modelone/tfserving:2.8.4',
+    # 'modelone/tfserving:2.7.4-gpu',
+    # 'modelone/tfserving:2.7.4',
+    # 'modelone/tfserving:2.6.5-gpu',
+    # 'modelone/tfserving:2.6.5',
+    # 'modelone/tfserving:2.5.4-gpu',
+    # 'modelone/tfserving:2.5.4',
+    'modelone/tfserving:2.3.4',
+    # 'modelone/tritonserver:21.12-py3',
+    # 'modelone/tritonserver:21.09-py3',
+    'modelone/tritonserver:22.07-py3',
+    'modelone/torchserve:0.7.1-cpu',
+    # 'modelone/torchserve:0.9.0-gpu',
+    # 'modelone/torchserve:0.9.0-cpu',
+    # 'modelone/torchserve:0.8.2-gpu',
+    # 'modelone/torchserve:0.8.2-cpu',
+    # 'modelone/torchserve:0.7.1-gpu',
+    'modelone/torchserve:0.7.1-cpu'
+    # 'modelone/onnxruntime:latest',
+    # 'modelone/onnxruntime:latest-cuda',
 ]
 
 user_image = [
@@ -115,7 +115,7 @@ user_image = [
     'docker:23.0.4',
 
     # 用户可能使用的基础镜像
-    'ccr.ccs.tencentyun.com/cube-studio/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9',
+    'modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9',
 
 ]
 
@@ -128,7 +128,7 @@ example_images=[]
 for file in os.listdir('../../myapp/init/'):
     file = os.path.join('../../myapp/init',file)
     content = open(file).read()
-    matchs = re.findall('"(ccr.ccs.tencentyun.com/cube-studio.*)"', content)
+    matchs = re.findall('"(modelone/.*)"', content)
     for match in matchs:
         if match not in example_images:
             example_images.append(match.strip())
@@ -140,7 +140,7 @@ init_images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio
 
 
 # 通过私有仓库，将公有镜像下发到内网每台机器上，例如内网docker.oa.com的仓库
-harbor_repo = 'xx.xx.xx.xx:xx/cube-studio/'
+harbor_repo = 'xx.xx.xx.xx:xx/modelone/'
 pull_file = open('pull_images.sh',mode='w')
 push_harbor_file = open('push_harbor.sh',mode='w')
 pull_harbor_file = open('pull_harbor.sh', mode='w')
@@ -156,7 +156,7 @@ for image in images:
     # print(image)
     # print(image)
     image = image.replace('<none>', '')
-    new_image = harbor_repo + image.replace('ccr.ccs.tencentyun.com/cube-studio/', '').replace('/', '-')
+    new_image = harbor_repo + image.replace('modelone/', '').replace('/', '-')
 
     # 可联网机器上拉取公有镜像并推送到私有仓库
     # print('docker pull %s && docker tag %s %s && docker push %s &' % (image,image,image_name,image_name))
@@ -182,6 +182,5 @@ push_harbor_file.write('\nwait\n')
 
 print('若服务器可以链网，直接执行sh pull_images.sh')
 print('若服务器无法联网，替换本代码中的内网harbor仓库名，先在可联网机器上执行push_harbor.sh，再在内网机器上执行pull_harbor.sh')
-
 
 

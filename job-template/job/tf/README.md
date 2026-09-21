@@ -50,7 +50,7 @@
 ### 2.2 镜像与仓库
 
 - **模板镜像**：Launcher 所在镜像，例如  
-  `ccr.ccs.tencentyun.com/cube-studio/tf:20230801`
+  `modelone/tf:20230801`
 - 若使用私有仓库，需先在 **训练 → 仓库** 中配置账号，并在 **训练 → 镜像** 中添加该镜像。
 
 ### 2.3 环境变量
@@ -89,9 +89,9 @@ TASK_RESOURCE_GPU=0
       "require": 1,
       "choice": [],
       "range": "",
-      "default": "ccr.ccs.tencentyun.com/cube-studio/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9",
+      "default": "modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9",
       "placeholder": "",
-      "describe": "worker镜像，直接运行你代码的环境镜像 <a href='https://github.com/data-infra/cube-studio/tree/main/images'>基础镜像</a>",
+      "describe": "worker镜像，直接运行你代码的环境镜像 <a href='https://github.com/data-infra/modelone/tree/main/images'>基础镜像</a>",
       "editable": 1
     },
     "--working_dir": {
@@ -153,7 +153,7 @@ TASK_RESOURCE_GPU=0
 ### 3.2 镜像要求
 
 - **`--image`** 中的镜像需包含 TensorFlow 及你训练脚本所需的依赖。
-- 可使用 [CubeStudio 基础镜像](https://github.com/data-infra/cube-studio/tree/main/images) 或官方 TensorFlow 镜像，或基于其制作自定义镜像。
+- 可使用 [CubeStudio 基础镜像](https://github.com/data-infra/modelone/tree/main/images) 或官方 TensorFlow 镜像，或基于其制作自定义镜像。
 
 ### 3.3 使用步骤
 

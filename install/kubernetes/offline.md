@@ -4,7 +4,7 @@
 
 内网机器需要安装了docker，docker-compose，iptables
 
-# [部署视频](https://cube-studio.oss-cn-hangzhou.aliyuncs.com/video/%E5%86%85%E7%BD%91%E7%A6%BB%E7%BA%BF%E9%83%A8%E7%BD%B2.mp4)
+# [部署视频](/static/assets/modelone/video/%E5%86%85%E7%BD%91%E7%A6%BB%E7%BA%BF%E9%83%A8%E7%BD%B2.mp4)
 
 # 完全无法联网的内网机器
 
@@ -16,19 +16,19 @@ mkdir offline
 cd offline
 # 下载kubectl 和harbor的离线安装包
 # amd64版本
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/kubectl
+wget /static/assets/modelone/install/kubectl
 wget https://githubfast.com/goharbor/harbor/releases/download/v2.11.1/harbor-offline-installer-v2.11.1.tgz
 
 # 下载模型
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/inference/resnet50.onnx
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/inference/resnet50-torchscript.pt
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/inference/resnet50.mar
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/inference/tf-mnist.tar.gz
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/inference/decisionTree_model.pkl
+wget /static/assets/modelone/inference/resnet50.onnx
+wget /static/assets/modelone/inference/resnet50-torchscript.pt
+wget /static/assets/modelone/inference/resnet50.mar
+wget /static/assets/modelone/inference/tf-mnist.tar.gz
+wget /static/assets/modelone/inference/decisionTree_model.pkl
 
 # 训练,标注数据集
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/pipeline/coco.zip
-wget https://docker-76009.sz.gfp.tencent-cloud.com/github/cube-studio/aihub/deeplearning/cv-tinynas-object-detection-damoyolo/dataset/coco2014.zip
+wget /static/assets/modelone/pipeline/coco.zip
+wget https://docker-76009.sz.gfp.tencent-cloud.com/github/modelone/aihub/deeplearning/cv-tinynas-object-detection-damoyolo/dataset/coco2014.zip
 
 ````
 
@@ -88,7 +88,7 @@ cp -r offline /data/k8s/kubeflow/pipeline/workspace/admin/
 ```bash
 ARCH=$(uname -m)
 
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/kubectl && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
+wget /static/assets/modelone/install/kubectl && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
 
 ```
 3、修改CubeStudio镜像为内网镜像。

@@ -1,4 +1,5 @@
 #!/bin/bash
+: "${MODELONE_ASSET_BASE_URL:?Set the enterprise resource base URL}"
 
 bash init_node.sh
 mkdir -p ~/.kube /etc/kubernetes/ && rm -rf ~/.kube/config /etc/kubernetes/admin.conf && cp config ~/.kube/config && cp ~/.kube/config /etc/kubernetes/admin.conf
@@ -6,7 +7,7 @@ mkdir -p kubeconfig && echo "" > kubeconfig/dev-kubeconfig
 
 ARCH=$(uname -m)
 
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/kubectl && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
+wget ${MODELONE_ASSET_BASE_URL%/}/install/kubectl && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
 
 version=`kubectl version --short | awk '/Server Version:/ {print $3}'`
 echo "kubernets versison" $version

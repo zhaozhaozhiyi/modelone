@@ -1,11 +1,13 @@
+: "${MODELONE_IMAGE_REGISTRY:?Set the enterprise registry host/path}"
+MODELONE_IMAGE_PREFIX="${MODELONE_IMAGE_REGISTRY%/}/"
 set -ex
 TARGETARCH=amd64
-hubhost=ccr.ccs.tencentyun.com/cube-studio
+hubhost=${MODELONE_IMAGE_PREFIX}modelone
 
 base_image=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu20.04
 
-docker build --network=host -t $hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-$TARGETARCH --build-arg FROM_IMAGES=$base_image -f cuda/Dockerfile .
-docker build --network=host -t $hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9-$TARGETARCH --build-arg FROM_IMAGES=$hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-$TARGETARCH --build-arg PYTHON_VERSION=python3.9 -f cuda/python/Dockerfile .
+docker build --build-arg MODELONE_IMAGE_PREFIX="$MODELONE_IMAGE_PREFIX" --network=host -t $hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-$TARGETARCH --build-arg FROM_IMAGES=$base_image -f cuda/Dockerfile .
+docker build --build-arg MODELONE_IMAGE_PREFIX="$MODELONE_IMAGE_PREFIX" --network=host -t $hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9-$TARGETARCH --build-arg FROM_IMAGES=$hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-$TARGETARCH --build-arg PYTHON_VERSION=python3.9 -f cuda/python/Dockerfile .
 
 docker push $hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-$TARGETARCH
 docker push $hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9-$TARGETARCH
@@ -15,8 +17,8 @@ docker push $hubhost/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9-$TARGETARCH
 
 base_image=nvidia/cuda:12.1.0-cudnn8-devel-ubuntu20.04
 
-docker build --network=host -t $hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-$TARGETARCH --build-arg FROM_IMAGES=$base_image -f cuda/Dockerfile .
-docker build --network=host -t $hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-python3.9-$TARGETARCH --build-arg FROM_IMAGES=$hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-$TARGETARCH --build-arg PYTHON_VERSION=python3.9 -f cuda/python/Dockerfile .
+docker build --build-arg MODELONE_IMAGE_PREFIX="$MODELONE_IMAGE_PREFIX" --network=host -t $hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-$TARGETARCH --build-arg FROM_IMAGES=$base_image -f cuda/Dockerfile .
+docker build --build-arg MODELONE_IMAGE_PREFIX="$MODELONE_IMAGE_PREFIX" --network=host -t $hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-python3.9-$TARGETARCH --build-arg FROM_IMAGES=$hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-$TARGETARCH --build-arg PYTHON_VERSION=python3.9 -f cuda/python/Dockerfile .
 
 docker push $hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-$TARGETARCH
 docker push $hubhost/ubuntu-gpu:cuda12.1.0-cudnn8-python3.9-$TARGETARCH

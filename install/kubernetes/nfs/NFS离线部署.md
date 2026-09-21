@@ -27,7 +27,7 @@ dpkg -i nfs-kernel-server
 ### centos使用rpm包方式安装(所有节点)
 
 ```shell
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/nfsrpm.tar.gz
+wget /static/assets/modelone/install/nfsrpm.tar.gz
 tar -zxvf nfsrpm.tar.gz
 cd nfs
 rpm -ivh *.rpm --force --nodeps

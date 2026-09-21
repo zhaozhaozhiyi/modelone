@@ -2,7 +2,7 @@
 
 平台提供两种基于 [阿里巴巴 DataX](https://github.com/alibaba/DataX) 的任务模板，适用于异构数据源同步与数据导入场景。
 
-**镜像**：`ccr.ccs.tencentyun.com/cube-studio/datax:20240501`
+**镜像**：`modelone/datax:20240501`
 
 ---
 

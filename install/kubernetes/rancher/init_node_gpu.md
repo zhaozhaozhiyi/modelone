@@ -48,7 +48,7 @@ yum install -y nvidia-container-toolkit
 # 离线安装
 
 ```bash
-wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/nvidia-docker2.tar.gz  && tar -zxvf nvidia-docker2.tar.gz && rm nvidia-docker2.tar.gz
+wget /static/assets/modelone/install/nvidia-docker2.tar.gz  && tar -zxvf nvidia-docker2.tar.gz && rm nvidia-docker2.tar.gz
 cd nvidia-docker2
 dpkg -i ./*.deb
 dpkg -l | grep nvidia-docker2
@@ -115,5 +115,5 @@ systemctl restart containerd
 ```bash
 docker run --name test --gpus all -it nvidia/cuda:11.8.0-devel-ubuntu22.04 bash
 
-docker run --name test --gpus all -it ccr.ccs.tencentyun.com/cube-studio/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9  bash
+docker run --name test --gpus all -it modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9  bash
 ```

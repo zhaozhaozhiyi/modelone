@@ -31,10 +31,8 @@ def make_shell_context():
 
 
 def replace_git(content):
-    content = json.dumps(content)
-    content = content.replace('https://github.com/data-infra/cube-studio/tree/main', conf.get('GIT_URL', '').strip('/'))
-    content = content.replace('ccr.ccs.tencentyun.com/cube-studio', conf.get('REPOSITORY_ORG', '').strip('/'))
-    return json.loads(content)
+    from myapp.brand import resolve_resources
+    return resolve_resources(content)
 
 # https://dormousehole.readthedocs.io/en/latest/cli.html
 @app.cli.command('init')
@@ -212,7 +210,7 @@ def init():
             try:
                 repository = Repository()
                 repository.name = 'hubsecret'
-                repository.server=conf.get('REPOSITORY_ORG','ccr.ccs.tencentyun.com/cube-studio/')
+                repository.server=conf.get('REPOSITORY_ORG','modelone/')
                 repository.user = 'yourname'
                 repository.password = 'yourpassword'
                 repository.hubsecret = 'hubsecret'
@@ -438,7 +436,7 @@ def init():
                     if not header:
                         header = line
                         continue
-                    data = dict(zip(header, line))
+                    data = replace_git(dict(zip(header, line)))
                     create_dataset(**data)
 
     except Exception as e:
@@ -686,6 +684,9 @@ def init():
                     label = data.get('label', '')
                     if name and label:
                         chat = db.session.query(Chat).filter_by(name=name).first()
+                        if not chat and name == 'modelone':
+                            # Keep the historical chat URL when upgrading.
+                            chat = db.session.query(Chat).filter_by(name='cube-studio').first()
                         if not chat:
                             knowledge = data.get('knowledge', '')
                             if type(knowledge)==dict:
@@ -697,7 +698,7 @@ def init():
                             chat.icon = data.get('icon', '')
                             chat.session_num = int(data.get('session_num', '0'))
                             chat.chat_type = data.get('chat_type', 'text')
-                            chat.hello = data.get('hello', '这里是CubeStudio开源社区，请问有什么可以帮你的么？')
+                            chat.hello = data.get('hello', '这里是 modelOne 平台支持，请问有什么可以帮您的？')
                             chat.tips = data.get('tips', '')
                             chat.prompt = data.get('prompt', '')
                             chat.knowledge = knowledge
@@ -734,38 +735,38 @@ def init():
                 from myapp.models.model_metadata import Metadata_table
                 tables = db.session.query(Metadata_table).all()
                 if len(tables)==0:
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='project', owner='admin',describe='项目分组，模板分组，模型分组'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='project_user', owner='admin',describe='项目组用户'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='idex_query', owner='admin',describe='sqllab的查询记录'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='metadata_table', owner='admin',describe='离线库表管理'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='metadata_metric', owner='admin',describe='指标管理'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='dimension', owner='admin',describe='维表管理'))
-                    db.session.add(Metadata_table(app='cube-studio',db=database,table='dataset',owner='admin',describe='数据集市场'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='project', owner='admin',describe='项目分组，模板分组，模型分组'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='project_user', owner='admin',describe='项目组用户'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='idex_query', owner='admin',describe='sqllab的查询记录'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='metadata_table', owner='admin',describe='离线库表管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='metadata_metric', owner='admin',describe='指标管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='dimension', owner='admin',describe='维表管理'))
+                    db.session.add(Metadata_table(app='modelone',db=database,table='dataset',owner='admin',describe='数据集市场'))
 
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='repository', owner='admin',describe='docker仓库管理'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='docker', owner='admin', describe='在线docker镜像构建'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='images', owner='admin',describe='镜像管理'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='notebook', owner='admin', describe='notebook在线开发'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='etl_pipeline', owner='admin',describe='数据ETL的任务流管理'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='etl_task', owner='admin',describe='数据ETL的任务管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='repository', owner='admin',describe='docker仓库管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='docker', owner='admin', describe='在线docker镜像构建'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='images', owner='admin',describe='镜像管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='notebook', owner='admin', describe='notebook在线开发'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='etl_pipeline', owner='admin',describe='数据ETL的任务流管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='etl_task', owner='admin',describe='数据ETL的任务管理'))
 
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='job_template', owner='admin',describe='任务模板'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='pipeline', owner='admin',describe='ml任务流'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='task', owner='admin', describe='ml任务管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='job_template', owner='admin',describe='任务模板'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='pipeline', owner='admin',describe='ml任务流'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='task', owner='admin', describe='ml任务管理'))
 
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='run', owner='admin',describe='定时调度记录'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='workflow', owner='admin',describe='任务流实例'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='nni', owner='admin', describe='nni超参搜索'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='service', owner='admin',describe='内部服务管理'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='model', owner='admin', describe='模型管理'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='inferenceservice', owner='admin', describe='推理服务'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='run', owner='admin',describe='定时调度记录'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='workflow', owner='admin',describe='任务流实例'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='nni', owner='admin', describe='nni超参搜索'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='service', owner='admin',describe='内部服务管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='model', owner='admin', describe='模型管理'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='inferenceservice', owner='admin', describe='推理服务'))
 
-                    db.session.add(Metadata_table(app='cube-studio',db=database,table='aihub',owner='admin',describe='模型应用市场，打通自动化标注，一键开发，一键微调，一建部署'))
-                    db.session.add(Metadata_table(app='cube-studio',db=database,table='chat',owner='admin',describe='私有知识库，配置领域知识文档或qa文档，智能机器人问答'))
-                    db.session.add(Metadata_table(app='cube-studio',db=database,table='chat_log',owner='admin',describe='所有的聊天日志记录'))
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='favorite', owner='admin',describe='收藏的数据记录'))
+                    db.session.add(Metadata_table(app='modelone',db=database,table='aihub',owner='admin',describe='模型应用市场，打通自动化标注，一键开发，一键微调，一建部署'))
+                    db.session.add(Metadata_table(app='modelone',db=database,table='chat',owner='admin',describe='私有知识库，配置领域知识文档或qa文档，智能机器人问答'))
+                    db.session.add(Metadata_table(app='modelone',db=database,table='chat_log',owner='admin',describe='所有的聊天日志记录'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='favorite', owner='admin',describe='收藏的数据记录'))
 
-                    db.session.add(Metadata_table(app='cube-studio', db=database, table='logs', owner='admin',describe='用户行为记录'))
+                    db.session.add(Metadata_table(app='modelone', db=database, table='logs', owner='admin',describe='用户行为记录'))
                     db.session.commit()
                     print('添加离线表成功')
 

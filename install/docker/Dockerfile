@@ -1,9 +1,11 @@
-# docker build -t ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:2026.06.01 -f install/docker/Dockerfile .
+# docker build -t modelone/kubeflow-dashboard:2026.06.01 -f install/docker/Dockerfile .
 
-FROM ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:base-python3.9-20260501
+ARG MODELONE_IMAGE_PREFIX
+FROM ${MODELONE_IMAGE_PREFIX}modelone/kubeflow-dashboard:base-python3.9-20260501
 
-RUN wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/aihub/deeplearning/aihub.zip && mkdir -p /cube-studio/aihub && unzip aihub.zip -d /cube-studio/aihub/ && rm aihub.zip
+RUN mkdir -p /cube-studio/aihub
 
+COPY config/modelone.json /home/myapp/config/modelone.json
 COPY myapp /home/myapp/myapp
 COPY myapp/static/appbuilder/frontend /data/web/frontend
 COPY aihub /cube-studio/aihub
@@ -15,8 +17,6 @@ RUN chmod +x /home/myapp/myapp/bin/myapp /entrypoint.sh
 # ENTRYPOINT ["bash","/entrypoint.sh"]
 
 # HEALTHCHECK CMD ["curl", "-f", "http://localhost:80/health"]
-
-
 
 
 

@@ -10,7 +10,8 @@ mkdir -p kubeconfig && echo "" > kubeconfig/dev-kubeconfig
 
 ARCH=$(uname -m)
 
-wget -O kubectl https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/kubectl-amd64-1.28 && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
+: "${MODELONE_ASSET_BASE_URL:?Set the enterprise resource base URL}"
+wget -O kubectl "${MODELONE_ASSET_BASE_URL}/install/kubectl-amd64-1.28" && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
 
 node=`kubectl  get node -o wide |grep $1 |awk '{print $1}'| head -n 1`
 
@@ -143,7 +144,6 @@ kubectl apply -k cube/overlays
 
 # 配置入口
 echo "打开网址：http://$1"
-
 
 
 

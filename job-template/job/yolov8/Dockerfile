@@ -1,6 +1,7 @@
-# docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/yolov8:20250901-amd64 -f Dockerfile .
-# docker push ccr.ccs.tencentyun.com/cube-studio/yolov8:20250901-amd64
-FROM ccr.ccs.tencentyun.com/cube-studio/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9
+ARG MODELONE_IMAGE_PREFIX
+# docker build --network=host -t modelone/yolov8:20250901-amd64 -f Dockerfile .
+# docker push modelone/yolov8:20250901-amd64
+FROM ${MODELONE_IMAGE_PREFIX}modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9
 #COPY sources.list /etc/apt/sources.list
 RUN apt update -y
 WORKDIR /yolov8

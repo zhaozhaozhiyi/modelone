@@ -4,7 +4,7 @@
 ```bash
 
 #mkdir -p /data/rancher/k3s/agent/images/
-#wget https://cube-studio.oss-cn-hangzhou.aliyuncs.com/install/k3s-airgap-images.tar -O /data/rancher/k3s/agent/images/k3s-airgap-images.tar
+#wget /static/assets/modelone/install/k3s-airgap-images.tar -O /data/rancher/k3s/agent/images/k3s-airgap-images.tar
 #nerdctl network create cube-studio
 
 export RANCHER_CONTAINER_TAG=v2.8.5
