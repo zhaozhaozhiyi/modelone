@@ -4,6 +4,23 @@
 
 准备 Python 3.11（构建和检查工具）、Node.js 22、Docker Compose、kubectl、SQLAlchemy、PyYAML 和 PyJWT 2.8–2.x。基础镜像和 CI 使用 Node.js 22；运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
 
+## 代码仓库
+
+企业 Git 仓库创建完成后，在工作树中先做一次预览，再显式应用远端配置。工具不会替换已有 `origin`，也不会向 `upstream` 推送；已有 `origin` 只有在明确传入 `--replace-origin` 时才会被替换。URL 不应内嵌账号或密码。
+
+```sh
+python3 scripts/configure_modelone_remotes.py \
+  --origin https://git.example.com/ai/modelone.git \
+  --upstream https://github.com/data-infra/cube-studio.git
+python3 scripts/configure_modelone_remotes.py \
+  --origin https://git.example.com/ai/modelone.git \
+  --upstream https://github.com/data-infra/cube-studio.git \
+  --apply
+git remote -v
+```
+
+应用后，`origin` 指向企业仓库，`upstream` 的 fetch URL 指向原始仓库且 push URL 为 `DISABLED`。未收到企业地址时不要使用示例地址，也不要创建正式发布标签。
+
 本地账号登录已加固；生产部署仍需处理[安全检查记录](security-review.md)中的企业认证、基础设施和目标环境验收项。
 
 ```sh

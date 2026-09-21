@@ -239,5 +239,26 @@ class BrandTests(unittest.TestCase):
             path.write_text("label = 'Cube Studio'\n")
             self.assertTrue(scan.scan())
 
+    def test_repository_remote_setup_is_explicit_and_read_only_upstream(self):
+        spec = importlib.util.spec_from_file_location('remotes', ROOT / 'scripts/configure_modelone_remotes.py')
+        remotes = importlib.util.module_from_spec(spec); spec.loader.exec_module(remotes)
+        with tempfile.TemporaryDirectory() as folder:
+            repo = Path(folder)
+            subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+            actions = remotes.configure(
+                repo,
+                'https://git.example.test/modelone/platform.git',
+                'https://git.example.test/source/cube-studio.git',
+                apply=True,
+            )
+            self.assertEqual(len(actions), 3)
+            self.assertEqual(remotes.remote_url(repo, 'origin'), 'https://git.example.test/modelone/platform.git')
+            self.assertEqual(remotes.remote_url(repo, 'upstream'), 'https://git.example.test/source/cube-studio.git')
+            self.assertEqual(remotes.remote_url(repo, 'upstream', push=True), 'DISABLED')
+            with self.assertRaises(ValueError):
+                remotes.configure(repo, 'https://other.example.test/modelone.git', apply=True)
+            with self.assertRaises(ValueError):
+                remotes.configure(repo, 'https://user:password@git.example.test/modelone.git')
+
 if __name__ == '__main__':
     unittest.main()
