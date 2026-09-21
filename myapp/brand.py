@@ -63,6 +63,8 @@ def validate_release_settings(include_links=True):
                 or parsed.password or any(c.isspace() for c in value)
                 or re.search(r'cube[-_]?studio|data-master\.net|github\.com/data-infra', value, re.I)):
             raise ValueError(key + ' must be a full enterprise HTTP(S) URL without credentials')
+        if key == 'asset_base_url' and is_legacy_resource_url(value):
+            raise ValueError('asset_base_url must use an enterprise-owned storage host')
         if key == 'asset_base_url' and (parsed.query or parsed.fragment):
             raise ValueError('asset_base_url must not contain a query or fragment')
     if re.search(r'cube[-_]?studio|cube-argoproj', registry, re.I):
@@ -78,6 +80,21 @@ LEGACY_ASSET_PREFIXES = (
     'https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/',
     'http://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/',
 )
+# These hosts are retained only as migration sources. They must never be used
+# as the configured or verified modelOne delivery target.
+LEGACY_RESOURCE_HOSTS = frozenset((
+    'cube-studio.oss-cn-hangzhou.aliyuncs.com',
+    'docker-76009.sz.gfp.tencent-cloud.com',
+))
+
+
+def is_legacy_resource_url(value):
+    """Return whether a URL points at an original platform resource host."""
+    try:
+        hostname = (urlsplit(value).hostname or '').lower().rstrip('.')
+    except (TypeError, ValueError):
+        return False
+    return hostname in LEGACY_RESOURCE_HOSTS
 
 def asset_path(path):
     path = path.lstrip('/')

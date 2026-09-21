@@ -102,12 +102,31 @@ class ResourceTests(unittest.TestCase):
 
     def test_release_rejects_relative_assets_and_malformed_registries(self):
         for asset in ('/static/assets/modelone', self.base + '/?token=secret',
-                      'https://user:password@example.test/assets'):
+                      'https://user:password@example.test/assets',
+                      'https://cube-studio.oss-cn-hangzhou.aliyuncs.com/assets',
+                      'https://docker-76009.sz.gfp.tencent-cloud.com/assets'):
             with patch.dict(resources.brand.BRAND, asset_base_url=asset), self.assertRaises(ValueError):
                 resources.brand.validate_release_settings(include_links=False)
         for registry in ('https://registry.example.test', 'example.test/$(id)', 'example.test/team/modelone'):
             with patch.dict(resources.brand.BRAND, image_registry=registry), self.assertRaises(ValueError):
                 resources.brand.validate_release_settings(include_links=False)
+
+    def test_enterprise_target_rejects_legacy_hosts_before_network_access(self):
+        for host in resources.brand.LEGACY_RESOURCE_HOSTS:
+            with self.assertRaisesRegex(ValueError, 'original storage host'):
+                resources.open_url('https://' + host + '/assets/file.bin', enterprise=True)
+
+    def test_enterprise_target_rejects_redirect_to_legacy_host(self):
+        class RedirectedResponse:
+            def geturl(self):
+                return 'https://docker-76009.sz.gfp.tencent-cloud.com/assets/file.bin'
+
+            def close(self):
+                self.closed = True
+
+        with patch.object(resources, 'urlopen', return_value=RedirectedResponse()):
+            with self.assertRaisesRegex(ValueError, 'redirects to the original storage host'):
+                resources.open_url(self.base + '/target.bin', enterprise=True)
 
     def test_argo_images_use_the_same_collision_safe_target_as_image_bundle(self):
         rows = resources.inventory()

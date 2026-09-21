@@ -87,10 +87,12 @@ def open_url(value, enterprise=False):
     parsed = urlsplit(value)
     if parsed.scheme not in ('http', 'https') or not parsed.hostname:
         raise ValueError('Resource URL must be absolute HTTP(S)')
+    if enterprise and brand.is_legacy_resource_url(value):
+        raise ValueError('Enterprise resource uses the original storage host')
     response = urlopen(urlunsplit(parsed._replace(path=quote(parsed.path, safe='/%:@-._~'))), timeout=60)
-    if enterprise and urlsplit(response.geturl()).hostname == BUCKET:
+    if enterprise and brand.is_legacy_resource_url(response.geturl()):
         response.close()
-        raise ValueError('Enterprise resource redirects to the original storage')
+        raise ValueError('Enterprise resource redirects to the original storage host')
     return response
 
 
