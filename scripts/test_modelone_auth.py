@@ -139,6 +139,8 @@ class AuthenticationTests(unittest.TestCase):
         self.assertIn('RABBIT_PASSWORD', rabbit)
         self.assertNotIn('"password": "admin"', datax)
         self.assertNotIn('"password": "admin"', ml_datax)
+        self.assertIn('"username": "modelone"', datax)
+        self.assertIn('"username": "modelone"', ml_datax)
         self.assertIn('MODELONE_EXAMPLE_MYSQL_SERVICE', example)
         self.assertIn('__CONFIGURE_BEFORE_DEPLOY__', services)
         self.assertIn('secretKeyRef', mysql)

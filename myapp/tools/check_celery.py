@@ -45,6 +45,7 @@ def check_push():
     except Exception as e:
         print(e)
         push_admin(str(e))
+        raise
 
 
 import argparse
