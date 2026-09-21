@@ -6,7 +6,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SURFACES = ('myapp/frontend/public', 'myapp/frontend/src', 'myapp/vision/public', 'myapp/vision/src', 'myapp/visionPlus/public', 'myapp/visionPlus/src', 'myapp/templates', 'myapp/init', 'myapp/example', 'myapp/views', 'myapp/models', 'myapp/cli.py', 'install/kubernetes/all_image.py', 'install/kubernetes/rancher/all_image.py', 'scripts/image_bundle.py')
+SURFACES = ('myapp/frontend/public', 'myapp/frontend/src', 'myapp/vision/public', 'myapp/vision/src', 'myapp/visionPlus/public', 'myapp/visionPlus/src', 'myapp/templates', 'myapp/init', 'myapp/example', 'job-template', 'myapp/views', 'myapp/models', 'myapp/cli.py', 'install/kubernetes/all_image.py', 'install/kubernetes/rancher/all_image.py', 'scripts/image_bundle.py')
 BUILDS = ('myapp/static/appbuilder/frontend', 'myapp/static/appbuilder/vison', 'myapp/static/appbuilder/visonPlus')
 DOCUMENTATION = ('job-template/**/*.md', 'images/**/*.md', 'install/**/*.md')
 OLD = re.compile(r'cube[-_ ]?studio|开源版|商业版|开源社区|data-master\.net|/vison(?:Plus)?/logo\.png|cubeStudioLogo|logoCB', re.I)
@@ -45,6 +45,10 @@ def scan(include_build=False):
             if '/example/' in str(path) or path.name == 'cli.py':
                 for expression in TECHNICAL:
                     safe = expression.sub('', safe)
+            if path.as_posix().endswith('job-template/job/dataset/launcher.py'):
+                # The legacy source type is accepted only for old task records;
+                # it is never rendered as a product label or help link.
+                safe = re.sub(r"(?<=src_type in \('modelone', )'cube-studio'", '', safe)
             if HOSTS.search(line) or OLD.search(safe) or issue:
                 failures.append('%s:%s: %s' % (path.relative_to(ROOT), number, line.strip()[:180]))
     return failures

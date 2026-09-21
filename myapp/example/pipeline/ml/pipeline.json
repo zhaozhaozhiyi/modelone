@@ -321,7 +321,7 @@
         "resource_cpu": "2",
         "resource_gpu": "0",
         "args": {
-          "--command": "apt-get update -y && apt-get install -y graphviz && pip install IPython pydotplus graphviz && python /mnt/admin/cube-studio/job-template/job/decision_tree/launcher.py --save_model_dir /mnt/admin/pipeline/decision_tree/ --train_dataset /mnt/admin/pipeline/data/data-test.csv --label_columns y --feature_columns age,duration,campaign,pdays,previous,emp_var_rate,cons_price_idx,cons_conf_idx,euribor3m,nr_employed ",
+          "--command": "apt-get update -y && apt-get install -y graphviz && pip install IPython pydotplus graphviz && python /mnt/admin/modelone/job-template/job/decision_tree/launcher.py --save_model_dir /mnt/admin/pipeline/decision_tree/ --train_dataset /mnt/admin/pipeline/data/data-test.csv --label_columns y --feature_columns age,duration,campaign,pdays,previous,emp_var_rate,cons_price_idx,cons_conf_idx,euribor3m,nr_employed ",
           "--params": "{\"max_depth\": tune.grid_search([3,4,5]),\"min_samples_split\": tune.grid_search([5,10,20])}",
           "--outfile": "/mnt/admin/pipeline/decision_tree/val_result.json",
           "--metric": "['train_auc','test_auc']",

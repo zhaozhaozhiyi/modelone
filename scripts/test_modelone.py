@@ -185,5 +185,19 @@ class BrandTests(unittest.TestCase):
             (scan.ROOT / 'surface/app.js.map').write_text('{}')
             self.assertTrue(scan.scan())
 
+    def test_job_template_scan_allows_only_documented_compatibility_alias(self):
+        import tempfile
+        spec = importlib.util.spec_from_file_location('scan_job', ROOT / 'scripts/brand_scan.py')
+        scan = importlib.util.module_from_spec(spec); spec.loader.exec_module(scan)
+        with tempfile.TemporaryDirectory() as folder:
+            scan.ROOT = Path(folder); scan.SURFACES = ('job-template',); scan.BUILDS = ()
+            target = scan.ROOT / 'job-template/job/dataset'
+            target.mkdir(parents=True)
+            path = target / 'launcher.py'
+            path.write_text("if args.src_type in ('modelone', 'cube-studio', '当前平台'):\n")
+            self.assertFalse(scan.scan())
+            path.write_text("label = 'Cube Studio'\n")
+            self.assertTrue(scan.scan())
+
 if __name__ == '__main__':
     unittest.main()
