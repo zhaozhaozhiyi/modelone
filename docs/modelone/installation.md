@@ -65,11 +65,13 @@ python3 scripts/brand_scan.py \
 
 清单中的 `pending` 项尚未同步，不能用不存在的 `modelone/` 默认镜像启动生产。审核清单并登录仓库后，可运行 `python3 scripts/resource_inventory.py --copy-images`；需要安装 skopeo，它保留多架构镜像并比对摘要。资源可用 `--download-assets <暂存目录>` 下载，工具记录 SHA-256；上传企业存储或打入离线包后需逐项验证访问与校验和。本地下载状态 `downloaded` 不满足发布条件。工具每项保存进度，可用 `--resume <报告>` 继续操作；更换来源、目标或路径后不会复用旧校验记录。上传后运行 `python3 scripts/resource_inventory.py --resume dist/modelone/resource-inventory.json --verify-targets --require-complete`，重新读取企业镜像摘要和 CDN 文件并比对；不存在、内容不同、跳转回原存储或仍待迁移的资源都会使门禁失败。已有报告中的 `verified` 不能跳过当次目标验证。盘点包含历史文档和示例引用，需要按企业保留清单筛选。
 
-当前清单去重后为 147 个镜像、939 个资源：已纳入 Argo 控制器镜像，分离语音 CSV 的 URL 与转写文本，并将智能问答中的 4 张示例图展开为实际地址。教程文件的目标路径与页面使用的 `tutorial-pipeline.mp4`、`tutorial-job-template.mp4` 一致。清单保存原始来源供追溯；修改文件名不会修改媒体内容，视频和图片还需检查画面中的旧品牌，替换为正式素材后才能对外发布。
+当前清单去重后为 147 个镜像、943 个资源：已纳入 Argo 控制器镜像，分离语音 CSV 的 URL 与转写文本，将智能问答中的 4 张示例图展开为实际地址，并纳入 MNIST 示例的 4 个数据文件。教程文件的目标路径与页面使用的 `tutorial-pipeline.mp4`、`tutorial-job-template.mp4` 一致。清单保存原始来源供追溯；修改文件名不会修改媒体内容，视频和图片还需检查画面中的旧品牌，替换为正式素材后才能对外发布。
 
 初始化任务模板中的帮助和镜像说明入口使用配置的帮助中心；尚未配置时隐藏入口，避免跳转到不存在的本地仓库路径。第三方工具的帮助链接仍指向其原文档。
 
 `assetBaseUrl` 应是浏览器和任务容器均可访问的完整 HTTP(S) 地址。默认 `/static/assets/modelone/` 只用于静态品牌和本地页面，不能直接当作容器中 wget/curl 的完整 URL。外部模型、教程和数据未打入本次代码改造，安装前必须准备好。
+
+MNIST 示例使用 `MODELONE_MNIST_BASE_URL`（或 `MODELONE_ASSET_BASE_URL`）拼接 `/datasets/mnist/`，不会回退到旧公共主机；资源同步清单中的四个压缩文件必须先上传到该路径，再启用对应任务模板。
 
 ## Docker Compose
 

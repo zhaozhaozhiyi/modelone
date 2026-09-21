@@ -28,9 +28,10 @@ def read_data(label_fname, image_fname, data_dir):
     """
     下载并读取数据到numpy数组
     """
-    # 原始url（保留）
-    # base_url = 'http://yann.lecun.com/exdb/mnist/'
-    base_url = 'http://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/'
+    base_url = os.environ.get('MODELONE_MNIST_BASE_URL') or os.environ.get('MODELONE_ASSET_BASE_URL')
+    if not base_url:
+        raise RuntimeError('MODELONE_MNIST_BASE_URL or MODELONE_ASSET_BASE_URL is required for the MNIST example')
+    base_url = base_url.rstrip('/') + '/datasets/mnist/'
 
     os.makedirs(data_dir, exist_ok=True)
 

@@ -14,13 +14,18 @@ pip install numpy==1.26.4
 # export NCCL_SOCKET_IFNAME=eth0  # 可不填，默认就是这个，有些协议无法走ib，会自动走以太网
 #export NCCL_DEBUG=INFO
 
-mkdir -p  data/MNIST/raw/
+mkdir -p data/MNIST/raw/
+MNIST_BASE_URL="${MODELONE_MNIST_BASE_URL:-${MODELONE_ASSET_BASE_URL:-}}"
+if [ -z "$MNIST_BASE_URL" ]; then
+  echo "MODELONE_MNIST_BASE_URL or MODELONE_ASSET_BASE_URL is required for the MNIST example" >&2
+  exit 1
+fi
+MNIST_BASE_URL="${MNIST_BASE_URL%/}/datasets/mnist"
 if [ "$RANK" = "0" ]; then
 
-  wget -P  data/MNIST/raw/ https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/train-images-idx3-ubyte.gz
-  wget -P  data/MNIST/raw/ https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/train-labels-idx1-ubyte.gz
-  wget -P  data/MNIST/raw/ https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/t10k-images-idx3-ubyte.gz
-  wget -P  data/MNIST/raw/ https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/t10k-labels-idx1-ubyte.gz
+  wget -P data/MNIST/raw/ "$MNIST_BASE_URL/train-images-idx3-ubyte.gz"
+  wget -P data/MNIST/raw/ "$MNIST_BASE_URL/train-labels-idx1-ubyte.gz"
+  wget -P data/MNIST/raw/ "$MNIST_BASE_URL/t10k-images-idx3-ubyte.gz"
+  wget -P data/MNIST/raw/ "$MNIST_BASE_URL/t10k-labels-idx1-ubyte.gz"
 fi
 python demo.py
-

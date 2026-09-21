@@ -5278,6 +5278,26 @@
       "kind": "asset",
       "source": "https://cube-studio.oss-cn-hangzhou.aliyuncs.com/video/window-frontend-dev.mp4",
       "path": "video/window-frontend-dev.mp4"
+    },
+    {
+      "kind": "asset",
+      "source": "https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/train-images-idx3-ubyte.gz",
+      "path": "datasets/mnist/train-images-idx3-ubyte.gz"
+    },
+    {
+      "kind": "asset",
+      "source": "https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/train-labels-idx1-ubyte.gz",
+      "path": "datasets/mnist/train-labels-idx1-ubyte.gz"
+    },
+    {
+      "kind": "asset",
+      "source": "https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/t10k-images-idx3-ubyte.gz",
+      "path": "datasets/mnist/t10k-images-idx3-ubyte.gz"
+    },
+    {
+      "kind": "asset",
+      "source": "https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/t10k-labels-idx1-ubyte.gz",
+      "path": "datasets/mnist/t10k-labels-idx1-ubyte.gz"
     }
   ]
 }

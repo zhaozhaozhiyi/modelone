@@ -24,7 +24,6 @@ data:
           192.168.3.100    security.ubuntu.com
           192.168.3.100    cloud.r-project.org
           192.168.3.100    deb.nodesource.com
-          192.168.3.100    docker-76009.sz.gfp.tencent-cloud.com
           fallthrough
         }
         prometheus :9153
@@ -49,4 +48,3 @@ kind: ConfigMap
 metadata:
   name: coredns
   namespace: kube-system
-

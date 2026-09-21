@@ -18,13 +18,13 @@ WORLD_SIZE = int(os.environ.get('WORLD_SIZE', 1))
 # 可以先下载数据到data目录
 # class MyMNIST(datasets.MNIST):
 #     resources = [
-#         ("https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/train-images-idx3-ubyte.gz",
+#         ("${MODELONE_MNIST_BASE_URL}/train-images-idx3-ubyte.gz",
 #          "f68b3c2dcbeaaa9fbdd348bbdeb94873"),
-#         ("https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/train-labels-idx1-ubyte.gz",
+#         ("${MODELONE_MNIST_BASE_URL}/train-labels-idx1-ubyte.gz",
 #          "d53e105ee54ea40749a09fcbcd1e9432"),
-#         ("https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/t10k-images-idx3-ubyte.gz",
+#         ("${MODELONE_MNIST_BASE_URL}/t10k-images-idx3-ubyte.gz",
 #          "9fb629c4189551a2d022fa330f9573f3"),
-#         ("https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/t10k-labels-idx1-ubyte.gz",
+#         ("${MODELONE_MNIST_BASE_URL}/t10k-labels-idx1-ubyte.gz",
 #          "ec29112dd5afa0611ce80d1b7f02629c")
 #     ]
 

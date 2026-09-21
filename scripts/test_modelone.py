@@ -44,6 +44,18 @@ class BrandTests(unittest.TestCase):
         finally:
             brand.BRAND.clear(); brand.BRAND.update(before)
 
+    def test_legacy_mnist_host_moves_to_owned_asset_path(self):
+        before = dict(brand.BRAND)
+        try:
+            brand.BRAND.update(asset_base_url='https://assets.example.test/modelone')
+            legacy = 'https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/train-images-idx3-ubyte.gz'
+            self.assertEqual(
+                brand.resolve_resources(legacy),
+                'https://assets.example.test/modelone/datasets/mnist/train-images-idx3-ubyte.gz',
+            )
+        finally:
+            brand.BRAND.clear(); brand.BRAND.update(before)
+
     def test_download_filenames_are_branded_and_keep_extensions(self):
         before = brand.BRAND['internal_name']
         try:

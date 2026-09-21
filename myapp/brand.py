@@ -74,6 +74,10 @@ ASSET_ALIASES = {
     'cube-studio.mp4': 'tutorial-pipeline.mp4',
     'job-template.mp4': 'tutorial-job-template.mp4',
 }
+LEGACY_ASSET_PREFIXES = (
+    'https://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/',
+    'http://docker-76009.sz.gfp.tencent-cloud.com/kubeflow/pytorch/example/data/',
+)
 
 def asset_path(path):
     path = path.lstrip('/')
@@ -121,6 +125,9 @@ def resolve_resources(value):
         return [resolve_resources(item) for item in value]
     if not isinstance(value, str):
         return value
+    for prefix in LEGACY_ASSET_PREFIXES:
+        if prefix in value:
+            value = value.replace(prefix, brand_asset('datasets/mnist/'))
     for prefix in ('https://cube-studio.oss-cn-hangzhou.aliyuncs.com/', 'http://cube-studio.oss-cn-hangzhou.aliyuncs.com/', '/static/assets/modelone/'):
         for old, new in ASSET_ALIASES.items():
             value = re.sub(re.escape(prefix + old) + r'(?=$|[?\s#\x22\x27<>\]\}),])', lambda _: prefix + new, value)
