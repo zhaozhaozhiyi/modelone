@@ -92,6 +92,7 @@ class BrandTests(unittest.TestCase):
         source = (ROOT / 'myapp/frontend/src/theme.ts').read_text(encoding='utf-8')
         self.assertIn("import { brand } from './brand';", source)
         self.assertIn('brand.primaryColor', source)
+        self.assertIn('brand.secondaryColor', source)
         self.assertIn("'--ant-primary-color': primary", source)
 
     def test_editor_themes_use_configured_brand_palette(self):
@@ -108,6 +109,15 @@ class BrandTests(unittest.TestCase):
         self.assertIn("meta[name=\"theme-color\"]", source)
         self.assertIn("link[rel=\"apple-touch-icon\"]", source)
         self.assertIn('themeColor.content = b.primaryColor', source)
+        self.assertIn("--mo-brand-secondary", source)
+
+    def test_login_and_error_templates_use_configured_visual_tokens(self):
+        login = (ROOT / 'myapp/templates/appbuilder/general/security/login_db.html').read_text(encoding='utf-8')
+        error = (ROOT / 'myapp/templates/modelone-error.html').read_text(encoding='utf-8')
+        for value in ('brand.secondary_color', 'brand.login_background_color', 'brand.login_surface_color'):
+            self.assertIn(value, login)
+        for value in ('brand.secondary_color', 'brand.login_background_color', 'brand.font_family'):
+            self.assertIn(value, error)
 
     def test_brand_css_values_are_validated(self):
         original_path = brand.CONFIG_PATH
@@ -121,6 +131,11 @@ class BrandTests(unittest.TestCase):
                 with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
                     brand.load_brand()
                 config['primaryColor'] = '#17191d'
+                config['secondaryColor'] = '#12345'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
+                    brand.load_brand()
+                config['secondaryColor'] = '#3b82f6'
                 config['fontFamily'] = 'Inter; body{display:none}'
                 path.write_text(json.dumps(config), encoding='utf-8')
                 with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):

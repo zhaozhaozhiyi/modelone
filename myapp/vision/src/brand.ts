@@ -1,6 +1,7 @@
 export interface EditorBrandConfig {
   assetBaseUrl?: string;
   primaryColor?: string;
+  secondaryColor?: string;
   fontFamily?: string;
 }
 
@@ -20,8 +21,10 @@ const parseHex = (value: string): [number, number, number] | null => {
 const cssColor = (rgb: [number, number, number]): string => `#${rgb.map((channel) => channel.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
 const mix = (rgb: [number, number, number], target: [number, number, number], amount: number): string => cssColor(rgb.map((channel, index) => Math.round(channel + (target[index] - channel) * amount)) as [number, number, number]);
 const primaryRgb = parseHex(config.primaryColor || '') || FALLBACK_PRIMARY;
+const secondaryRgb = parseHex(config.secondaryColor || '') || [59, 130, 246] as [number, number, number];
 
 export const brandFontFamily = config.fontFamily || DEFAULT_FONT;
+export const brandSecondary = cssColor(secondaryRgb);
 export const brandPalette = {
   themePrimary: cssColor(primaryRgb),
   themeLighterAlt: mix(primaryRgb, [255, 255, 255], 0.96),

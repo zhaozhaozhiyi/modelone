@@ -9,8 +9,9 @@
   <style>
     :root {
       --brand-primary: {{ brand.primary_color or '#17191d' }};
-      --brand-surface: #ffffff;
-      --brand-background: #f4f6f8;
+      --brand-secondary: {{ brand.secondary_color or '#3b82f6' }};
+      --brand-surface: {{ brand.login_surface_color or '#ffffff' }};
+      --brand-background: {{ brand.login_background_color or '#f4f6f8' }};
       --brand-border: #d9dee5;
       --brand-muted: #667085;
     }
@@ -48,7 +49,7 @@
       background: #fff;
       font: inherit;
     }
-    .field input:focus { outline: 2px solid color-mix(in srgb, var(--brand-primary) 25%, transparent); outline-offset: 1px; }
+    .field input:focus { outline: 2px solid color-mix(in srgb, var(--brand-secondary) 45%, transparent); outline-offset: 1px; }
     .field-error { margin: 6px 0 0; color: #b42318; font-size: 12px; }
     .form-error { margin: 0 0 16px; color: #b42318; font-size: 13px; }
     .login-submit {
@@ -63,6 +64,7 @@
       cursor: pointer;
     }
     .login-submit:hover { opacity: 0.9; }
+    .login-submit:focus-visible { outline: 2px solid var(--brand-secondary); outline-offset: 3px; }
     .login-footer { margin-top: 24px; color: var(--brand-muted); font-size: 12px; text-align: center; }
     .login-footer a { color: var(--brand-primary); }
     @media (max-width: 480px) { .login-card { padding: 28px 22px; } }

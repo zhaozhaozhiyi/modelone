@@ -4,6 +4,8 @@
 
 准备 Python 3.11（构建和检查工具）、Node.js 22、Docker Compose、kubectl、SQLAlchemy、PyYAML 和 PyJWT 2.8–2.x。基础镜像和 CI 使用 Node.js 22；运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
 
+品牌配置中的 `primaryColor`、`secondaryColor`、`loginBackgroundColor`、`loginSurfaceColor` 和 `fontFamily` 同时供后端登录/错误页面、主控制台及两个独立编排器使用。正式 Logo 替换 `logoUrl`、`logoReverseUrl` 和 `faviconUrl` 后，重新运行 `python3 scripts/generate_brand.py` 并重建三个前端；不要只替换某一个入口的静态文件。
+
 ## 代码仓库
 
 企业 Git 仓库创建完成后，在工作树中先做一次预览，再显式应用远端配置。工具不会替换已有 `origin`，也不会向 `upstream` 推送；已有 `origin` 只有在明确传入 `--replace-origin` 时才会被替换。URL 不应内嵌账号或密码。

@@ -7,13 +7,14 @@ import { store } from './models/store';
 import { Provider } from 'react-redux';
 import './app.less';
 import 'antd/dist/antd.css';
-import { brandFontFamily, brandPalette } from './brand';
+import { brandFontFamily, brandPalette, brandSecondary } from './brand';
 
 
 const isDev = process.env.NODE_ENV === 'development' ? true : false
 const assetsUrl = isDev ? '/assets' : '/static/appbuilder/assets'
 document.documentElement.style.setProperty('--mo-brand-primary', brandPalette.themePrimary);
 document.documentElement.style.setProperty('--mo-brand-primary-soft', brandPalette.themeLighter);
+document.documentElement.style.setProperty('--mo-brand-secondary', brandSecondary);
 document.documentElement.style.setProperty('--mo-font-sans', brandFontFamily);
 
 window.FabricConfig = {

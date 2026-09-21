@@ -13,6 +13,9 @@ export interface BrandConfig {
   termsUrl?: string;
   privacyUrl?: string;
   primaryColor?: string;
+  secondaryColor?: string;
+  loginBackgroundColor?: string;
+  loginSurfaceColor?: string;
   fontFamily?: string;
 }
 

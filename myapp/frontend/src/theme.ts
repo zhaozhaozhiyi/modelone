@@ -115,6 +115,7 @@ const modelone: IThemeConfig = {
     '--mo-brand-primary-hover': primaryHover,
     '--mo-brand-primary-active': primaryActive,
     '--mo-brand-primary-soft': primarySoft,
+    '--mo-brand-secondary': brand.secondaryColor || '#3B82F6',
     '--mo-brand-text': primary,
     '--mo-brand-contrast': '#FFFFFF',
     '--mo-brand-signal': primary,

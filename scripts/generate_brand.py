@@ -25,6 +25,9 @@ if __name__ == '__main__':
   var themeColor = document.querySelector('meta[name="theme-color"]');
   if (themeColor && b.primaryColor) themeColor.content = b.primaryColor;
   document.documentElement.style.setProperty('--mo-brand-primary', b.primaryColor);
+  document.documentElement.style.setProperty('--mo-brand-secondary', b.secondaryColor);
+  document.documentElement.style.setProperty('--mo-login-background', b.loginBackgroundColor);
+  document.documentElement.style.setProperty('--mo-login-surface', b.loginSurfaceColor);
   document.documentElement.style.setProperty('--mo-font-sans', b.fontFamily);
 };
 window.applyModeloneBrand();

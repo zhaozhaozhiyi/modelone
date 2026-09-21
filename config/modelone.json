@@ -16,5 +16,8 @@
   "logoReverseUrl": "/static/assets/modelone/modelone-logo-reverse.svg",
   "faviconUrl": "/static/assets/modelone/modelone-mark.svg",
   "primaryColor": "#17191d",
+  "secondaryColor": "#3b82f6",
+  "loginBackgroundColor": "#f4f6f8",
+  "loginSurfaceColor": "#ffffff",
   "fontFamily": "Inter, \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
 }

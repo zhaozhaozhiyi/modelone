@@ -7,16 +7,21 @@
   <meta name="description" content="{{ brand.description }}">
   <link rel="icon" href="{{ brand.favicon_url }}">
   <style>
-    :root { --ink:#17191d; --muted:#50545c; --surface:#f5f6f7; }
+    :root {
+      --ink: {{ brand.primary_color or '#17191d' }};
+      --accent: {{ brand.secondary_color or '#3b82f6' }};
+      --muted:#50545c;
+      --surface: {{ brand.login_background_color or '#f5f6f7' }};
+    }
     * { box-sizing:border-box; }
-    body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.6 Inter,"PingFang SC","Microsoft YaHei",sans-serif; }
+    body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.6 {{ brand.font_family or 'Inter, "PingFang SC", "Microsoft YaHei", sans-serif' }}; }
     main { max-width:640px; margin:12vh auto; padding:32px; }
     img { width:160px; max-width:100%; }
     .code { margin:64px 0 0; color:var(--muted); font-size:14px; letter-spacing:.08em; }
     h1 { font-size:32px; line-height:1.2; letter-spacing:-.02em; font-weight:600; }
     p { max-width:50ch; }
-    a { display:inline-block; color:var(--ink); padding:12px 0; margin-right:24px; text-underline-offset:4px; }
-    a:focus-visible { outline:2px solid var(--ink); outline-offset:4px; }
+    a { display:inline-block; color:var(--accent); padding:12px 0; margin-right:24px; text-underline-offset:4px; }
+    a:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
     footer { margin-top:64px; font-size:13px; color:var(--muted); }
   </style>
 </head>

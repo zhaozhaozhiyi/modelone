@@ -19,7 +19,9 @@ FIELDS = {
     'image_registry': 'imageRegistry', 'asset_base_url': 'assetBaseUrl',
     'deployment_name': 'deploymentName', 'logo_url': 'logoUrl',
     'logo_reverse_url': 'logoReverseUrl', 'favicon_url': 'faviconUrl',
-    'primary_color': 'primaryColor', 'font_family': 'fontFamily',
+    'primary_color': 'primaryColor', 'secondary_color': 'secondaryColor',
+    'login_background_color': 'loginBackgroundColor', 'login_surface_color': 'loginSurfaceColor',
+    'font_family': 'fontFamily',
 }
 
 def load_brand():
@@ -30,8 +32,9 @@ def load_brand():
         value = brand[key]
         if value and (not value.startswith(('https://', 'http://', '/')) or value.startswith('//') or any(c in value for c in ('\"', "'", '<', '>', '\n', '\r'))):
             raise ValueError('Invalid brand URL: ' + key)
-    if brand['primary_color'] and not COLOR.fullmatch(brand['primary_color']):
-        raise ValueError('primary_color must be a hexadecimal CSS color')
+    for key in ('primary_color', 'secondary_color', 'login_background_color', 'login_surface_color'):
+        if brand[key] and not COLOR.fullmatch(brand[key]):
+            raise ValueError(key + ' must be a hexadecimal CSS color')
     if brand['font_family'] and not FONT_FAMILY.fullmatch(brand['font_family']):
         raise ValueError('font_family contains unsupported CSS characters')
     brand['copyright_year'] = brand['copyright_year'] or str(date.today().year)
