@@ -98,6 +98,10 @@ class BrandTests(unittest.TestCase):
                 path.write_text(json.dumps(config), encoding='utf-8')
                 with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
                     brand.load_brand()
+                config['fontFamily'] = '思源黑体, Microsoft YaHei, sans-serif'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                with patch.dict(os.environ, {}, clear=True):
+                    self.assertEqual(brand.load_brand()['font_family'], config['fontFamily'])
         finally:
             brand.CONFIG_PATH = original_path
 

@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 CONFIG_PATH = Path(os.environ.get('MODELONE_CONFIG', Path(__file__).resolve().parents[1] / 'config/modelone.json'))
 COLOR = re.compile(r'^#[0-9a-fA-F]{3,8}$')
-FONT_FAMILY = re.compile(r'^[A-Za-z0-9 ,._\-\"\']{1,200}$')
+FONT_FAMILY = re.compile(r'^[\w\s,._\-\"\']{1,200}$', re.UNICODE)
 FIELDS = {
     'name': 'name', 'internal_name': 'internalName', 'title': 'title',
     'description': 'description', 'copyright_holder': 'copyrightHolder',
