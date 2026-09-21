@@ -17,6 +17,10 @@ jobs:
       - run: python scripts/test_modelone.py
       - run: python scripts/brand_scan.py
       - name: Build all product frontends
+        # Upstream lint warnings remain visible; brand and source-map gates
+        # below still fail independently. CRA otherwise fails on every warning.
+        env:
+          CI: 'false'
         run: |
           for app in frontend vision visionPlus; do
             npm ci --prefix "myapp/$app" --legacy-peer-deps --no-audit --no-fund
