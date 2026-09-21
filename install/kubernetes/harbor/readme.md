@@ -20,7 +20,7 @@ cp harbor.yml.tmpl harbor.yml
 修改内容如下，主要涉及 hostname改为ip，http端口可以换掉，https块去掉
 ```bash
 hostname: xx.xx.xx.xx
-harbor_admin_password: admin
+harbor_admin_password: <set-a-private-password-before-install>
 http:
   # port for http, default is 80. If https enabled, this port will redirect to https port
   port: 88
@@ -68,4 +68,3 @@ systemctl stop docker
 systemctl daemon-reload
 systemctl start docker
 ```
-

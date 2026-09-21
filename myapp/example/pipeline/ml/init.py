@@ -79,20 +79,17 @@ def csv_table(csv_path,SQLALCHEMY_DATABASE_URI):
     print('导入成功...')
 
 def init():
-    mysql_sql_uri='mysql+pymysql://root:admin@mysql-service.infra:3306/example?charset=utf8mb4'
-    postgres_sql_uri = 'postgresql+psycopg2://postgres:postgres@postgresql.kubeflow:5432/example'
+    mysql_sql_uri = os.environ.get('MODELONE_EXAMPLE_MYSQL_SERVICE', '')
+    postgres_sql_uri = os.environ.get('MODELONE_EXAMPLE_POSTGRES_SERVICE', '')
     current_work_dir = os.path.dirname(__file__)
-    try:
-        init_db(SQLALCHEMY_DATABASE_URI=mysql_sql_uri)
-        csv_table(csv_path=os.path.join(current_work_dir, 'train.csv'), SQLALCHEMY_DATABASE_URI=mysql_sql_uri)
-    except Exception as e:
-        print(e)
-    try:
-        init_db(SQLALCHEMY_DATABASE_URI=postgres_sql_uri)
-        csv_table(csv_path=os.path.join(current_work_dir,'train.csv'),SQLALCHEMY_DATABASE_URI=postgres_sql_uri)
-    except Exception as e:
-        print(e)
+    for uri in (mysql_sql_uri, postgres_sql_uri):
+        if not uri:
+            continue
+        try:
+            init_db(SQLALCHEMY_DATABASE_URI=uri)
+            csv_table(csv_path=os.path.join(current_work_dir, 'train.csv'), SQLALCHEMY_DATABASE_URI=uri)
+        except Exception as e:
+            print(e)
 
 init()
-
 

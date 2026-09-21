@@ -15,7 +15,7 @@
                     "name": "mysqlreader",
                     "parameter": {
                         "username": "root",
-                        "password": "admin",
+                        "password": "__CONFIGURE_BEFORE_DEPLOY__",
                         "column": [
                             "age",
                             "duration",

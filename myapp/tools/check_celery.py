@@ -21,13 +21,14 @@ from project import push_admin
 def check_push():
     try:
         redis_host = os.getenv('REDIS_HOST', 'redis-master.infra')
+        redis_password = os.environ.get('REDIS_PASSWORD')
+        if not redis_password:
+            raise ValueError('REDIS_PASSWORD must be provided through private deployment configuration')
         r = redis.StrictRedis(host=redis_host,
-                              port=6379,
+                              port=int(os.getenv('REDIS_PORT', '6379')),
                               db=0,
                               decode_responses=True,
-                              password='admin')
-        # r = redis.StrictRedis(host='100.116.64.86', port=8080, db=0, decode_responses=True, password='admin')
-        # r = redis.StrictRedis(host='9.22.26.233', port=8080, db=0, decode_responses=True, password='admin')
+                              password=redis_password)
 
         if r.exists('celery'):
             unscheduld_num = r.llen('celery')

@@ -5,7 +5,7 @@
     "service_describe": "可视化编辑mysql数据库",
     "image_name": "phpmyadmin:5.2.1",
     "command": "",
-    "env": "PMA_HOST=mysql-service.infra\nPMA_PORT=3306\nPMA_USER=root\nPMA_PASSWORD=admin",
+    "env": "PMA_HOST=mysql-service.infra\nPMA_PORT=3306\nPMA_USER=modelone\nPMA_PASSWORD=__CONFIGURE_BEFORE_DEPLOY__",
     "ports": "80",
     "expand": {
       "help_url": "/docs/example/service.md"
@@ -17,7 +17,7 @@
     "service_describe": "可视化编辑redis数据库",
     "image_name": "modelone/patrikx3:latest",
     "command": "",
-    "env": "REDIS_NAME=default\nREDIS_HOST=redis-master.infra\nREDIS_PORT=6379\nREDIS_PASSWORD=admin",
+    "env": "REDIS_NAME=default\nREDIS_HOST=redis-master.infra\nREDIS_PORT=6379\nREDIS_PASSWORD=__CONFIGURE_BEFORE_DEPLOY__",
     "ports": "7843",
     "expand": {
       "help_url": "/docs/example/service.md"
@@ -29,7 +29,7 @@
     "service_describe": "可视化编辑图数据库neo4j",
     "image_name": "modelone/neo4j:4.4",
     "command": "",
-    "env": "NEO4J_AUTH=neo4j/admin",
+    "env": "NEO4J_AUTH=neo4j/__CONFIGURE_BEFORE_DEPLOY__",
     "ports": "7474,7687",
     "volume_mount": "kubeflow-user-workspace(pvc):/mnt,/data/k8s/kubeflow/pipeline/workspace/admin/neo4j(hostpath):/var/lib/neo4j/data",
     "expand": {
@@ -42,7 +42,7 @@
     "service_describe": "可视化编辑postgresql数据库",
     "image_name": "dpage/pgadmin4",
     "command": "",
-    "env": "PGADMIN_DEFAULT_EMAIL=admin@tencent.com\nPGADMIN_DEFAULT_PASSWORD=admin",
+    "env": "PGADMIN_DEFAULT_EMAIL=admin@example.invalid\nPGADMIN_DEFAULT_PASSWORD=__CONFIGURE_BEFORE_DEPLOY__",
     "ports": "80",
     "expand": {
       "help_url": "/docs/example/service.md"

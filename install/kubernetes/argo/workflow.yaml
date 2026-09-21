@@ -1064,7 +1064,7 @@ metadata:
   name: argo-mysql-config
   namespace: infra
 stringData:
-  password: admin
+  password: REPLACE_WITH_PRIVATE_ARGO_MYSQL_PASSWORD
   username: root
 type: Opaque
 ---
@@ -1331,6 +1331,5 @@ spec:
       securityContext:
         runAsNonRoot: true
       serviceAccountName: argo
-
 
 

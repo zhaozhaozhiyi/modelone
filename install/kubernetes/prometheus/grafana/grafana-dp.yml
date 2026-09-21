@@ -46,6 +46,11 @@ spec:
             secretKeyRef:
               name: grafana-credentials
               key: password
+        - name: GF_SECURITY_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: secretKey
         ports:
         - containerPort: 3000
           name: http

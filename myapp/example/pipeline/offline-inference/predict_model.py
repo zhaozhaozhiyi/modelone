@@ -12,11 +12,19 @@ import urllib.parse
 VC_TASK_INDEX = int(os.environ.get('VC_TASK_INDEX', '0'))
 VC_WORKER_NUM = int(os.environ.get('VC_WORKER_NUM', '1')) - 1  # 0 作为生产者
 
+def rabbit_credentials(user, password):
+    user = user or os.environ.get('RABBIT_USER')
+    password = password or os.environ.get('RABBIT_PASSWORD')
+    if not user or not password:
+        raise ValueError('RABBIT_USER and RABBIT_PASSWORD must be provided through private deployment configuration')
+    return user, password
+
 
 class Rabbit_Producer():
 
-    def __init__(self, host=os.environ.get('RABBIT_HOST', '127.0.0.1'), port=5672, user='admin', password='admin',
+    def __init__(self, host=os.environ.get('RABBIT_HOST', '127.0.0.1'), port=5672, user=None, password=None,
                  virtual_host='/'):  # 默认端口5672，可不写
+        user, password = rabbit_credentials(user, password)
         credentials = pika.PlainCredentials(user, password)
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=host, port=port, credentials=credentials, virtual_host=virtual_host,
@@ -69,8 +77,9 @@ class Rabbit_Producer():
 
 class Rabbit_Consumer():
 
-    def __init__(self, host=os.environ.get('RABBIT_HOST', '127.0.0.1'), port=5672, user='admin', password='admin',
+    def __init__(self, host=os.environ.get('RABBIT_HOST', '127.0.0.1'), port=5672, user=None, password=None,
                  virtual_host='/'):  # 默认端口5672，可不写
+        user, password = rabbit_credentials(user, password)
         credentials = pika.PlainCredentials(user, password)
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=host, port=port, credentials=credentials, virtual_host=virtual_host,
@@ -116,7 +125,8 @@ class Rabbit_Consumer():
 
 
 class Rabbit_info():
-    def __init__(self, host=os.environ.get('RABBIT_HOST', '127.0.0.1'), port=15672, user='admin', password='admin'):
+    def __init__(self, host=os.environ.get('RABBIT_HOST', '127.0.0.1'), port=15672, user=None, password=None):
+        user, password = rabbit_credentials(user, password)
         self.url = 'http://' + host + ':' + str(port) + '/api/'
         self.user = user
         self.password = password
@@ -307,7 +317,6 @@ class Offline_Predict():
         local_rank = int(os.environ.get('LOCAL_RANK', 0))
         print('!!!!!!!! task_index=%s,local_rank=%s' % (VC_TASK_INDEX, local_rank))
         self.start_predict(local_rank)
-
 
 
 

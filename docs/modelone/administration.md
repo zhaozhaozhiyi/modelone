@@ -10,4 +10,8 @@
 
 为 Notebook、训练和服务配置可用节点标签、资源配额、持久卷、运行镜像和拉取 Secret。更新镜像应固定版本，并保留旧标签以支持回滚。先在测试项目运行小规模工作负载，再开放给业务用户。
 
+初始化的 MySQL、Redis、Neo4j 和 PostgreSQL 管理服务模板只提供连接地址与 `__CONFIGURE_BEFORE_DEPLOY__` 占位符，不包含可用密码。部署前由管理员按企业 Secret 更新模板或服务环境变量；不要把占位符替换为源码中的固定密码。
+
+Grafana 管理员密码和签名密钥由 `grafana-credentials` Secret 提供，Celery 检查任务读取 `REDIS_PASSWORD`，离线推理示例读取 `RABBIT_USER` 和 `RABBIT_PASSWORD`。这些变量缺失时组件会拒绝连接。
+
 遇到启动或调度失败，检查应用日志、Pod 事件、数据库连接、存储挂载和镜像仓库可达性。用户界面不应显示堆栈、凭据或企业内部错误细节；完整故障证据保存在受控日志中。
