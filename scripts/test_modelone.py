@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 import sqlalchemy as sa
 import yaml
 
@@ -80,6 +81,25 @@ class BrandTests(unittest.TestCase):
                       'request.full_path', 'autocomplete="current-password"'):
             self.assertIn(value, template)
         self.assertNotIn('CubeStudio', template)
+
+    def test_brand_css_values_are_validated(self):
+        original_path = brand.CONFIG_PATH
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                config = json.loads((ROOT / 'config/modelone.json').read_text(encoding='utf-8'))
+                path = Path(folder) / 'modelone.json'
+                config['primaryColor'] = '#17191d; color: red'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                brand.CONFIG_PATH = path
+                with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
+                    brand.load_brand()
+                config['primaryColor'] = '#17191d'
+                config['fontFamily'] = 'Inter; body{display:none}'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
+                    brand.load_brand()
+        finally:
+            brand.CONFIG_PATH = original_path
 
     def test_sql_migration_preserves_ids_and_handles_optional_modules(self):
         engine = sa.create_engine('sqlite://')

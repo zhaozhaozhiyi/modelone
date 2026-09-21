@@ -7,6 +7,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 CONFIG_PATH = Path(os.environ.get('MODELONE_CONFIG', Path(__file__).resolve().parents[1] / 'config/modelone.json'))
+COLOR = re.compile(r'^#[0-9a-fA-F]{3,8}$')
+FONT_FAMILY = re.compile(r'^[A-Za-z0-9 ,._\-\"\']{1,200}$')
 FIELDS = {
     'name': 'name', 'internal_name': 'internalName', 'title': 'title',
     'description': 'description', 'copyright_holder': 'copyrightHolder',
@@ -26,6 +28,10 @@ def load_brand():
         value = brand[key]
         if value and (not value.startswith(('https://', 'http://', '/')) or value.startswith('//') or any(c in value for c in ('\"', "'", '<', '>', '\n', '\r'))):
             raise ValueError('Invalid brand URL: ' + key)
+    if brand['primary_color'] and not COLOR.fullmatch(brand['primary_color']):
+        raise ValueError('primary_color must be a hexadecimal CSS color')
+    if brand['font_family'] and not FONT_FAMILY.fullmatch(brand['font_family']):
+        raise ValueError('font_family contains unsupported CSS characters')
     brand['copyright_year'] = brand['copyright_year'] or str(date.today().year)
     brand['copyright'] = ('Copyright © %s %s. All Rights Reserved.' % (brand['copyright_year'], brand['copyright_holder'])) if brand['copyright_holder'] else ''
     return brand
