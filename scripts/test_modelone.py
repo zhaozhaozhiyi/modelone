@@ -250,6 +250,10 @@ class BrandTests(unittest.TestCase):
         import tempfile
         spec = importlib.util.spec_from_file_location('scan', ROOT / 'scripts/brand_scan.py')
         scan = importlib.util.module_from_spec(spec); spec.loader.exec_module(scan)
+        self.assertIn('myapp/frontend/public', scan.SURFACES)
+        self.assertIn('myapp/vision/public', scan.SURFACES)
+        self.assertIn('myapp/visionPlus/public', scan.SURFACES)
+        self.assertIn('myapp/static/assets/modelone', scan.SURFACES)
         with tempfile.TemporaryDirectory() as folder:
             scan.ROOT = Path(folder); scan.SURFACES = ('surface',); scan.BUILDS = ()
             (scan.ROOT / 'surface').mkdir()
