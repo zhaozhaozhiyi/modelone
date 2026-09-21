@@ -90,12 +90,14 @@ class BundleTests(unittest.TestCase):
         plan = self.plan(['redis:7', 'busybox:1.36'])
         mapping = bundle.image_mapping(plan)
         document = {'spec': {'initContainers': [{'image': 'busybox:1.36'}],
-                             'containers': [{'image': 'redis:7'}]},
+                             'containers': [{'image': 'redis:7',
+                                             'args': ['--executor-image', 'busybox:1.36']} ]},
                     'metadata': {'name': 'compatible-service'}}
         bundle.rewrite_images(document, mapping)
         self.assertEqual(document['metadata']['name'], 'compatible-service')
         self.assertEqual(document['spec']['containers'][0]['image'], mapping['redis:7'])
         self.assertEqual(document['spec']['initContainers'][0]['image'], mapping['busybox:1.36'])
+        self.assertEqual(document['spec']['containers'][0]['args'][1], mapping['busybox:1.36'])
         with self.assertRaisesRegex(ValueError, 'missing from the transfer plan'):
             bundle.rewrite_images({'image': 'unplanned/image:v1'}, mapping)
 

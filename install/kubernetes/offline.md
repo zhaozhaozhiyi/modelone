@@ -100,7 +100,7 @@ python3 scripts/rewrite_deployment_images.py \
   --manifest install/kubernetes/argo/workflow.yaml
 ```
 
-该命令会检查每个 `image` 和 `initContainers[].image` 都出现在计划中；缺少镜像、模板表达式或重复输出文件名会直接失败。集群安装使用 `dist/modelone/platform-manifests` 中的重写文件，不直接应用源码清单。镜像包仅是离线安装的一部分；软件包、控制器注入镜像、模型数据、许可证清单与离线网络检查仍须完整验收。
+该命令会重写每个 `image`、`initContainers[].image` 以及控制器 `args`/`command` 中的计划镜像引用；缺少镜像、模板表达式或重复输出文件名会直接失败。集群安装使用 `dist/modelone/platform-manifests` 中的重写文件，不直接应用源码清单。镜像包仅是离线安装的一部分；软件包、控制器注入镜像、模型数据、许可证清单与离线网络检查仍须完整验收。
 
 ## 内网部署 modelOne
 

@@ -157,11 +157,26 @@ def rewrite_images(value, mapping):
                 if item not in mapping:
                     raise ValueError('Deployment image is missing from the transfer plan: ' + item)
                 value[key] = mapping[item]
+            elif key in ('args', 'command'):
+                value[key] = rewrite_image_tokens(item, mapping)
             else:
                 rewrite_images(item, mapping)
     elif isinstance(value, list):
         for item in value:
             rewrite_images(item, mapping)
+    return value
+
+
+def rewrite_image_tokens(value, mapping):
+    """Rewrite image references embedded in controller command arguments."""
+    if isinstance(value, dict):
+        return {key: rewrite_image_tokens(item, mapping) for key, item in value.items()}
+    if isinstance(value, list):
+        return [rewrite_image_tokens(item, mapping) for item in value]
+    if not isinstance(value, str):
+        return value
+    for source in sorted(mapping, key=len, reverse=True):
+        value = value.replace(source, mapping[source])
     return value
 
 
