@@ -82,6 +82,12 @@ class BrandTests(unittest.TestCase):
             self.assertIn(value, template)
         self.assertNotIn('CubeStudio', template)
 
+    def test_frontend_theme_uses_configured_primary_color(self):
+        source = (ROOT / 'myapp/frontend/src/theme.ts').read_text(encoding='utf-8')
+        self.assertIn("import { brand } from './brand';", source)
+        self.assertIn('brand.primaryColor', source)
+        self.assertIn("'--ant-primary-color': primary", source)
+
     def test_brand_css_values_are_validated(self):
         original_path = brand.CONFIG_PATH
         try:
@@ -106,6 +112,15 @@ class BrandTests(unittest.TestCase):
                 path.write_text(json.dumps(config), encoding='utf-8')
                 with patch.dict(os.environ, {}, clear=True):
                     self.assertEqual(brand.load_brand()['font_family'], config['fontFamily'])
+                for color in ('#abc', '#abcd', '#aabbcc', '#aabbccdd'):
+                    config['primaryColor'] = color
+                    path.write_text(json.dumps(config), encoding='utf-8')
+                    with patch.dict(os.environ, {}, clear=True):
+                        self.assertEqual(brand.load_brand()['primary_color'], color)
+                config['primaryColor'] = '#12345'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
+                    brand.load_brand()
         finally:
             brand.CONFIG_PATH = original_path
 

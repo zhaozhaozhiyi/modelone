@@ -7,7 +7,9 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 CONFIG_PATH = Path(os.environ.get('MODELONE_CONFIG', Path(__file__).resolve().parents[1] / 'config/modelone.json'))
-COLOR = re.compile(r'^#[0-9a-fA-F]{3,8}$')
+# Accept the four CSS hexadecimal color forms and reject ambiguous lengths
+# such as ``#12345`` that browsers interpret inconsistently.
+COLOR = re.compile(r'^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$')
 FONT_FAMILY = re.compile(r'^[\w ,._\-\"\']{1,200}$', re.UNICODE)
 FIELDS = {
     'name': 'name', 'internal_name': 'internalName', 'title': 'title',

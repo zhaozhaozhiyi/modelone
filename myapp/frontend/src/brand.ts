@@ -12,6 +12,8 @@ export interface BrandConfig {
   supportUrl?: string;
   termsUrl?: string;
   privacyUrl?: string;
+  primaryColor?: string;
+  fontFamily?: string;
 }
 
 const env = (key: string, fallback: string): string => {

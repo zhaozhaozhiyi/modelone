@@ -1,25 +1,77 @@
+import { brand } from './brand';
+
 interface IThemeConfig {
     [key: string]: string
 }
 
+const DEFAULT_PRIMARY = '#17191D';
+const DEFAULT_THEME = {
+    hover: '#262A31',
+    active: '#0E1013',
+    soft: '#E9EAEC',
+};
+
+interface ParsedColor {
+    rgb: [number, number, number];
+    alpha: number;
+}
+
+const parseHex = (value: string): ParsedColor | null => {
+    const match = value.trim().match(/^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
+    if (!match) return null;
+    let hex = match[1];
+    if (hex.length === 3 || hex.length === 4) {
+        hex = hex.split('').map((channel) => channel + channel).join('');
+    }
+    const alpha = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+    return {
+        rgb: [
+            parseInt(hex.slice(0, 2), 16),
+            parseInt(hex.slice(2, 4), 16),
+            parseInt(hex.slice(4, 6), 16),
+        ],
+        alpha,
+    };
+};
+
+const cssColor = ({ rgb, alpha }: ParsedColor): string => {
+    const channels = rgb.map((channel) => channel.toString(16).padStart(2, '0')).join('').toUpperCase();
+    if (alpha >= 1) return `#${channels}`;
+    return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${Number(alpha.toFixed(3))})`;
+};
+
+const mix = (value: ParsedColor, target: [number, number, number], amount: number): string => {
+    const rgb = value.rgb.map((channel, index) => Math.round(channel + (target[index] - channel) * amount)) as [number, number, number];
+    return cssColor({ rgb, alpha: value.alpha });
+};
+
+const parsedPrimary = parseHex(brand.primaryColor || '') || parseHex(DEFAULT_PRIMARY)!;
+const primary = cssColor(parsedPrimary);
+const primaryHover = primary === DEFAULT_PRIMARY ? DEFAULT_THEME.hover : mix(parsedPrimary, [255, 255, 255], 0.12);
+const primaryActive = primary === DEFAULT_PRIMARY ? DEFAULT_THEME.active : mix(parsedPrimary, [0, 0, 0], 0.2);
+const primarySoft = primary === DEFAULT_PRIMARY ? DEFAULT_THEME.soft : mix(parsedPrimary, [255, 255, 255], 0.9);
+const primaryOutline = parsedPrimary
+    ? `rgba(${parsedPrimary.rgb[0]}, ${parsedPrimary.rgb[1]}, ${parsedPrimary.rgb[2]}, 0.18)`
+    : 'rgba(23, 25, 29, 0.18)';
+
 const modelone: IThemeConfig = {
-    '--ant-primary-color': '#17191D',
-    '--ant-primary-color-hover': '#262A31',
-    '--ant-primary-color-active': '#0E1013',
-    '--ant-primary-color-outline': 'rgba(23, 25, 29, 0.18)',
+    '--ant-primary-color': primary,
+    '--ant-primary-color-hover': primaryHover,
+    '--ant-primary-color-active': primaryActive,
+    '--ant-primary-color-outline': primaryOutline,
     '--ant-primary-1': '#F5F6F7',
     '--ant-primary-2': '#E9EAEC',
     '--ant-primary-3': '#D9DCE1',
     '--ant-primary-4': '#B8BDC6',
-    '--ant-primary-5': '#17191D',
-    '--ant-primary-6': '#262A31',
-    '--ant-primary-7': '#0E1013',
+    '--ant-primary-5': primary,
+    '--ant-primary-6': primaryHover,
+    '--ant-primary-7': primaryActive,
     '--ant-primary-color-deprecated-pure': '',
-    '--ant-primary-color-deprecated-l-35': '#F5F6F7',
-    '--ant-primary-color-deprecated-l-20': '#E9EAEC',
-    '--ant-primary-color-deprecated-t-20': '#D9DCE1',
+    '--ant-primary-color-deprecated-l-35': primarySoft,
+    '--ant-primary-color-deprecated-l-20': primarySoft,
+    '--ant-primary-color-deprecated-t-20': primarySoft,
     '--ant-primary-color-deprecated-t-50': '#B8BDC6',
-    '--ant-primary-color-deprecated-f-12': 'rgba(23, 25, 29, 0.12)',
+    '--ant-primary-color-deprecated-f-12': `rgba(${parsedPrimary.rgb[0]}, ${parsedPrimary.rgb[1]}, ${parsedPrimary.rgb[2]}, 0.12)`,
     '--ant-primary-color-active-deprecated-f-30': 'rgba(233, 234, 236, 0.3)',
     '--ant-primary-color-active-deprecated-d-02': '#E9EAEC',
     '--ant-success-color': '#16825D',
@@ -46,7 +98,7 @@ const modelone: IThemeConfig = {
     '--ant-info-color-outline': 'rgba(23, 105, 170, 0.2)',
     '--ant-info-color-deprecated-bg': '#E9F3FA',
     '--ant-info-color-deprecated-border': '#A9CBE3',
-    '--ant-link': '#17191D',
+    '--ant-link': primary,
     '--mo-bg': '#F5F6F7',
     '--mo-surface': '#FFFFFF',
     '--mo-surface-muted': '#F0F2F4',
@@ -59,21 +111,22 @@ const modelone: IThemeConfig = {
     '--mo-text-tertiary': '#737985',
     '--mo-border': '#D9DCE1',
     '--mo-border-strong': '#B8BDC6',
-    '--mo-brand-primary': '#17191D',
-    '--mo-brand-primary-hover': '#262A31',
-    '--mo-brand-primary-active': '#0E1013',
-    '--mo-brand-primary-soft': '#E9EAEC',
-    '--mo-brand-text': '#17191D',
+    '--mo-brand-primary': primary,
+    '--mo-brand-primary-hover': primaryHover,
+    '--mo-brand-primary-active': primaryActive,
+    '--mo-brand-primary-soft': primarySoft,
+    '--mo-brand-text': primary,
     '--mo-brand-contrast': '#FFFFFF',
-    '--mo-brand-signal': '#17191D',
-    '--mo-brand-signal-hover': '#262A31',
-    '--mo-brand-signal-active': '#0E1013',
-    '--mo-brand-signal-soft': '#E9EAEC',
+    '--mo-brand-signal': primary,
+    '--mo-brand-signal-hover': primaryHover,
+    '--mo-brand-signal-active': primaryActive,
+    '--mo-brand-signal-soft': primarySoft,
+    '--mo-font-sans': brand.fontFamily || 'Inter, "PingFang SC", "Microsoft YaHei", sans-serif',
     '--mo-success': '#16825D',
     '--mo-info': '#1769AA',
     '--mo-warning': '#A65F00',
     '--mo-danger': '#C7353C',
-}
+};
 
 // Keep the historical theme keys available for configuration compatibility.
 const themesCollection: Record<TThemeType, IThemeConfig> = {
