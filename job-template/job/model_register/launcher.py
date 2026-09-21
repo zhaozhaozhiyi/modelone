@@ -10,13 +10,13 @@ import re
 import requests
 import copy
 import os
-SECRET = os.getenv('SECRET',os.getenv('KFJ_CREATOR', 'admin'))
+SECRET = os.getenv('SECRET', '')
 KFJ_TASK_PROJECT_NAME = os.getenv('KFJ_TASK_PROJECT_NAME','public')
 KFJ_RUN_ID = os.getenv('KFJ_RUN_ID', '')
 KFJ_PIPELINE_ID = os.getenv('KFJ_PIPELINE_ID', '0')
 host = os.getenv('HOST',os.getenv('KFJ_MODEL_REPO_API_URL','http://kubeflow-dashboard.infra')).strip('/')
 
-@pysnooper.snoop()
+# Do not trace local variables containing API credentials.
 def deploy(**kwargs):
     # print(kwargs)
     headers = {

@@ -52,6 +52,9 @@ services:
       REDIS_PASSWORD: admin
       MYSQL_SERVICE: 'mysql+pymysql://root:admin@mysql:3306/kubeflow?charset=utf8mb4'
       ENVIRONMENT: DEV
+      MODELONE_SECRET_KEY: ${MODELONE_SECRET_KEY:?Create a private secrets env file first}
+      MODELONE_JWT_KEY: ${MODELONE_JWT_KEY:?Create a private secrets env file first}
+      MODELONE_ADMIN_PASSWORD: ${MODELONE_ADMIN_PASSWORD:-}
     depends_on:
         redis:
           condition: service_started

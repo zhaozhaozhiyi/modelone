@@ -53,6 +53,9 @@ spec:
           imagePullPolicy: Always  # IfNotPresent
           workingDir: /home/myapp
           command: ["supervisord", "-c", "/home/myapp/myapp/tools/supervisord.conf"]
+          envFrom:
+          - secretRef:
+              name: modelone-auth
           env:
           - name: REDIS_HOST
             valueFrom:

@@ -6,6 +6,7 @@ myapp/search
 myapp/test
 myapp/project-*
 .git
+.modelone-secrets
 .DS_Store
 **/__pycache__/
 **/*.pyc

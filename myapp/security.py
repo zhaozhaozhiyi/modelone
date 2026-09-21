@@ -73,25 +73,11 @@ class MyUser(User,MyappModelBase):
 
     @property
     def secret(self):
-        if self.changed_on:
-            pass
-            # help(self.changed_on)
-            # timestamp = int(func.date_format(self.changed_on))
-            timestamp = int(self.changed_on.timestamp())
-            payload = {
-                # "iss": "cube-studio",
-                "sub":self.username
-                # "iat": timestamp,  # Issue period
-                # "nbf": timestamp,  # Effective Date
-                # "exp": timestamp + 60 * 60 * 24 * 30 * 12,  # Valid for 12 months
-            }
-
-            from myapp import conf
-            global_password = conf.get('JWT_PASSWORD','cube-studio')
-            encoded_jwt = jwt.encode(payload, global_password, algorithm='HS256')
-            # 去掉固定的 HS256 header，只保留 payload.signature，缩短 token 长度
-            return encoded_jwt.split('.', 1)[1]
-        return ''
+        from myapp import conf
+        from myapp.auth_tokens import issue_token
+        if not self.is_active:
+            return ''
+        return issue_token(self.username, conf['JWT_PASSWORD'], conf['API_TOKEN_TTL_SECONDS'])
 
     @property
     def roles_html(self):
@@ -253,43 +239,23 @@ class MyappSecurityManager(SecurityManager):
         # 添加从header中进行认证的方式
         self.lm.header_loader(self.load_user_from_header)
 
-    # 使用header 认证，通过username名获取用户
+    # Authenticate signed API credentials and load only active users.
     # @pysnooper.snoop()
     def load_user_from_header(self, authorization_value):
-        # token=None
-        # if 'token' in request.headers:
-        #     token = request.headers['token']
-        if authorization_value:
-            from myapp import conf
-            # username 免认证：AUTH_PLATFORM_ACCESS 全局开启，或通过 K8s 内部域名(kubeflow-dashboard)访问时放行
-            is_k8s_internal = 'kubeflow-dashboard.infra' in (request.host or '')
-            if len(authorization_value) < 40 and (conf.get('AUTH_PLATFORM_ACCESS', False) or is_k8s_internal):
-                username = authorization_value
-                if username:
-                    user = self.find_user(username)
-                    g.user = user
-                    return user
-            else:  # token 认证
-                # 兼容无 header 的短 token：只有 payload.signature 两段时，补回固定的 HS256 header
-                HS256_HEADER = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
-                if authorization_value.count('.') == 1:
-                    authorization_value = HS256_HEADER + '.' + authorization_value
-                encoded_jwt = authorization_value.encode('utf-8')
-                payload = jwt.decode(encoded_jwt, conf.get('JWT_PASSWORD', 'cube-studio'), algorithms=['HS256'])
-                # if payload['iat'] > time.time():
-                #     return
-                # elif payload['exp'] < time.time():
-                #     return
-                # else:
-                user = self.find_user(payload['sub'])
-                g.user = user
-                return user
+        from myapp import conf
+        from myapp.auth_tokens import token_subject
+        username = token_subject(authorization_value, conf['JWT_PASSWORD'], request.path)
+        user = self.find_user(username=username) if username else None
+        if user and user.is_active:
+            g.user = user
+            return user
+        return None
 
     # 自定义登录用户
     def load_user(self, pk):
         user = self.get_user_by_id(int(pk))
         # set cookie
-        return user
+        return user if user and user.is_active else None
 
 
     # 注册security菜单栏下的子菜单和链接
@@ -322,7 +288,7 @@ class MyappSecurityManager(SecurityManager):
             user.active = True
             user.roles+=roles   # 添加默认注册角色
             if password:
-                user.password=password
+                user.password=generate_password_hash(password)
             if hashed_password:
                 user.password = generate_password_hash(hashed_password)
             self.get_session.add(user)

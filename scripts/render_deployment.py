@@ -50,6 +50,10 @@ def render(output, release=False):
             if image.startswith('modelone/'):
                 container['image'] = brand.image_repository(image[len('modelone/'):])
             container.setdefault('envFrom', []).append({'configMapRef':{'name':'modelone-brand'}})
+            if doc.get('metadata', {}).get('name') != 'kubeflow-dashboard-frontend':
+                secret_ref = {'secretRef': {'name': 'modelone-auth'}}
+                if secret_ref not in container['envFrom']:
+                    container['envFrom'].append(secret_ref)
     (output / 'kubernetes.yaml').write_text(yaml.safe_dump_all(manifests, allow_unicode=True, sort_keys=False))
     (output / 'brand.json').write_text(json.dumps(brand.public_brand(), ensure_ascii=False, indent=2) + '\n')
 

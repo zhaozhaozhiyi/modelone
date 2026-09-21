@@ -171,6 +171,8 @@ def dag_to_pipeline(pipeline, dbsession, workflow_label=None, **kwargs):
     for env in pipeline_global_env:
         key, value = env[:env.index('=')], env[env.index('=') + 1:]
         global_envs[key] = value
+    from myapp.auth_tokens import issue_token
+    global_envs['SECRET'] = issue_token(pipeline.created_by.username, conf['JWT_PASSWORD'], conf['API_TOKEN_TTL_SECONDS'], scope='task')
     # 全局环境变量可以在任务的参数中引用
     for global_env in pipeline_global_env:
         key,value = global_env.split('=')[0],global_env.split('=')[1]

@@ -442,6 +442,8 @@ class Task_ModelView_Base():
         task_env += 'KFJ_RUNNER=' + str(g.user.username) + "\n"
         task_env += 'KFJ_PIPELINE_NAME=' + str(task.pipeline.name) + "\n"
         task_env += 'KFJ_NAMESPACE=pipeline' + "\n"
+        from myapp.auth_tokens import issue_token
+        task_env += 'SECRET=' + issue_token(task.pipeline.created_by.username, conf['JWT_PASSWORD'], conf['API_TOKEN_TTL_SECONDS'], scope='task') + "\n"
 
         template_kwargs={}
         def template_str(src_str):

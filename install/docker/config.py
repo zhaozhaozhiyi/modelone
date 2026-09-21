@@ -39,7 +39,7 @@ MYAPP_WEBSERVER_TIMEOUT = 300
 
 # Your App secret key
 # 设置才能正常使用session
-SECRET_KEY = "\2\1thisismyscretkey\1\2\e\y\y\h"  # noqa
+# Session and API signing keys are loaded from private MODELONE_* settings.
 
 # csv导出文件编码
 CSV_EXPORT = {"encoding": "utf_8_sig"}

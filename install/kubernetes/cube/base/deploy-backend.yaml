@@ -55,6 +55,9 @@ spec:
           image: modelone/kubeflow-dashboard
           imagePullPolicy: Always  # IfNotPresent   Always
           command: ["bash","/entrypoint.sh"]
+          envFrom:
+          - secretRef:
+              name: modelone-auth
           env:
           - name: STAGE
             value: $(STAGE)

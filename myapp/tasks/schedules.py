@@ -1189,9 +1189,10 @@ import requests
 @celery_app.task(name="task.check_pod_terminating",bind=True)
 def check_pod_terminating(task):
     logging.info(f'============= begin run check_pod_terminating task')
+    from myapp.auth_tokens import issue_token
     headers={
         'Content-Type': "application/json",
-        "Authorization":conf.get('ADMIN_USER','admin').split(',')[0]
+        "Authorization":issue_token(conf.get('ADMIN_USER','admin').split(',')[0], conf['JWT_PASSWORD'], ttl=300)
     }
     res = requests.get('http://kubeflow-dashboard.infra/k8s/read/pod/terminating',headers=headers)
     if res.status_code==200:
@@ -1217,6 +1218,5 @@ def check_pod_terminating(task):
 
 if __name__=="__main__":
     pass
-
 
 

@@ -1,4 +1,5 @@
 .DS_Store
+/.modelone-secrets/
 .idea
 __pycache__
 install/docker/file

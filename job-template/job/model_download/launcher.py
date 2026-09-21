@@ -11,10 +11,10 @@ import re
 import requests
 import copy
 import os
-SECRET = os.getenv('SECRET',os.getenv('KFJ_CREATOR', 'admin'))
+SECRET = os.getenv('SECRET', '')
 host = os.getenv('HOST',os.getenv('KFJ_MODEL_REPO_API_URL','http://kubeflow-dashboard.infra')).strip('/')
 
-@pysnooper.snoop()
+# Do not trace local variables containing API credentials.
 def download(**kwargs):
     # print(kwargs)
     headers = {

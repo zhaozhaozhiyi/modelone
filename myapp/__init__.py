@@ -32,6 +32,8 @@ app.json.ensure_ascii = False   # 返回 中文乱码问题
 
 CONFIG_MODULE = os.environ.get("MYAPP_CONFIG", "myapp.config")
 app.config.from_object(CONFIG_MODULE)
+from myapp.auth_config import security_config
+app.config.update(security_config())
 conf = app.config
 
 from myapp.brand import BRAND, public_brand

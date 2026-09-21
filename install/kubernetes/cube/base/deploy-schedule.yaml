@@ -55,6 +55,9 @@ spec:
             requests:
               cpu: 10m
               memory: 100Mi
+          envFrom:
+          - secretRef:
+              name: modelone-auth
           env:
           - name: REDIS_HOST
             valueFrom:

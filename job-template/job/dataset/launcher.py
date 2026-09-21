@@ -13,12 +13,11 @@ import requests
 import copy
 import os
 KFJ_CREATOR = os.getenv('KFJ_CREATOR', 'admin')
-SECRET = os.getenv('SECRET',KFJ_CREATOR)
+SECRET = os.getenv('SECRET', '')
 KFJ_TASK_PROJECT_NAME = os.getenv('KFJ_TASK_PROJECT_NAME','public')
 
 host = os.getenv('HOST',os.getenv('KFJ_MODEL_REPO_API_URL','http://kubeflow-dashboard.infra')).strip('/')
 
-# @pysnooper.snoop()
 def download_file(url,des_dir=None,local_path=None):
     if des_dir:
         local_path = os.path.join(des_dir, url.split('/')[-1])
@@ -34,7 +33,7 @@ def download_file(url,des_dir=None,local_path=None):
                 f.write(chunk)
         r.close()
 
-@pysnooper.snoop()
+# Do not trace local variables containing API credentials.
 def download(name,version,partition,save_dir,**kwargs):
     # print(kwargs)
     headers = {
@@ -140,5 +139,4 @@ if __name__ == "__main__":
         command = f'modelscope download --dataset {args.name} --local_dir {args.save_dir}'
         exitcode = exe_command(command)
         exit(exitcode)
-
 
