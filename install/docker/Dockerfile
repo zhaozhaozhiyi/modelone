@@ -16,6 +16,7 @@ COPY install/docker/config.py /home/myapp/myapp/config.py
 COPY install/docker/project.py /home/myapp/myapp/project.py
 COPY myapp/static/appbuilder/frontend /data/web/frontend
 COPY aihub /cube-studio/aihub
+COPY job-template /cube-studio/job-template
 ENV PATH=/home/myapp/myapp/bin:${PATH:-}
 ENV PYTHONPATH=/home/myapp:${PYTHONPATH:-}
 COPY install/docker/entrypoint.sh /entrypoint.sh
@@ -24,4 +25,3 @@ RUN chmod +x /home/myapp/myapp/bin/myapp /entrypoint.sh
 # ENTRYPOINT ["bash","/entrypoint.sh"]
 
 # HEALTHCHECK CMD ["curl", "-f", "http://localhost:80/health"]
-

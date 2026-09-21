@@ -24,6 +24,21 @@ def render(output, release=False, image_plan=None):
     compose = yaml.safe_load((ROOT / 'install/docker/docker-compose.yml').read_text())
     compose.pop('version', None)
     compose['name'] = brand.BRAND['deployment_name']
+    if release:
+        # Release output must run from the published images and an external
+        # kubeconfig, rather than binding this checkout into containers.
+        compose['volumes'] = {
+            'modelone-kubeflow-data': {},
+            'modelone-mysql-data': {},
+        }
+        compose['services']['mysql']['volumes'] = [
+            'modelone-mysql-data:/var/lib/mysql',
+        ]
+        compose['services']['frontend']['volumes'] = []
+        compose['services']['myapp']['volumes'] = [
+            'modelone-kubeflow-data:/data/k8s/kubeflow',
+            '${MODELONE_KUBECONFIG:-./kubeconfig}:/home/myapp/kubeconfig:ro',
+        ]
     for service in compose['services'].values():
         image = service.get('image', '').replace('${MODELONE_IMAGE_PREFIX:-}', '')
         if image.startswith('modelone/'):

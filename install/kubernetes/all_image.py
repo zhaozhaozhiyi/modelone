@@ -1,9 +1,13 @@
 import json
+import importlib.util
 import os,re
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+brand_spec = importlib.util.spec_from_file_location('modelone_brand_config', ROOT / 'myapp/brand.py')
+brand_module = importlib.util.module_from_spec(brand_spec)
+brand_spec.loader.exec_module(brand_module)
 snapshot = json.loads((ROOT / 'config/resource-sources.json').read_text())
 # 所需要的所有镜像
 kubeflow = [
@@ -166,6 +170,7 @@ if __name__ == '__main__':
         images += manifest_images(args.manifest)
         if args.image_list:
             images += [line.strip() for line in args.image_list.read_text().splitlines() if line.strip()]
-        generate(images, os.environ.get('MODELONE_IMAGE_REGISTRY', ''), args.output)
+        registry = os.environ.get('MODELONE_IMAGE_REGISTRY') or brand_module.BRAND['image_registry']
+        generate(images, registry, args.output)
     except ValueError as error:
         parser.error(str(error))

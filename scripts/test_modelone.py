@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import unittest
 import sqlalchemy as sa
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 def load(name):
@@ -166,6 +167,23 @@ class BrandTests(unittest.TestCase):
             self.assertTrue(all(not row['source'].startswith('modelone/') for row in plan['images']))
             self.assertTrue((Path(folder) / 'push_harbor.sh').exists())
 
+            config = json.loads((ROOT / 'config/modelone.json').read_text())
+            config['imageRegistry'] = 'registry.config.example.test/team'
+            config_file = Path(folder) / 'modelone.json'
+            config_file.write_text(json.dumps(config))
+            config_env = {key: value for key, value in env.items() if key != 'MODELONE_IMAGE_REGISTRY'}
+            config_env['MODELONE_CONFIG'] = str(config_file)
+            configured = subprocess.run(['python3', str(script)], cwd=folder, env=config_env,
+                                        capture_output=True, text=True)
+            self.assertNotEqual(configured.returncode, 0, 'The image output directory must not be reused')
+            with tempfile.TemporaryDirectory() as configured_folder:
+                configured = subprocess.run(['python3', str(script)], cwd=configured_folder, env=config_env,
+                                            capture_output=True, text=True)
+                self.assertEqual(configured.returncode, 0, configured.stderr)
+                configured_plan = json.loads((Path(configured_folder) / 'images.json').read_text())
+                self.assertTrue(all(row['target'].startswith('registry.config.example.test/team/modelone/')
+                                    for row in configured_plan['images']))
+
     def test_release_and_resource_gates_require_enterprise_inputs(self):
         config_path = ROOT / 'config/modelone.json'
         render_script = ROOT / 'scripts/render_deployment.py'
@@ -190,6 +208,38 @@ class BrandTests(unittest.TestCase):
             )
             self.assertNotEqual(inventoried.returncode, 0)
             self.assertIn('image_registry', inventoried.stderr + inventoried.stdout)
+
+    def test_release_compose_is_portable_and_images_include_job_templates(self):
+        render_script = ROOT / 'scripts/render_deployment.py'
+        with tempfile.TemporaryDirectory() as folder:
+            env = {key: value for key, value in os.environ.items() if not key.startswith('MODELONE_')}
+            env.update({
+                'MODELONE_IMAGE_REGISTRY': 'registry.example.test/team',
+                'MODELONE_ASSET_BASE_URL': 'https://assets.example.test/modelone',
+                'MODELONE_COPYRIGHT_HOLDER': 'Validation Company',
+                'MODELONE_HELP_URL': 'https://help.example.test/modelone',
+                'MODELONE_SUPPORT_URL': 'https://support.example.test/modelone',
+                'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',
+                'MODELONE_PRIVACY_URL': 'https://www.example.test/modelone/privacy',
+            })
+            output = Path(folder) / 'release'
+            rendered = subprocess.run(
+                ['python3', str(render_script), '--release', '--output', str(output)],
+                cwd=ROOT, env=env, capture_output=True, text=True,
+            )
+            self.assertEqual(rendered.returncode, 0, rendered.stderr)
+            compose = yaml.safe_load((output / 'compose.yaml').read_text())
+            self.assertEqual(compose['services']['mysql']['volumes'], [
+                'modelone-mysql-data:/var/lib/mysql',
+            ])
+            self.assertEqual(compose['services']['frontend']['volumes'], [])
+            self.assertEqual(compose['services']['myapp']['volumes'], [
+                'modelone-kubeflow-data:/data/k8s/kubeflow',
+                '${MODELONE_KUBECONFIG:-./kubeconfig}:/home/myapp/kubeconfig:ro',
+            ])
+            self.assertNotIn(str(ROOT), (output / 'compose.yaml').read_text())
+            self.assertIn('COPY job-template /cube-studio/job-template',
+                          (ROOT / 'install/docker/Dockerfile').read_text())
 
     def test_scan_blocks_legacy_text_and_maps(self):
         import tempfile

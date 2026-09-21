@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Generate Rancher image transfer scripts without pulling or pushing images."""
 import argparse
+import importlib.util
 import os
 from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
+brand_spec = importlib.util.spec_from_file_location('modelone_brand_config', ROOT / 'myapp/brand.py')
+brand_module = importlib.util.module_from_spec(brand_spec)
+brand_spec.loader.exec_module(brand_module)
 sys.path.insert(0, str(ROOT / 'scripts'))
 from image_bundle import generate
 
@@ -18,6 +22,7 @@ if __name__ == '__main__':
              'pull_rancher_harbor.sh': 'pull-targets', 'rancher_image_save.sh': 'save',
              'rancher_image_load.sh': 'load'}
     try:
-        generate(images, os.environ.get('MODELONE_IMAGE_REGISTRY', ''), args.output, names)
+        registry = os.environ.get('MODELONE_IMAGE_REGISTRY') or brand_module.BRAND['image_registry']
+        generate(images, registry, args.output, names)
     except ValueError as error:
         parser.error(str(error))

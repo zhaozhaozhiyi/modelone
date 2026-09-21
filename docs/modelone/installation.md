@@ -38,7 +38,10 @@ done
 python3 scripts/brand_scan.py --built
 python3 scripts/resource_inventory.py
 python3 scripts/compliance_inventory.py
-python3 scripts/render_deployment.py --release
+python3 install/kubernetes/all_image.py --output dist/modelone/platform-images
+python3 scripts/render_deployment.py \
+  --release \
+  --image-plan dist/modelone/platform-images/images.json
 python3 scripts/brand_scan.py \
   --artifact dist/modelone/compose.yaml \
   --artifact dist/modelone/kubernetes.yaml \
@@ -47,7 +50,7 @@ python3 scripts/brand_scan.py \
 
 `--release` 要求企业仓库、完整 HTTP(S) 资源 CDN、版权方、帮助、支持、用户协议和隐私地址配置；相对资源路径、含凭据的 URL 和错误仓库格式会被拒绝，不等于完整发布验收。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。产物扫描只针对 Compose、Kubernetes 和品牌清单，资源迁移报告保留原始来源作为审计证据，不应作为运行时交付目录直接发布。
 
-镜像仓库配置格式为 `registry.example.com/team`，不要附加 `/modelone`。渲染器将工作负载镜像写为 `<仓库>/modelone/<镜像>:<标签>`。Compose 直接使用源文件时，`MODELONE_IMAGE_PREFIX` 必须包含尾随 `/`；后端的 `MODELONE_IMAGE_REGISTRY` 不包含尾随命名空间。环境变量覆盖通过渲染器写入容器；直接使用源 Compose 时以挂载的 JSON 配置为准。
+镜像仓库配置格式为 `registry.example.com/team`，不要附加 `/modelone`。渲染器将工作负载镜像写为 `<仓库>/modelone/<镜像>:<标签>`。发布前先生成镜像计划并把它传给渲染器，Compose、Kubernetes 和离线 Argo 产物才会统一使用企业目标镜像。`install/kubernetes/all_image.py` 和 Rancher 计划生成器优先读取 `MODELONE_IMAGE_REGISTRY`，未设置时读取 `config/modelone.json`。Compose 直接使用源文件时，`MODELONE_IMAGE_PREFIX` 必须包含尾随 `/`；后端的 `MODELONE_IMAGE_REGISTRY` 不包含尾随命名空间。环境变量覆盖通过渲染器写入容器；直接使用源 Compose 时以挂载的 JSON 配置为准。
 
 ## 镜像与资源
 
@@ -61,7 +64,7 @@ python3 scripts/brand_scan.py \
 
 ## Docker Compose
 
-渲染文件中的挂载路径指向当前源码目录，不是可移机使用的独立安装包。先构建并推送企业后端和前端镜像。后端构建参数 `MODELONE_IMAGE_PREFIX` 当前作为前缀使用，传入时需包含尾随 `/`；基础镜像必须已同步。
+开发预览渲染文件会挂载当前源码目录；`--release` 生成的 Compose 使用已发布的后端/前端镜像和命名数据卷（应用数据与 MySQL 数据），不依赖源码绝对路径，只需准备与 Compose 文件同目录的 kubeconfig，或通过 `MODELONE_KUBECONFIG` 指定受保护的 kubeconfig 文件。先构建并推送企业后端和前端镜像。后端构建参数 `MODELONE_IMAGE_PREFIX` 当前作为前缀使用，传入时需包含尾随 `/`；基础镜像必须已同步。
 
 也可通过 `MODELONE_BACKEND_BASE_IMAGE` 指定完整的企业后端基础镜像，通过 `MODELONE_NGINX_IMAGE` 指定企业 Nginx 镜像。构建会清理基础镜像中已有的产品静态目录后复制当前产物，保留 PWA 清单，并在 `/usr/share/licenses/modelone/LICENSE` 附带原许可证。后端镜像内包含 Docker 运行配置，部署时仍可用挂载文件覆盖。
 
@@ -70,6 +73,8 @@ python3 scripts/init_modelone_secrets.py --output .modelone-secrets/compose.env
 docker compose --env-file .modelone-secrets/compose.env -f dist/modelone/compose.yaml config --quiet
 docker compose --env-file .modelone-secrets/compose.env -f dist/modelone/compose.yaml up -d
 ```
+
+正式 Compose 不会从工作树挂载应用代码、静态资源或任务模板；这些内容已随镜像发布。`MODELONE_KUBECONFIG` 只读挂载到后端容器，不能把 kubeconfig 写入镜像或提交到 Git。
 
 密钥生成只执行一次；文件权限为 600，默认目录已从 Git 与镜像构建上下文排除。通过受保护方式保存和分发该文件，不打印完整 Compose 配置或把密钥写入品牌 JSON。生成器拒绝覆盖已有文件，重启或新增副本必须复用同一套会话/JWT 密钥。
 
