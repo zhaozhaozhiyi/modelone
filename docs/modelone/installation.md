@@ -2,13 +2,14 @@
 
 ## 准备与构建
 
-准备 Python 3.11（构建和检查工具）、Node.js 20、Docker Compose、kubectl、SQLAlchemy 和 PyYAML。运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
+准备 Python 3.11（构建和检查工具）、Node.js 20、Docker Compose、kubectl、SQLAlchemy、PyYAML 和 PyJWT 2.8–2.x。运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
 
-生产部署还需处理[安全检查记录](security-review.md)中的认证阻断项。当前脚本默认配置不能作为企业安全配置使用。
+本地账号登录已加固；生产部署仍需处理[安全检查记录](security-review.md)中的企业认证、基础设施和目标环境验收项。
 
 ```sh
 python3 scripts/generate_brand.py
 python3 scripts/test_modelone.py
+python3 scripts/test_modelone_auth.py
 for app in frontend vision visionPlus; do
   npm ci --prefix "myapp/$app" --legacy-peer-deps --no-audit --no-fund
   npm run build --prefix "myapp/$app"
@@ -40,21 +41,30 @@ python3 scripts/render_deployment.py --release
 也可通过 `MODELONE_BACKEND_BASE_IMAGE` 指定完整的企业后端基础镜像，通过 `MODELONE_NGINX_IMAGE` 指定企业 Nginx 镜像。构建会清理基础镜像中已有的产品静态目录后复制当前产物，保留 PWA 清单，并在 `/usr/share/licenses/modelone/LICENSE` 附带原许可证。后端镜像内包含 Docker 运行配置，部署时仍可用挂载文件覆盖。
 
 ```sh
-docker compose -f dist/modelone/compose.yaml config --quiet
-docker compose -f dist/modelone/compose.yaml up -d
+python3 scripts/init_modelone_secrets.py --output .modelone-secrets/auth.env
+docker compose --env-file .modelone-secrets/auth.env -f dist/modelone/compose.yaml config --quiet
+docker compose --env-file .modelone-secrets/auth.env -f dist/modelone/compose.yaml up -d
 ```
 
-启动前修改数据库和 Redis 凭据、确认持久化路径、配置 kubeconfig 并限制服务监听范围；源 Compose 的 admin 凭据仅为开发默认值。平台计算任务须连接 Kubernetes。
+密钥生成只执行一次；文件权限为 600，默认目录已从 Git 与镜像构建上下文排除。通过受保护方式保存和分发该文件，不打印完整 Compose 配置或把密钥写入品牌 JSON。生成器拒绝覆盖已有文件，重启或新增副本必须复用同一套会话/JWT 密钥。
+
+`MODELONE_SECRET_KEY` 和 `MODELONE_JWT_KEY` 至少 32 字符且不同；`MODELONE_ADMIN_PASSWORD` 仅在初次创建 admin 时使用，至少 16 字符。已有管理员不会被重置。也可通过 `<变量名>_FILE` 向后端读取挂载文件；使用该方式时调整 Compose，移除对应直接环境变量的必填声明并挂载文件，不同时设置两种形式。
+
+启动前修改数据库和 Redis 凭据、确认持久化路径、配置 kubeconfig 并限制服务监听范围；源 Compose 的数据库和 Redis 仍是开发示例值，生产还需将 `STAGE` 改为 `prod` 并配置 HTTPS。生产会话 cookie 默认要求 HTTPS；仅隔离 HTTP 测试可显式设置 `MODELONE_COOKIE_SECURE=false`。平台计算任务须连接 Kubernetes。
 
 ## Kubernetes
 
 渲染器保留既有命名空间、服务名、选择器和 CRD，添加 modelone 应用标签和品牌 ConfigMap。企业环境需预建数据库、存储、控制器、镜像拉取 Secret 以及 kubeconfig；所需资源参照既有 install/kubernetes 基础设施目录。
 
 ```sh
+python3 scripts/init_modelone_secrets.py --kubernetes --output .modelone-secrets/auth.json
+kubectl apply -f .modelone-secrets/auth.json
 kubectl apply --dry-run=server -f dist/modelone/kubernetes.yaml
 kubectl apply -f dist/modelone/kubernetes.yaml
 kubectl -n infra rollout status deployment/kubeflow-dashboard
 ```
+
+在已有 `infra` 命名空间创建 `modelone-auth` Secret，再启动后端、worker、watch 和 schedule。多个副本及上述进程共用同一套密钥；前端不需要读取 Secret。生成文件也是私密数据，需纳入企业密钥备份。不要对已有安装重新生成密钥，升级操作见[升级迁移](upgrade.md)。
 
 正式域名和 TLS 证书需要在实际入口网关配置并验证。当前未配置目标集群，尚未执行上述集群命令。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
 
@@ -68,6 +78,6 @@ python3 scripts/test_modelone_frontend_image.py --image <本地构建的前端�
 python3 scripts/test_modelone_app.py --backend-image <本地构建的后端镜像> --mysql-image <已缓存的MySQL-8.0镜像> --redis-image <已缓存的兼容Bitnami配置的Redis镜像>
 ```
 
-MySQL 测试额外需要 PyMySQL、mysql 和 mysqldump 客户端；测试实例使用原生密码认证以兼容旧客户端，不改变企业服务器认证配置。应用测试使用本地开发启动方式，验证空库初始化到最新迁移、健康检查、登录页、公开品牌配置及品牌图标；它不运行 Notebook、训练或推理任务，也不验证企业认证。前端测试检查三个入口的实际 HTTP 静态响应，并放入测试 source map 验证拒绝规则。
+MySQL 测试额外需要 PyMySQL、mysql 和 mysqldump 客户端；测试实例使用原生密码认证以兼容旧客户端，不改变企业服务器认证配置。应用测试使用临时随机凭据和本地开发启动方式，验证空库初始化、健康/品牌页面、正确与错误密码、CSRF、禁止自动注册、令牌签名和有效期、任务用途限制、停用账号及重复管理员初始化；它不运行 Notebook、训练或推理任务，也不验证企业 SSO。前端测试检查三个入口的实际 HTTP 静态响应，并放入测试 source map 验证拒绝规则。
 
 报告为 `dist/modelone/mysql-validation.json`、`frontend-image-validation.json` 和 `app-smoke-validation.json`。通过后仍须对正式企业镜像、目标数据库和 Kubernetes 集群复测。
