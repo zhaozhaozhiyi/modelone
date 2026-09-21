@@ -41,11 +41,9 @@ docker build --network=host -t modelone/kubeflow-dashboard:2026.06.01 -f install
 docker build --network=host -t modelone/kubeflow-dashboard-frontend:2026.06.01 -f install/docker/dockerFrontend/Dockerfile .
 ```
 
-## 镜像拉取(如果你不参与开发可以直接使用线上镜像)
-```
-docker pull modelone/kubeflow-dashboard:2026.06.01
-docker pull modelone/kubeflow-dashboard-frontend:2026.06.01
-```
+## 企业镜像
+
+`modelone/` 是本地命名约定，不能假定公共仓库中存在同名镜像。先按[安装部署手册](../../docs/modelone/installation.md)填写企业仓库、构建镜像并生成部署文件，再使用企业完整镜像地址。
 
 ## deploy myapp (docker-compose)
 
@@ -79,14 +77,14 @@ conda install --file requirements.txt
 docker-compose.yaml文件在install/docker目录下，这里提供了mac和linux版本的docker-compose.yaml。
 
 1) debug backend
-```
-STAGE: 'dev'
-docker-compose -f docker-compose.yml  up
+
+按[安装部署手册](../../docs/modelone/installation.md)生成私密配置和 Compose 文件。仅在隔离的本机调试环境中将服务环境设为 `STAGE=dev`，通过 HTTP 调试时另设 `MODELONE_COOKIE_SECURE=false`，然后启动：
+
+```sh
+docker compose --env-file .modelone-secrets/compose.env -f dist/modelone/compose.yaml up
 ```
 
-部署以后，登录首页 会自动创建用户，绑定角色（Gamma）。
-
-可根据自己的需求为角色授权。
+打开 `/login/`，输入管理员初始化时配置的账号密码。登录不会自动注册；其他账号由管理员创建并分配角色。
 
 注意：一种比较快捷的本地调试方式，是在后端的启动命令前加上sleep 1000000，然后docker-compose up -d起来以后，再`docker exec -it docker-myapp-1 bash`进入到后端命令行进行调试。
 
@@ -120,23 +118,22 @@ window 电脑前端开发：/static/assets/modelone/video/window-frontend-dev.mp
 项目资源打包：
 ```
 开发环境要求：
-node: 16.15.0+
-npm: 6.14.8+
+node: 20.x
+npm: Node.js 20 配套版本
 
-包管理（建议使用yarn）：
-yarn: npm install yarn -g
+依赖安装：npm ci --legacy-peer-deps --no-audit --no-fund
 
 ```
 
 #### 纯前端开发（本地）
 
-注意：本地前端开发，需要docker-compose先在本地启动cube前后端。
+注意：本地前端开发，需要docker-compose先在本地启动 modelOne 前后端。
 
 ##### 环境准备
 
 - https://nodejs.org/en/download/ 进入nodejs官网，选择下载LTS长期支持版本
-- 然后在官网下载安装好LTS版本之后，输入`npm install -g n`安装node版本管理器（ https://www.npmjs.com/package/n ），最后输入`n 16.15.0`将node版本切换至16.x
-- https://github.com/nodejs/Release 这里可以找到16.x等往期版本
+- 然后在官网下载安装好LTS版本之后，输入`npm install -g n`安装node版本管理器（ https://www.npmjs.com/package/n ），最后输入`n 20`将 Node.js 切换至20.x
+- https://github.com/nodejs/Release 这里可以查看各版本的支持周期
 
 
 ### frontend 主体前端
@@ -151,7 +148,7 @@ yarn: npm install yarn -g
 
  -  `cd myapp/frontend` 进入目录
  - `npm run start` 进入调试模式。
- - - 首次进入  http://localhost:3000/login?username=admin&login_url=http://localhost:3000/frontend/  跳转后页面可直接关闭
+ - - 首次进入  http://localhost:3000/login/ ，使用已创建的账号和密码登录，再打开编排器
  - - 后面可直接进入 前端 http://localhost:3000/frontend/
 
 ### vision 任务流编排
@@ -165,7 +162,7 @@ yarn: npm install yarn -g
 2、前端启动
  -  `cd myapp/vision` 进入目录
  - `npm run dev` 进入调试模式。
- - - 首次进入  http://localhost:3000/login?username=admin&login_url=http://localhost:3000/frontend/  跳转后页面可直接关闭
+ - - 首次进入  http://localhost:3000/login/ ，使用已创建的账号和密码登录，再打开编排器
  - - vision启动 首页访问地址：http://localhost:3000/#/home/   或者某个pipeline的id， http://localhost:3000/?pipeline_id=1#/
 
 ### visionPlus 任务流编排
@@ -179,7 +176,7 @@ yarn: npm install yarn -g
 2、前端启动
  -  `cd myapp/visionPlus` 进入目录
  - `npm run dev` 进入调试模式。
- - - 首次进入  http://localhost:3000/login?username=admin&login_url=http://localhost:3000/frontend/  跳转后页面可直接关闭
+ - - 首次进入  http://localhost:3000/login/ ，使用已创建的账号和密码登录，再打开编排器
  - - visionPLus启动访问地址：http://localhost:3000/?scenes=etl_pipeline&pipeline_id=1
 
 
