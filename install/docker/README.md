@@ -118,8 +118,8 @@ window 电脑前端开发：/static/assets/modelone/video/window-frontend-dev.mp
 项目资源打包：
 ```
 开发环境要求：
-node: 20.x
-npm: Node.js 20 配套版本
+node: 22.x
+npm: Node.js 22 配套版本
 
 依赖安装：npm ci --legacy-peer-deps --no-audit --no-fund
 
@@ -132,7 +132,7 @@ npm: Node.js 20 配套版本
 ##### 环境准备
 
 - https://nodejs.org/en/download/ 进入nodejs官网，选择下载LTS长期支持版本
-- 然后在官网下载安装好LTS版本之后，输入`npm install -g n`安装node版本管理器（ https://www.npmjs.com/package/n ），最后输入`n 20`将 Node.js 切换至20.x
+- 然后在官网下载安装好LTS版本之后，输入`npm install -g n`安装node版本管理器（ https://www.npmjs.com/package/n ），最后输入`n 22`将 Node.js 切换至22.x
 - https://github.com/nodejs/Release 这里可以查看各版本的支持周期
 
 

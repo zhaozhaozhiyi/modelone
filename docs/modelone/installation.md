@@ -2,7 +2,7 @@
 
 ## 准备与构建
 
-准备 Python 3.11（构建和检查工具）、Node.js 20、Docker Compose、kubectl、SQLAlchemy、PyYAML 和 PyJWT 2.8–2.x。运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
+准备 Python 3.11（构建和检查工具）、Node.js 22、Docker Compose、kubectl、SQLAlchemy、PyYAML 和 PyJWT 2.8–2.x。基础镜像和 CI 使用 Node.js 22；运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
 
 本地账号登录已加固；生产部署仍需处理[安全检查记录](security-review.md)中的企业认证、基础设施和目标环境验收项。
 

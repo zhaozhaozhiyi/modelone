@@ -12,7 +12,7 @@ jobs:
           python-version: '3.11'
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: python -m pip install 'SQLAlchemy>=1.4,<3' PyYAML alembic 'PyJWT>=2.8,<3'
       - run: python scripts/test_modelone.py
       - run: python scripts/test_modelone_auth.py
