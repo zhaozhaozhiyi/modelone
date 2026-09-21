@@ -14,21 +14,22 @@
 ````bash
 mkdir offline
 cd offline
+export MODELONE_ASSET_BASE_URL="https://<企业对象存储或CDN域名>/modelone"
 # 下载kubectl 和harbor的离线安装包
 # amd64版本
-wget /static/assets/modelone/install/kubectl
-wget https://githubfast.com/goharbor/harbor/releases/download/v2.11.1/harbor-offline-installer-v2.11.1.tgz
+wget "${MODELONE_ASSET_BASE_URL%/}/install/kubectl"
+wget "${MODELONE_ASSET_BASE_URL%/}/install/harbor-offline-installer-v2.11.1.tgz"
 
 # 下载模型
-wget /static/assets/modelone/inference/resnet50.onnx
-wget /static/assets/modelone/inference/resnet50-torchscript.pt
-wget /static/assets/modelone/inference/resnet50.mar
-wget /static/assets/modelone/inference/tf-mnist.tar.gz
-wget /static/assets/modelone/inference/decisionTree_model.pkl
+wget "${MODELONE_ASSET_BASE_URL%/}/inference/resnet50.onnx"
+wget "${MODELONE_ASSET_BASE_URL%/}/inference/resnet50-torchscript.pt"
+wget "${MODELONE_ASSET_BASE_URL%/}/inference/resnet50.mar"
+wget "${MODELONE_ASSET_BASE_URL%/}/inference/tf-mnist.tar.gz"
+wget "${MODELONE_ASSET_BASE_URL%/}/inference/decisionTree_model.pkl"
 
 # 训练,标注数据集
-wget /static/assets/modelone/pipeline/coco.zip
-wget https://docker-76009.sz.gfp.tencent-cloud.com/github/modelone/aihub/deeplearning/cv-tinynas-object-detection-damoyolo/dataset/coco2014.zip
+wget "${MODELONE_ASSET_BASE_URL%/}/pipeline/coco.zip"
+wget "${MODELONE_ASSET_BASE_URL%/}/pipeline/coco2014.zip"
 
 ````
 
@@ -106,33 +107,9 @@ python3 scripts/rewrite_deployment_images.py \
 
 1、在每个节点执行生成的 `image_load.sh` 校验并导入完整离线包，或通过 `pull_harbor.sh` 从企业内网仓库拉取。平台部署前审核节点初始化配置，避免直接套用发行版和网络配置示例。
 
-2、取消start.sh脚本中下载kubectl，注释掉
-```bash
-ARCH=$(uname -m)
+2、在联网环境完成企业镜像计划、Argo 清单重写和发布清单扫描，确保 `dist/modelone/kubernetes.yaml` 与 `dist/modelone/platform-manifests/argo/install-3.4.3-all.yaml` 已随交付包提供。集群启动脚本拒绝直接应用源码清单。
 
-wget /static/assets/modelone/install/kubectl && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
-
-```
-3、修改 modelOne 镜像为内网镜像。
-```bash
-vi install/kubernetes/cube/overlays/kustomization.yml
-修改最底部的newName和newTag
-```
-
-4、修改 modelOne 的配置文件
-
-```bash
-vi install/kubernetes/cube/overlays/config/config.py
-
-下面的值改为内网仓库地址
-REPOSITORY_ORG PUSH_REPOSITORY_ORG USER_IMAGE NOTEBOOK_IMAGES DOCKER_IMAGES NERDCTL_IMAGES NNI_IMAGES WAIT_POD_IMAGES INFERNENCE_IMAGES
-
-其他修改：
-SERVICE_EXTERNAL_IP 添加内网ip
-DEFAULT_GPU_RESOURCE_NAME 修改为默认的k8s资源名
-```
-
-6、复制 k8s 的 config 文件，部署 modelOne，部署方式参考单机部署文档
+3、复制 k8s 的 config 文件，设置 `MODELONE_RELEASE_DIR`（默认 `../../dist/modelone`）和可选的 `MODELONE_SERVICE_EXTERNAL_IP`，再执行 `bash install/kubernetes/start.sh <节点地址>`。脚本会把节点地址注入 modelOne 工作负载，不会修改源码配置文件。
 
 ## web界面的部分内网修正
 
@@ -162,7 +139,7 @@ docker run --name proxy-repo -d --restart=always --network=host -v $PWD/nginx-ht
 host
 ```bash
 <出口服务器的IP地址>    mirrors.aliyun.com
-<出口服务器的IP地址>    ccr.ccs.tencentyun.com
+<出口服务器的IP地址>    <企业镜像仓库域名>
 <出口服务器的IP地址>    registry-1.docker.io
 <出口服务器的IP地址>    auth.docker.io
 <出口服务器的IP地址>    hub.docker.com
@@ -172,7 +149,7 @@ host
 <出口服务器的IP地址>    security.ubuntu.com
 <出口服务器的IP地址>    cloud.r-project.org
 <出口服务器的IP地址>    deb.nodesource.com
-<出口服务器的IP地址>    docker-76009.sz.gfp.tencent-cloud.com
+<出口服务器的IP地址>    <企业对象存储或CDN域名>
 ```
 
 添加新的host要重启下kubelet   docker restart kubelet
@@ -202,7 +179,7 @@ k8s中修改 kube-system命名空间，coredns的configmap，添加 需要访问
 		    # 自定义host
 		    hosts {
 		        <出口服务器的IP地址>    mirrors.aliyun.com
-                <出口服务器的IP地址>    ccr.ccs.tencentyun.com
+                <出口服务器的IP地址>    <企业镜像仓库域名>
                 <出口服务器的IP地址>    registry-1.docker.io
                 <出口服务器的IP地址>    auth.docker.io
                 <出口服务器的IP地址>    hub.docker.com
@@ -212,7 +189,7 @@ k8s中修改 kube-system命名空间，coredns的configmap，添加 需要访问
                 <出口服务器的IP地址>    security.ubuntu.com
                 <出口服务器的IP地址>    cloud.r-project.org
                 <出口服务器的IP地址>    deb.nodesource.com
-                <出口服务器的IP地址>    docker-76009.sz.gfp.tencent-cloud.com
+                <出口服务器的IP地址>    <企业对象存储或CDN域名>
 		      fallthrough
 		    }
 		    prometheus :9153

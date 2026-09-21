@@ -383,5 +383,23 @@ class BrandTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 remotes.configure(repo, 'https://user:password@git.example.test/modelone.git')
 
+    def test_cluster_entrypoints_require_rendered_release_manifests(self):
+        for name in ('start.sh', 'start-with-kubesphere.sh'):
+            source = (ROOT / 'install/kubernetes' / name).read_text(encoding='utf-8')
+            self.assertIn('MODELONE_KUBERNETES_MANIFEST', source)
+            self.assertIn('MODELONE_ARGO_MANIFEST_DIR', source)
+            self.assertIn('install-3.4.3-all.yaml', source)
+            self.assertIn('kubectl apply -f "$MODELONE_KUBERNETES_MANIFEST"', source)
+            self.assertIn('MODELONE_SERVICE_EXTERNAL_IP', source)
+            self.assertNotIn('kubectl apply -k cube/overlays', source)
+            self.assertNotIn('kubectl apply -f argo/install-3.4.3-all.yaml', source)
+        for path in ('install/kubernetes/cube/overlays/config/config.py', 'install/docker/config.py'):
+            source = (ROOT / path).read_text(encoding='utf-8')
+            self.assertIn('MODELONE_SERVICE_EXTERNAL_IP', source)
+        offline = (ROOT / 'install/kubernetes/offline.md').read_text(encoding='utf-8')
+        self.assertIn('MODELONE_ASSET_BASE_URL', offline)
+        self.assertNotIn('ccr.ccs.tencentyun.com', offline)
+        self.assertNotIn('docker-76009.sz.gfp.tencent-cloud.com', offline)
+
 if __name__ == '__main__':
     unittest.main()

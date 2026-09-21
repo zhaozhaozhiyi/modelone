@@ -100,6 +100,8 @@ kubectl -n infra rollout status deployment/kubeflow-dashboard
 
 正式域名和 TLS 证书需要在实际入口网关配置并验证。当前未配置目标集群，尚未执行上述集群命令。平台和 Rancher 镜像计划、完整归档校验与离线导入流程见[离线安装](../../install/kubernetes/offline.md)。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
 
+`install/kubernetes/start.sh` 和 `start-with-kubesphere.sh` 只接受已经渲染并通过品牌/镜像扫描的发布清单：默认读取 `../../dist/modelone/kubernetes.yaml` 和 `../../dist/modelone/platform-manifests/argo/install-3.4.3-all.yaml`，也可通过 `MODELONE_RELEASE_DIR`、`MODELONE_KUBERNETES_MANIFEST` 和 `MODELONE_ARGO_MANIFEST_DIR` 指定路径。脚本不会直接应用源码中的 Argo 清单或 Kustomize overlay。节点地址通过 `MODELONE_SERVICE_EXTERNAL_IP` 注入工作负载；未设置时使用启动脚本的节点地址参数。
+
 ## 本地隔离容器验证
 
 先完成镜像构建；以下测试只使用本机已有镜像，不拉取或推送远程仓库。临时容器只公开随机回环端口，测试结束清理自己的容器、临时数据和网络，不操作已有环境。

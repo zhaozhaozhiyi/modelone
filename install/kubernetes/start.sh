@@ -4,6 +4,19 @@ if [ $# -eq 0 ]; then
   echo "错误：请提供 内网ip地址 作为参数"
   exit 1
 fi
+
+# Only install rendered release manifests. Applying the source Argo/Kustomize
+# files here would bypass enterprise image and asset migration checks.
+MODELONE_RELEASE_DIR="${MODELONE_RELEASE_DIR:-../../dist/modelone}"
+MODELONE_KUBERNETES_MANIFEST="${MODELONE_KUBERNETES_MANIFEST:-$MODELONE_RELEASE_DIR/kubernetes.yaml}"
+MODELONE_ARGO_MANIFEST_DIR="${MODELONE_ARGO_MANIFEST_DIR:-$MODELONE_RELEASE_DIR/platform-manifests/argo}"
+for manifest in "$MODELONE_KUBERNETES_MANIFEST" "$MODELONE_ARGO_MANIFEST_DIR/install-3.4.3-all.yaml"; do
+  if [ ! -f "$manifest" ]; then
+    echo "错误：缺少 modelOne 发布清单 $manifest，请先生成并校验企业镜像清单"
+    exit 1
+  fi
+done
+
 bash init_node.sh
 mkdir -p ~/.kube && rm -rf ~/.kube/config && cp config ~/.kube/config
 mkdir -p kubeconfig && echo "" > kubeconfig/dev-kubeconfig
@@ -112,7 +125,7 @@ kubectl apply -f virtual.yaml
 # 部署argo
 kubectl apply -f argo/minio-pv-pvc-hostpath.yaml
 kubectl apply -f argo/pipeline-runner-rolebinding.yaml
-kubectl apply -f argo/install-3.4.3-all.yaml
+kubectl apply -f "$MODELONE_ARGO_MANIFEST_DIR/install-3.4.3-all.yaml"
 
 # 部署trainjob:tfjob/pytorchjob/mpijob/mxnetjob/xgboostjobs/paddlepaddle
 kubectl apply -f kubeflow/sa-rbac.yaml
@@ -136,16 +149,24 @@ kubectl create -f pv-pvc-automl.yaml
 kubectl create -f pv-pvc-pipeline.yaml
 kubectl create -f pv-pvc-service.yaml
 
-# 替换配置文件config.py中的内网ip地址
-sed -i "s/SERVICE_EXTERNAL_IP=\\[\\]/SERVICE_EXTERNAL_IP=\[\"$1\"\]/g" cube/overlays/config/config.py
+kubectl apply -f "$MODELONE_KUBERNETES_MANIFEST"
 
-kubectl delete -k cube/overlays
-kubectl apply -k cube/overlays
+# Keep the legacy node-address behavior without mutating the checked-in
+# ConfigMap source or bypassing the rendered release manifest.
+MODELONE_SERVICE_EXTERNAL_IP_VALUE="${MODELONE_SERVICE_EXTERNAL_IP:-$1}"
+case "$MODELONE_SERVICE_EXTERNAL_IP_VALUE" in
+  *[!A-Za-z0-9:.,_|-]*)
+    echo "错误：MODELONE_SERVICE_EXTERNAL_IP 只能包含主机地址字符"
+    exit 1
+    ;;
+esac
+if [ -n "$MODELONE_SERVICE_EXTERNAL_IP_VALUE" ]; then
+  kubectl set env deployment -n infra -l app.kubernetes.io/part-of=modelone \
+    "MODELONE_SERVICE_EXTERNAL_IP=[\"$MODELONE_SERVICE_EXTERNAL_IP_VALUE\"]"
+fi
 
 # 配置入口
 echo "打开网址：http://$1"
-
-
 
 
 
