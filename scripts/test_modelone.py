@@ -1,7 +1,10 @@
 """Regression checks for persisted data and shared configuration (no app startup)."""
 import importlib.util
 import json
+import os
 from pathlib import Path
+import subprocess
+import tempfile
 import unittest
 import sqlalchemy as sa
 
@@ -118,6 +121,24 @@ class BrandTests(unittest.TestCase):
         examples = [row for row in rows if 'sourceTemplate' in row]
         self.assertEqual(len(examples), 4)
         self.assertTrue(all('{' not in row['source'] for row in examples))
+
+    def test_offline_image_generator_requires_private_registry(self):
+        script = ROOT / 'install/kubernetes/all_image.py'
+        with tempfile.TemporaryDirectory() as folder:
+            env = os.environ.copy()
+            env.pop('MODELONE_IMAGE_REGISTRY', None)
+            missing = subprocess.run(['python3', str(script)], cwd=folder, env=env,
+                                     capture_output=True, text=True)
+            self.assertNotEqual(missing.returncode, 0)
+            self.assertIn('MODELONE_IMAGE_REGISTRY is required', missing.stderr + missing.stdout)
+
+            env['MODELONE_IMAGE_REGISTRY'] = 'registry.example.test/team'
+            generated = subprocess.run(['python3', str(script)], cwd=folder, env=env,
+                                       capture_output=True, text=True)
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            push = (Path(folder) / 'push_harbor.sh').read_text()
+            self.assertIn('registry.example.test/team/modelone/', push)
+            self.assertNotIn('xx.xx.xx.xx', push)
 
     def test_scan_blocks_legacy_text_and_maps(self):
         import tempfile

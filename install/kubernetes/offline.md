@@ -46,7 +46,7 @@ chmod +x kubectl  && cp kubectl /usr/bin/ && cp kubectl /usr/local/bin/
 
 参考install/kubernetes/harbor/readme.md
 
-并创建cube-studio和rancher项目，分别存放rancher的基础镜像和cube-studio的基础镜像
+并创建 modelone 和 rancher 项目，分别存放 Rancher 基础镜像和 modelOne 基础镜像
 
 配置每台机器docker添加这个 insecure-registries内网的私有镜像仓，如果是https可以忽略
 
@@ -72,7 +72,7 @@ cp -r offline /data/k8s/kubeflow/pipeline/workspace/admin/
 
 使用rancher相同方法可在内网部署k8s
 
-## 转移CubeStudio基础镜像
+## 转移 modelOne 基础镜像
 
 修改all_image.py中内网仓库地址，运行导出推送和拉取脚本.
 
@@ -80,7 +80,7 @@ cp -r offline /data/k8s/kubeflow/pipeline/workspace/admin/
 
 不能联网机器上运行，每台机器运行 pull_harbor.sh 从内网仓库中拉取镜像 或 image_load.sh 从压缩文件中导入镜像
 
-## 内网部署CubeStudio
+## 内网部署 modelOne
 
 1、修改init_node.sh中pull_images.sh 修改为pull_harbor.sh，表示从内网拉取镜像，每台机器都要执行。
 
@@ -91,13 +91,13 @@ ARCH=$(uname -m)
 wget /static/assets/modelone/install/kubectl && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
 
 ```
-3、修改CubeStudio镜像为内网镜像。
+3、修改 modelOne 镜像为内网镜像。
 ```bash
 vi install/kubernetes/cube/overlays/kustomization.yml
 修改最底部的newName和newTag
 ```
 
-4、修改CubeStudio的配置文件
+4、修改 modelOne 的配置文件
 
 ```bash
 vi install/kubernetes/cube/overlays/config/config.py
@@ -110,7 +110,7 @@ SERVICE_EXTERNAL_IP 添加内网ip
 DEFAULT_GPU_RESOURCE_NAME 修改为默认的k8s资源名
 ```
 
-6、复制k8s的config文件，部署CubeStudio，部署方式通外网，参考：部署/单机部署
+6、复制 k8s 的 config 文件，部署 modelOne，部署方式参考单机部署文档
 
 ## web界面的部分内网修正
 
@@ -237,4 +237,3 @@ yum 配置https源：下载阿里的源
 ```bash
 wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-8.repo
 ```
-

@@ -6,9 +6,9 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SURFACES = ('myapp/frontend/public', 'myapp/frontend/src', 'myapp/vision/public', 'myapp/vision/src', 'myapp/visionPlus/public', 'myapp/visionPlus/src', 'myapp/templates', 'myapp/init', 'myapp/example', 'myapp/views', 'myapp/models', 'myapp/cli.py')
+SURFACES = ('myapp/frontend/public', 'myapp/frontend/src', 'myapp/vision/public', 'myapp/vision/src', 'myapp/visionPlus/public', 'myapp/visionPlus/src', 'myapp/templates', 'myapp/init', 'myapp/example', 'myapp/views', 'myapp/models', 'myapp/cli.py', 'install/kubernetes/all_image.py')
 BUILDS = ('myapp/static/appbuilder/frontend', 'myapp/static/appbuilder/vison', 'myapp/static/appbuilder/visonPlus')
-DOCUMENTATION = ('job-template/**/*.md', 'images/**/*.md')
+DOCUMENTATION = ('job-template/**/*.md', 'images/**/*.md', 'install/**/*.md')
 OLD = re.compile(r'cube[-_ ]?studio|开源版|商业版|开源社区|data-master\.net|/vison(?:Plus)?/logo\.png|cubeStudioLogo|logoCB', re.I)
 HOSTS = re.compile(r'cube-studio\.oss-cn-hangzhou\.aliyuncs\.com|ccr\.ccs\.tencentyun\.com/cube-studio|(?:github\.com|githubfast\.com)/data-infra/(?:cube-studio|modelone)', re.I)
 # Compatibility exceptions are syntactic tokens, not blanket file exclusions.

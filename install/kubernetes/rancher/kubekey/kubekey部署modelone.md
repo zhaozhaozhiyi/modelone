@@ -93,16 +93,16 @@ kk create config --with-kubernetes v1.25.16
 示例如下：name写内网ip地址
 spec:
   hosts:
-  - {name: 172.16.0.2, address: 172.16.0.2, internalAddress: 172.16.0.2, user: ubuntu, password: "Qcloud@123"}
-  - {name: 172.16.0.3, address: 172.16.0.3, internalAddress: 172.16.0.3, user: ubuntu, password: "Qcloud@123"}
+  - {name: NODE_1_IP, address: NODE_1_IP, internalAddress: NODE_1_IP, user: REPLACE_WITH_SSH_USER, password: "REPLACE_WITH_PRIVATE_SSH_PASSWORD"}
+  - {name: NODE_2_IP, address: NODE_2_IP, internalAddress: NODE_2_IP, user: REPLACE_WITH_SSH_USER, password: "REPLACE_WITH_PRIVATE_SSH_PASSWORD"}
   roleGroups:
     etcd:
-    - 172.16.0.2
+    - NODE_1_IP
     control-plane: 
-    - 172.16.0.2
+    - NODE_1_IP
     worker:
-    - 172.16.0.2
-    - 172.16.0.3
+    - NODE_1_IP
+    - NODE_2_IP
 ```
 
 *  安装 1.25 版本的 k8s
@@ -112,7 +112,7 @@ kk create cluster -f config-cluster.yaml
 会自己安装 containerd，kubectl，kubeadm kubecni，helm 等
 ```
 
-# 部署CubeStudio(主节点)
+# 部署 modelOne（主节点）
 
 2、如果使用containerd运行时，替换脚本中的docker命令
 ```bash

@@ -1,5 +1,8 @@
 import json
 import os,re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
 # 所需要的所有镜像
 kubeflow = [
     'mysql:8.0.32',  # 数据库
@@ -49,7 +52,7 @@ pipeline = [
     'ccr.ccs.tencentyun.com/cube-argoproj/workflow-controller:v3.4.3',
     'ccr.ccs.tencentyun.com/cube-argoproj/argocli:v3.4.3'
 ]
-cube_studio = [
+modelone_images = [
     # 前后端
     'modelone/kubeflow-dashboard-frontend:2026.06.01',
     'modelone/kubeflow-dashboard:2026.06.01',
@@ -120,27 +123,32 @@ user_image = [
 ]
 
 # 任务模板的镜像
-all_job_templates = json.load(open('../../myapp/init/init-job-template.json',mode='r'))
+with (ROOT / 'myapp/init/init-job-template.json').open(encoding='utf-8') as source:
+    all_job_templates = json.load(source)
 job_template_images = [template['image_name'] for template in list(all_job_templates.values())]
 
 ## 示例需要的镜像
 example_images=[]
-for file in os.listdir('../../myapp/init/'):
-    file = os.path.join('../../myapp/init',file)
-    content = open(file).read()
+for file in (ROOT / 'myapp/init').iterdir():
+    if not file.is_file():
+        continue
+    content = file.read_text(encoding='utf-8')
     matchs = re.findall('"(modelone/.*)"', content)
     for match in matchs:
         if match not in example_images:
             example_images.append(match.strip())
 
-images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline + cube_studio + user_image + job_template_images + example_images
+images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline + modelone_images + user_image + job_template_images + example_images
 images = list(set(images))
 init_images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline
 
 
 
-# 通过私有仓库，将公有镜像下发到内网每台机器上，例如内网docker.oa.com的仓库
-harbor_repo = 'xx.xx.xx.xx:xx/modelone/'
+# 通过私有仓库，将镜像下发到内网每台机器。仓库地址不写入源码或生成脚本默认值。
+image_registry = os.environ.get('MODELONE_IMAGE_REGISTRY', '').strip().rstrip('/')
+if not image_registry:
+    raise SystemExit('MODELONE_IMAGE_REGISTRY is required, for example registry.example.com/team')
+harbor_repo = image_registry + '/modelone/'
 pull_file = open('pull_images.sh',mode='w')
 push_harbor_file = open('push_harbor.sh',mode='w')
 pull_harbor_file = open('pull_harbor.sh', mode='w')
@@ -182,5 +190,4 @@ push_harbor_file.write('\nwait\n')
 
 print('若服务器可以链网，直接执行sh pull_images.sh')
 print('若服务器无法联网，替换本代码中的内网harbor仓库名，先在可联网机器上执行push_harbor.sh，再在内网机器上执行pull_harbor.sh')
-
 

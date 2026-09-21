@@ -1,7 +1,7 @@
-# 将此文件内容追加到~/.ssh/config   ssh root登录密码 cube-studio
+# 将此文件内容追加到 ~/.ssh/config；密码由 NOTEBOOK_ROOT_PASSWORD 注入
 # ssh-copy-id -p PORT root@HOST  本地设置免密登录
 
-Host cube-studio
+Host modelone
   HostName localhost
   Port localport
   User root

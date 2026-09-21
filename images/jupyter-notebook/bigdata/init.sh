@@ -5,7 +5,8 @@ echo "Port ${SSH_PORT}" >> /etc/ssh/sshd_config
 sed -i "s/#PermitEmptyPasswords no/PermitEmptyPasswords yes/g" /etc/ssh/sshd_config
 sed -i "s/#PermitRootLogin yes/PermitRootLogin yes/g" /etc/ssh/sshd_config
 sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/g" /etc/ssh/sshd_config
-echo root:cube-studio | chpasswd
+: "${NOTEBOOK_ROOT_PASSWORD:?Set a private NOTEBOOK_ROOT_PASSWORD before enabling SSH}"
+echo "root:${NOTEBOOK_ROOT_PASSWORD}" | chpasswd
 service ssh restart
 # 客户端连接命令，    ssh -p ${SSH_PORT} root@${SERVICE_EXTERNAL_IP}
 
@@ -23,6 +24,5 @@ echo "spark.driver.port=${PORT1}" >> ${SPARK_HOME}/conf/spark-defaults.conf
 echo "spark.blockManager.port=${PORT2}" >> ${SPARK_HOME}/conf/spark-defaults.conf
 echo "spark.driver.bindAddress=0.0.0.0" >> ${SPARK_HOME}/conf/spark-defaults.conf
 echo "spark.driver.host=${SERVICE_EXTERNAL_IP}" >>${SPARK_HOME}/conf/spark-defaults.conf
-
 
 

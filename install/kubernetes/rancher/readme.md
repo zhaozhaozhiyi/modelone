@@ -2,7 +2,7 @@
 
 参考install/rancher/install_docker.md部署docker
 
-clone项目，`git clone --depth=1 https://github.com/data-infra/cube-studio.git`
+从企业 Git 仓库克隆 modelOne：`git clone --depth=1 "$MODELONE_GIT_URL"`
 
 centos中如果没有git，可以先`yum install git`安装git
 
@@ -14,7 +14,7 @@ apt-get install gnutls-bin
 git config --global http.sslVerify false
 git config --global http.postBuffer 1048576000
 ```
-再执行git clone即可，如果还是不行，直接`git clone --depth=1 https://githubfast.com/data-infra/cube-studio.git`，通过国内代理拉取。
+再执行 `git clone`；如果企业 Git 需要代理，请按企业网络策略配置，不要改回公共仓库地址。
 
 # 2. 建设前准备
 
@@ -110,10 +110,10 @@ echo "127.0.0.1 localhost" >> /etc/hosts
 sudo timedatectl set-local-rtc 1
 # 部署rancher server
 export RANCHER_CONTAINER_TAG=v2.10.3
-export PASSWORD=cube-studio
-sudo docker run -d --privileged --restart=unless-stopped -p 443:443 --name=myrancher -e AUDIT_LEVEL=3 -e CATTLE_BOOTSTRAP_PASSWORD=$PASSWORD rancher/rancher:$RANCHER_CONTAINER_TAG
+: "${RANCHER_BOOTSTRAP_PASSWORD:?请先设置私密的 Rancher 初始密码}"
+sudo docker run -d --privileged --restart=unless-stopped -p 443:443 --name=myrancher -e AUDIT_LEVEL=3 -e CATTLE_BOOTSTRAP_PASSWORD=$RANCHER_BOOTSTRAP_PASSWORD rancher/rancher:$RANCHER_CONTAINER_TAG
 # 打开 https://xx.xx.xx.xx:443/ 等待web界面可以打开。预计要1~10分钟
-# 用户名admin，输入密码cube-studio
+# 用户名为 admin，密码使用 RANCHER_BOOTSTRAP_PASSWORD 的值
 ```
 
 ## 4.1 rancher server 启动可能问题
@@ -451,13 +451,13 @@ kubectl delete node node12
 ```bash
 export RANCHER_CONTAINER_TAG=v2.8.5
 export RANCHER_CONTAINER_NAME=myrancher
-export PASSWORD=cube-studio
+: "${RANCHER_BOOTSTRAP_PASSWORD:?请先设置私密的 Rancher 初始密码}"
 docker stop $RANCHER_CONTAINER_NAME
 docker create --volumes-from $RANCHER_CONTAINER_NAME --name rancher-data rancher/rancher:$RANCHER_CONTAINER_TAG
 docker run --volumes-from rancher-data -v $PWD:/backup alpine tar zcvf /backup/rancher-data-backup-$RANCHER_VERSION-$DATE.tar.gz /var/lib/rancher
 docker pull rancher/rancher:$RANCHER_CONTAINER_TAG
 # 重新创建的命令自己按需修改
-docker run -d --privileged --volumes-from rancher-data --restart=unless-stopped -p 443:443 --name=myrancher-new -e CATTLE_TLS_MIN_VERSION=1.2 -e AUDIT_LEVEL=3 -e CATTLE_BOOTSTRAP_PASSWORD=$PASSWORD rancher/rancher:$RANCHER_CONTAINER_TAG
+docker run -d --privileged --volumes-from rancher-data --restart=unless-stopped -p 443:443 --name=myrancher-new -e CATTLE_TLS_MIN_VERSION=1.2 -e AUDIT_LEVEL=3 -e CATTLE_BOOTSTRAP_PASSWORD=$RANCHER_BOOTSTRAP_PASSWORD rancher/rancher:$RANCHER_CONTAINER_TAG
 
 如果修改了启动端口，要在全局设置里面修改server-url，然后关闭docker
 # 停止 Docker 服务
@@ -525,4 +525,3 @@ rancher使用**全部容器化**的形式来部署k8s集群，能大幅度降低
 k8s集群(包括etcd)的增删节点动作是由rancher server节点控制，由rancher agent来执行的。在新节点上通过运行rancher agent容器，来访问rancher server 获取要执行的部署命令,部署对应的k8s组件容器（包含kubelet，api-server，scheduler，controller等）。
 
 rancher本身并不改变k8s的基础组件和工作原理，k8s的架构依然不变，只不过多了一个认证代理（auth proxy），也就是前面说的config文件中的rancher server中的接口。
-

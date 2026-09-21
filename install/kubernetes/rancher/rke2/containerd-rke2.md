@@ -5,15 +5,15 @@
 
 #mkdir -p /data/rancher/k3s/agent/images/
 #wget /static/assets/modelone/install/k3s-airgap-images.tar -O /data/rancher/k3s/agent/images/k3s-airgap-images.tar
-#nerdctl network create cube-studio
+#nerdctl network create modelone
 
 export RANCHER_CONTAINER_TAG=v2.8.5
-export PASSWORD=cube-studio
-#nerdctl run -d --privileged --network cube-studio  --restart=unless-stopped -p 443:443 --name=myrancher -e AUDIT_LEVEL=3 -e CATTLE_SYSTEM_DEFAULT_REGISTRY=registry.cn-hangzhou.aliyuncs.com -e CATTLE_BOOTSTRAP_PASSWORD=$PASSWORD -v /data/rancher:/var/lib/rancher registry.cn-hangzhou.aliyuncs.com/rancher/rancher:$RANCHER_CONTAINER_TAG
-nerdctl run -d --privileged --restart=unless-stopped -p 443:443 --name=myrancher -e AUDIT_LEVEL=3 -e CATTLE_SYSTEM_DEFAULT_REGISTRY=registry.cn-hangzhou.aliyuncs.com -e CATTLE_BOOTSTRAP_PASSWORD=$PASSWORD registry.cn-hangzhou.aliyuncs.com/rancher/rancher:$RANCHER_CONTAINER_TAG
+: "${RANCHER_BOOTSTRAP_PASSWORD:?请先设置私密的 Rancher 初始密码}"
+#nerdctl run -d --privileged --network modelone  --restart=unless-stopped -p 443:443 --name=myrancher -e AUDIT_LEVEL=3 -e CATTLE_SYSTEM_DEFAULT_REGISTRY=registry.cn-hangzhou.aliyuncs.com -e CATTLE_BOOTSTRAP_PASSWORD=$RANCHER_BOOTSTRAP_PASSWORD -v /data/rancher:/var/lib/rancher registry.cn-hangzhou.aliyuncs.com/rancher/rancher:$RANCHER_CONTAINER_TAG
+nerdctl run -d --privileged --restart=unless-stopped -p 443:443 --name=myrancher -e AUDIT_LEVEL=3 -e CATTLE_SYSTEM_DEFAULT_REGISTRY=registry.cn-hangzhou.aliyuncs.com -e CATTLE_BOOTSTRAP_PASSWORD=$RANCHER_BOOTSTRAP_PASSWORD registry.cn-hangzhou.aliyuncs.com/rancher/rancher:$RANCHER_CONTAINER_TAG
 
 # 打开 https://xx.xx.xx.xx:443/ 等待web界面可以打开。预计要1~10分钟
-# 输入密码cube-studio
+# 使用 RANCHER_BOOTSTRAP_PASSWORD 的值登录
 ```
 
 # 部署rke2
@@ -60,4 +60,3 @@ Agent 节点：运行 rke2-agent，仅运行工作负载相关的组件（如 ku
 # 卸载
 
 rancher-system-agent-uninstall.sh
-

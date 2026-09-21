@@ -4,18 +4,18 @@ metadata:
   name: dev
 spec:
   hosts:
-  - {name: 172.21.106.247, address: 172.21.106.247, internalAddress: 172.21.106.247, port: 22, user: root, password: "1qaz2wsx#EDC"}
-  - {name: 172.21.106.248, address: 172.21.106.248, internalAddress: 172.21.106.248, port: 22, user: root, password: "1qaz2wsx#EDC"}
-  - {name: 172.21.106.248, address: 172.21.106.248, internalAddress: 172.21.106.248, port: 22, user: root, password: "1qaz2wsx#EDC", arch: arm64}
+  - {name: REPLACE_WITH_NODE_1_IP, address: REPLACE_WITH_NODE_1_IP, internalAddress: REPLACE_WITH_NODE_1_IP, port: 22, user: REPLACE_WITH_SSH_USER, password: "REPLACE_WITH_PRIVATE_SSH_PASSWORD"}
+  - {name: REPLACE_WITH_NODE_2_IP, address: REPLACE_WITH_NODE_2_IP, internalAddress: REPLACE_WITH_NODE_2_IP, port: 22, user: REPLACE_WITH_SSH_USER, password: "REPLACE_WITH_PRIVATE_SSH_PASSWORD"}
+  # arm  - {name: REPLACE_WITH_NODE_2_IP, address: REPLACE_WITH_NODE_2_IP, internalAddress: REPLACE_WITH_NODE_2_IP, port: 22, user: REPLACE_WITH_SSH_USER, password: "REPLACE_WITH_PRIVATE_SSH_PASSWORD", arch: arm64}
 
   roleGroups:
     etcd:
-    - 172.21.106.247
+    - REPLACE_WITH_NODE_1_IP
     control-plane:
-    - 172.21.106.247
+    - REPLACE_WITH_NODE_1_IP
     worker:
-    - 172.21.106.247
-    - 172.21.106.248
+    - REPLACE_WITH_NODE_1_IP
+    - REPLACE_WITH_NODE_2_IP
   controlPlaneEndpoint:
     ## Internal loadbalancer for apiservers
     # internalLoadbalancer: haproxy

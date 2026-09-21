@@ -58,7 +58,8 @@ if [ "$stage" = "22" ]; then
 fi
 ## =================拉取rancher镜像=====================
 if [ "$stage" = "3" ]; then
-  sh /data/nfs/cube-studio-enterprise/install/kubernetes/rancher/pull_rancher_images.sh
+  : "${MODELONE_INSTALL_ROOT:?Set MODELONE_INSTALL_ROOT to the mounted modelOne installation root}"
+  sh "$MODELONE_INSTALL_ROOT/install/kubernetes/rancher/pull_rancher_images.sh"
 fi
 # =================检测：拉取rancher镜像==================
 if [ "$stage" = "33" ]; then
@@ -72,6 +73,10 @@ if [ "$stage" = "4" ]; then
 fi
 ## ==================加入rancher集群=====================
 if [ "$stage" = "44" ]; then
+  : "${RANCHER_SERVER_URL:?Set the private Rancher server URL}"
+  : "${RANCHER_AGENT_TOKEN:?Set the short-lived Rancher agent token}"
+  : "${RANCHER_AGENT_CA_CHECKSUM:?Set the Rancher agent CA checksum}"
+  RANCHER_AGENT_IMAGE="${RANCHER_AGENT_IMAGE:-rancher/rancher-agent:v2.8.5}"
   ip=`ifconfig eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'`
-  sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run  rancher/rancher-agent:v2.8.5 --server https://10.0.0.76 --token tplxzwdhqjpr6vtc6jkq86zhcnftsqpq4t9j8ljjp4rxft6npxwr8g --ca-checksum 757201df237a2d92f909abb42db07c929d1153ec224869f5868211de191e0051 --worker --node-name $ip
+  sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run "$RANCHER_AGENT_IMAGE" --server "$RANCHER_SERVER_URL" --token "$RANCHER_AGENT_TOKEN" --ca-checksum "$RANCHER_AGENT_CA_CHECKSUM" --worker --node-name "$ip"
 fi

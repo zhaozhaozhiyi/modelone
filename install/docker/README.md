@@ -64,8 +64,8 @@ pip3 install -r requirements.txt
 ```
 或者使用conda
 ```bash
-conda create -y -n cube-studio python=3.9
-source activate cube-studio
+conda create -y -n modelone python=3.9
+source activate modelone
 conda config --append channels conda-forge
 conda install --file requirements.txt
 ```
@@ -97,7 +97,7 @@ docker-compose -f docker-compose.yml  up
 
 2）本地连接k8s开发集群
 
-需要先在k8s开发集群部署一遍CubeStudio，然后才能在本地连接并调度
+需要先在 k8s 开发集群部署一遍 modelOne，然后才能在本地连接并调度
 
 ![k8s配置](/static/assets/modelone/docs/image/localk8s.jpg)
 
