@@ -11,6 +11,7 @@ import pysnooper
 import uuid
 from myapp.models.model_notebook import Notebook
 from myapp.models.model_job import Repository
+from myapp.notebook_runtime import initialization_command, parse_environment
 from flask_appbuilder.actions import action
 from flask_appbuilder.forms import GeneralModelConverter
 from myapp.utils import core
@@ -618,7 +619,7 @@ class Notebook_ModelView_Base():
 
         rewrite_url = '/'
 
-        pre_command = '(nohup sh /init.sh > /notebook_init.log 2>&1 &) ; (nohup sh /mnt/%s/init.sh > /init.log 2>&1 &) ; ' % notebook.created_by.username
+        pre_command = initialization_command(notebook.created_by.username)
         if notebook.ide_type == 'jupyter' or notebook.ide_type == 'bigdata' or notebook.ide_type == 'machinelearning' or notebook.ide_type == 'deeplearning':
             rewrite_url = '/notebook/jupyter/%s/' % notebook.name
             workingDir = '/mnt/%s' % notebook.created_by.username
@@ -641,11 +642,7 @@ class Notebook_ModelView_Base():
         image_pull_secrets = list(set(image_pull_secrets + [rep.hubsecret for rep in user_repositorys]))
 
         labels = {"app": notebook.name, 'user': notebook.created_by.username, 'pod-type': "notebook"}
-        notebook_env = []
-        if notebook.env:
-            notebook_env = [x.strip() for x in notebook.env.split('\n') if x.strip()]
-            notebook_env = [env.split("=") for env in notebook_env if '=' in env]
-            notebook_env = dict(zip([env[0] for env in notebook_env], [env[1] for env in notebook_env]))
+        notebook_env = parse_environment(notebook.env)
         if notebook_env:
             env.update(notebook_env)
         if SERVICE_EXTERNAL_IP:

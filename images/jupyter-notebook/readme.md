@@ -10,6 +10,24 @@
 
 需要构建新镜像并在生产上替换，才能让用户使用新的notebook镜像。
 
+四种 Jupyter 镜像共用 `notebook_init.py`。bigdata、machinelearning 和 deeplearning 的构建脚本会自动将构建目录定位到 `images/jupyter-notebook`；手工构建时同样使用这个目录作为上下文，例如 `docker build -f bigdata/Dockerfile .`。构建会安装显示名称为 `modelOne Python` 的 `modelone` 内核，供 SDK 示例直接选择；内部 conda 环境名称继续兼容既有配置。
+
+## Notebook 初始化与 SSH
+
+默认不启动 SSH，示例目录和 Spark 配置仍会初始化，之后才启动 IDE。平台初始化失败会使 Pod 启动失败，错误可在 Pod 日志或 `/notebook_init.log` 查看。用户自己的 `/mnt/<用户名>/init.sh` 仍以后台方式执行，日志在 `/init.log`。
+
+需要 SSH 时，为每个 Notebook 准备独立凭据；推荐公钥认证。管理员在对应 Notebook 命名空间建立 Secret，把 `authorized_keys` 文件挂载到 `/run/notebook-credentials`，并在 Notebook 环境变量设置：
+
+```text
+NOTEBOOK_SSH_PUBLIC_KEY_FILE=/run/notebook-credentials/authorized_keys
+```
+
+现有挂载语法为 `my-notebook-ssh(secret):/run/notebook-credentials`，其中 `my-notebook-ssh` 是该 Notebook 专用 Secret 名称。Secret 由管理员按项目隔离，不能跨用户共享。私钥始终留在用户客户端。SSH 端口由平台分配，连接时使用平台显示的外部地址和 SSH 端口。
+
+确需密码认证时，可以改用 `NOTEBOOK_ROOT_PASSWORD_FILE=/run/notebook-credentials/password`。密码至少 16 字符、单行；禁止空密码。兼容 `NOTEBOOK_ROOT_PASSWORD` 直接注入，但它会出现在 Pod 环境和平台数据中，不建议使用。文件和直接值不能同时设置。密码文件错误、密钥校验失败或系统密码更新失败均不会继续启动 SSH。不启用 SSH 时无需设置这些变量。
+
+先重新构建并验证四种企业 Notebook 镜像，再更新平台的默认镜像清单。旧镜像不会因后端代码更新自动获得这些变更；本地回归不代替目标集群中的 SSH、公钥登录和 Notebook 业务测试。
+
 ## 方法1：Dockerfile构建
 
 jupyter 镜像的构建脚本：[build.sh](build.sh)。

@@ -75,3 +75,7 @@ COPY examples/* /examples/
 COPY init.sh /init.sh
 
 RUN echo "export PATH=/root/miniconda3/envs/python39/bin:/root/miniconda3/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /etc/profile
+
+COPY notebook_init.py /opt/modelone/notebook_init.py
+RUN rm -f /etc/ssh/ssh_host_*
+RUN python3 -m ipykernel install --sys-prefix --name modelone --display-name "modelOne Python"

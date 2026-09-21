@@ -71,17 +71,17 @@ RUN pip install matplotlib pyecharts \
     && rm -rf /tmp/* /var/tmp/* /root/.cache
 
 # 拷贝examples
-COPY examples/* /examples/
+COPY bigdata/examples/* /examples/
 
 # 拷贝示例的hadoop和hive配置文件
-COPY conf/hive/* /opt/third/hive/conf/
-COPY conf/hadoop/* /opt/third/hadoop/etc/hadoop/
+COPY bigdata/conf/hive/* /opt/third/hive/conf/
+COPY bigdata/conf/hadoop/* /opt/third/hadoop/etc/hadoop/
 
 # 新增flink-dep.xml
-COPY conf/flink/flink-dep.xml /opt/third/flink/
+COPY bigdata/conf/flink/flink-dep.xml /opt/third/flink/
 
 # 修改maven镜像
-COPY maven/conf/settings.xml /opt/third/maven/conf/settings.xml
+COPY bigdata/maven/conf/settings.xml /opt/third/maven/conf/settings.xml
 
 ENV M2_HOME /opt/third/maven
 ENV PATH $M2_HOME/bin:$PATH
@@ -101,7 +101,11 @@ ENV PATH $PATH:$JAVA_HOME/bin:$M2_HOME/bin:$SPARK_HOME/bin
 ENV PYTHONPATH ${SPARK_HOME}/python:${SPARK_HOME}/lib/py4j-0.10.9-src.zip:${SPARK_HOME}/lib/pyspark.zip:${SPARK_HOME}/lib/pyspark.zip:$PYTHONPATH
 
 # 环境初始化配置
-COPY init.sh /init.sh
+COPY bigdata/init.sh /init.sh
 
 
 
+
+COPY notebook_init.py /opt/modelone/notebook_init.py
+RUN rm -f /etc/ssh/ssh_host_*
+RUN python3 -m ipykernel install --sys-prefix --name modelone --display-name "modelOne Python"

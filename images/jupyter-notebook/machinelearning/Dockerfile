@@ -3,7 +3,7 @@ FROM ${MODELONE_IMAGE_PREFIX}modelone/notebook:jupyter-ubuntu22.04
 
 RUN apt-get update && apt install -y lsof
 
-COPY modelone-examples/ /examples/
+COPY machinelearning/modelone-examples/ /examples/
 
 # 爬虫包
 RUN pip install pyquery requests lxml beautifulsoup4 \
@@ -26,7 +26,10 @@ RUN pip install gevent flask asyncio uvloop aiohttp grpcio protobuf grpcio-tools
     && rm -rf /tmp/* /var/tmp/* /root/.cache
 
 # 拷贝examples
-COPY examples/* /examples/
+COPY machinelearning/examples/* /examples/
 
 # 环境初始化配置
-COPY init.sh /init.sh
+COPY machinelearning/init.sh /init.sh
+COPY notebook_init.py /opt/modelone/notebook_init.py
+RUN rm -f /etc/ssh/ssh_host_*
+RUN python3 -m ipykernel install --sys-prefix --name modelone --display-name "modelOne Python"

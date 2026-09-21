@@ -5,7 +5,7 @@ RUN apt-get update && apt install -y lsof
 ENV TZ Asia/Shanghai
 ENV DEBIAN_FRONTEND noninteractive
 
-COPY modelone-examples/ /examples/
+COPY deeplearning/modelone-examples/ /examples/
 
 # 基础工具
 RUN apt install -y -f python3-opencv ffmpeg gcc automake autoconf libtool make ffmpeg build-essential
@@ -20,7 +20,10 @@ RUN pip install tensorflow keras torch torchvision keras nltk spacy gensim fasta
 # RUN pip uninstall -y tensorboard && pip install tensorboard==2.10 jupyterlab-tensorboard-pro && jupyter labextension install jupyterlab_tensorboard_pro ; jupyter serverextension enable jupyterlab_tensorboard_pro --sys-prefix
 
 # 拷贝examples
-COPY examples/* /examples/
+COPY deeplearning/examples/* /examples/
 
 # 环境初始化配置
-COPY init.sh /init.sh
+COPY deeplearning/init.sh /init.sh
+COPY notebook_init.py /opt/modelone/notebook_init.py
+RUN rm -f /etc/ssh/ssh_host_*
+RUN python3 -m ipykernel install --sys-prefix --name modelone --display-name "modelOne Python"

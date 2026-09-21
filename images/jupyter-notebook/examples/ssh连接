@@ -1,4 +1,4 @@
-# 将此文件内容追加到 ~/.ssh/config；密码由 NOTEBOOK_ROOT_PASSWORD 注入
+# 将此文件内容追加到 ~/.ssh/config；SSH 需单独配置公钥或密码文件，参见 Notebook 部署说明
 # ssh-copy-id -p PORT root@HOST  本地设置免密登录
 
 Host modelone
