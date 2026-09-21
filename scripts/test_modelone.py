@@ -49,6 +49,8 @@ class BrandTests(unittest.TestCase):
             self.assertEqual(brand.download_filename('records', 'csv'), 'modelone-records.csv')
             self.assertEqual(brand.download_filename('/tmp/modelone-report.csv', 'csv'), 'modelone-report.csv')
             self.assertEqual(brand.download_filename('workflow.log'), 'modelone-workflow.log')
+            self.assertEqual(brand.download_filename('cube-studio.csv'), 'modelone.csv')
+            self.assertEqual(brand.download_filename('开源版-report.csv'), 'modelone-当前版本-report.csv')
         finally:
             brand.BRAND['internal_name'] = before
 

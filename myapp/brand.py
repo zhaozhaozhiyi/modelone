@@ -84,6 +84,9 @@ def image_repository(path):
 def download_filename(filename=None, extension=None):
     """Return a safe, product-branded filename for user downloads."""
     value = os.path.basename(str(filename or 'download')).strip() or 'download'
+    value = re.sub(r'cube[-_ ]?studio', 'modelone', value, flags=re.I)
+    value = (value.replace('开源版', '当前版本').replace('商业版', '当前版本')
+                  .replace('开源社区', '平台支持'))
     prefix = BRAND.get('internal_name') or 'modelone'
     if not re.match(r'^' + re.escape(prefix) + r'(?:[-_.]|$)', value, re.I):
         value = prefix + '-' + value
