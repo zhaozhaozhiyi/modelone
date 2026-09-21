@@ -1,0 +1,20 @@
+{
+  "name": "modelOne",
+  "internalName": "modelone",
+  "title": "modelOne｜企业级 AI 开发与模型生产平台",
+  "description": "企业级 AI 开发与模型生产平台",
+  "copyrightHolder": "",
+  "copyrightYear": "",
+  "supportUrl": "",
+  "helpUrl": "",
+  "termsUrl": "",
+  "privacyUrl": "",
+  "imageRegistry": "",
+  "assetBaseUrl": "",
+  "deploymentName": "modelone",
+  "logoUrl": "/static/assets/modelone/modelone-logo.svg",
+  "logoReverseUrl": "/static/assets/modelone/modelone-logo-reverse.svg",
+  "faviconUrl": "/static/assets/modelone/modelone-mark.svg",
+  "primaryColor": "#17191d",
+  "fontFamily": "Inter, \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+}

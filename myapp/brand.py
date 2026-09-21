@@ -1,0 +1,60 @@
+"""Single brand source: JSON defaults, then deployment environment overrides."""
+import json
+import os
+import re
+from datetime import date
+from pathlib import Path
+
+CONFIG_PATH = Path(os.environ.get('MODELONE_CONFIG', Path(__file__).resolve().parents[1] / 'config/modelone.json'))
+FIELDS = {
+    'name': 'name', 'internal_name': 'internalName', 'title': 'title',
+    'description': 'description', 'copyright_holder': 'copyrightHolder',
+    'copyright_year': 'copyrightYear', 'support_url': 'supportUrl',
+    'help_url': 'helpUrl', 'terms_url': 'termsUrl', 'privacy_url': 'privacyUrl',
+    'image_registry': 'imageRegistry', 'asset_base_url': 'assetBaseUrl',
+    'deployment_name': 'deploymentName', 'logo_url': 'logoUrl',
+    'logo_reverse_url': 'logoReverseUrl', 'favicon_url': 'faviconUrl',
+    'primary_color': 'primaryColor', 'font_family': 'fontFamily',
+}
+
+def load_brand():
+    with CONFIG_PATH.open(encoding='utf-8') as source:
+        config = json.load(source)
+    brand = {key: os.environ.get('MODELONE_' + key.upper(), config.get(field, '')) for key, field in FIELDS.items()}
+    for key in ('help_url', 'support_url', 'terms_url', 'privacy_url', 'logo_url', 'logo_reverse_url', 'favicon_url', 'asset_base_url'):
+        value = brand[key]
+        if value and (not value.startswith(('https://', 'http://', '/')) or value.startswith('//') or any(c in value for c in ('\"', "'", '<', '>', '\n', '\r'))):
+            raise ValueError('Invalid brand URL: ' + key)
+    brand['copyright_year'] = brand['copyright_year'] or str(date.today().year)
+    brand['copyright'] = ('Copyright © %s %s. All Rights Reserved.' % (brand['copyright_year'], brand['copyright_holder'])) if brand['copyright_holder'] else ''
+    return brand
+
+BRAND = load_brand()
+
+def public_brand():
+    # Explicit allowlist: infrastructure settings never reach the browser.
+    return {field: BRAND[key] for key, field in FIELDS.items() if key not in ('image_registry', 'asset_base_url', 'deployment_name')} | {'assetBaseUrl': BRAND['asset_base_url'], 'copyright': BRAND['copyright']}
+
+def brand_asset(path):
+    base = BRAND['asset_base_url'].rstrip('/') or '/static/assets/modelone'
+    return base + '/' + path.lstrip('/')
+
+def image_repository(path):
+    base = BRAND['image_registry'].rstrip('/')
+    return (base + '/' if base else '') + 'modelone/' + path.lstrip('/')
+
+def resolve_resources(value):
+    """Resolve only owned references; preserve API, mount and SDK identifiers."""
+    if isinstance(value, dict):
+        return {key: resolve_resources(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [resolve_resources(item) for item in value]
+    if not isinstance(value, str):
+        return value
+    value = re.sub(r'https?://cube-studio\.oss-cn-hangzhou\.aliyuncs\.com/', brand_asset(''), value)
+    if value == 'ccr.ccs.tencentyun.com/cube-studio':
+        return image_repository('').rstrip('/')
+    value = value.replace('ccr.ccs.tencentyun.com/cube-studio/', image_repository(''))
+    # A registry prefix already resolved above must not be prefixed twice.
+    value = re.sub(r'(?<![\w/.-])modelone/(?=[A-Za-z0-9])', lambda _: image_repository(''), value)
+    return value.replace('/static/assets/modelone/', brand_asset(''))
