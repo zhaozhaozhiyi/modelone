@@ -107,13 +107,13 @@ const itemFolderNode = mergeStyles({
   padding: '7px 15px',
   border: '1px solid transparent',
   height: 16,
-  fontFamily: 'Segoe UI,sans-serif',
+  fontFamily: 'var(--mo-font-sans, Inter, "PingFang SC", "Microsoft YaHei", sans-serif)',
   fontSize: 12,
   lineHeight: 16,
   fontWeight: 600,
   color: 'black',
   '&:hover': {
-    backgroundColor: '#eaeaea',
+    backgroundColor: 'var(--mo-brand-primary-soft, #E9EAEC)',
   },
 });
 

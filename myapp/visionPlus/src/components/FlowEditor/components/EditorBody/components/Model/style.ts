@@ -101,7 +101,7 @@ const textLabelStyle = mergeStyles({
 
 const borTitle = mergeStyles({
   fontSize: 16,
-  borderLeft: '2px solid rgb(0, 120, 212)',
+  borderLeft: '2px solid var(--mo-brand-primary, #17191D)',
   paddingLeft: 4,
   marginTop: 8
 });

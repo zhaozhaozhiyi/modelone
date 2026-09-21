@@ -87,7 +87,7 @@ const Home: React.FC = () => {
         <span
           style={{
             textDecoration: 'underline',
-            color: '#005ccb',
+            color: 'var(--mo-brand-primary, #17191D)',
             cursor: 'pointer',
           }}
           onClick={() => {

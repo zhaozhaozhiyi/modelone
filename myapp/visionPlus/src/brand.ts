@@ -34,7 +34,6 @@ export const brandPalette = {
   themeDarker: mix(primaryRgb, [0, 0, 0], 0.35),
 };
 
-/** Assets follow the same runtime configuration as the main console. */
 export const brandAsset = (path: string): string => {
   const base = (config.assetBaseUrl || '/static/assets/modelone').replace(/\/$/, '');
   return `${base}/${path.replace(/^\//, '')}`;

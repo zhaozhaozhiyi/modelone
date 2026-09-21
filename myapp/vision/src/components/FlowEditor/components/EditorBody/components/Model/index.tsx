@@ -407,7 +407,7 @@ const Model: React.FC<ModelProps> = props => {
                 <Tooltip overlayClassName={style.tipStyle}
                          // placement="bottom"
                          title={<span className="cube-tip" dangerouslySetInnerHTML={{__html: tip}}></span>}>
-                  <span style={{fontWeight: 'bold', color: '#0078d4', marginLeft: '10px'}}>{'详情'}</span>
+                  <span style={{fontWeight: 'bold', color: 'var(--mo-brand-primary, #17191D)', marginLeft: '10px'}}>{'详情'}</span>
                 </Tooltip>
               )
 

@@ -19,7 +19,7 @@ const nodeContainer = mergeStyles({
 });
 const nodeOnSelect = mergeStyles({
   ...baseContainerStyle,
-  ...{ borderWidth: 1, borderColor: '#006dce', backgroundColor: '#f1f7fd' },
+  ...{ borderWidth: 1, borderColor: 'var(--mo-brand-primary, #17191D)', backgroundColor: '#f1f7fd' },
 });
 const nodeBar = mergeStyles({
   width: 8,
@@ -45,7 +45,7 @@ const nodeIconWrapper = mergeStyles({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  backgroundColor: 'rgb(0, 120, 212)',
+  backgroundColor: 'var(--mo-brand-primary, #17191D)',
   borderTopLeftRadius: 100,
   borderBottomLeftRadius: 100,
   margin: '-1px 0 -1px -1px'

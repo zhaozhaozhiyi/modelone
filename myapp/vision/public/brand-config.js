@@ -6,6 +6,8 @@ window.applyModeloneBrand = function () {
   if (icon && b.faviconUrl) icon.href = b.faviconUrl;
   var description = document.querySelector('meta[name="description"]');
   if (description) description.content = b.description;
+  var themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor && b.primaryColor) themeColor.content = b.primaryColor;
   document.documentElement.style.setProperty('--mo-brand-primary', b.primaryColor);
   document.documentElement.style.setProperty('--mo-font-sans', b.fontFamily);
 };

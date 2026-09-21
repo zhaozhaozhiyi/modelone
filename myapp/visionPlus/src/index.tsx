@@ -8,25 +8,22 @@ import { Provider } from 'react-redux';
 import './app.less';
 import "antd/lib/button/style/index.css";
 import "antd/lib/message/style/index.css";
+import { brandFontFamily, brandPalette } from './brand';
 
 const isDev = process.env.NODE_ENV === 'development' ? true : false
 const assetsUrl = isDev ? '/assets' : '/static/appbuilder/assets'
+document.documentElement.style.setProperty('--mo-brand-primary', brandPalette.themePrimary);
+document.documentElement.style.setProperty('--mo-brand-primary-soft', brandPalette.themeLighter);
+document.documentElement.style.setProperty('--mo-font-sans', brandFontFamily);
 
 // fluentui icon 资源初始化
 initializeIcons(`${assetsUrl}/fonts/`);
 registerDefaultFontFaces(`${assetsUrl}`)
 
 const myTheme = createTheme({
+  defaultFontStyle: { fontFamily: brandFontFamily },
   palette: {
-    themePrimary: '#1890ff',
-    themeLighterAlt: '#f6fbff',
-    themeLighter: '#daedff',
-    themeLight: '#b9ddff',
-    themeTertiary: '#74bcff',
-    themeSecondary: '#339cff',
-    themeDarkAlt: '#1581e6',
-    themeDark: '#116dc2',
-    themeDarker: '#0d508f',
+    ...brandPalette,
     neutralLighterAlt: '#faf9f8',
     neutralLighter: '#f3f2f1',
     neutralLight: '#edebe9',

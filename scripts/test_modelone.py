@@ -88,6 +88,20 @@ class BrandTests(unittest.TestCase):
         self.assertIn('brand.primaryColor', source)
         self.assertIn("'--ant-primary-color': primary", source)
 
+    def test_editor_themes_use_configured_brand_palette(self):
+        for app in ('vision', 'visionPlus'):
+            source = (ROOT / 'myapp' / app / 'src/index.tsx').read_text(encoding='utf-8')
+            brand = (ROOT / 'myapp' / app / 'src/brand.ts').read_text(encoding='utf-8')
+            self.assertIn("brandPalette", source, app)
+            self.assertIn("brandFontFamily", source, app)
+            self.assertIn('primaryColor', brand, app)
+            self.assertNotIn('#015cda', source + brand, app)
+
+    def test_runtime_brand_script_updates_browser_theme_color(self):
+        source = (ROOT / 'scripts/generate_brand.py').read_text(encoding='utf-8')
+        self.assertIn("meta[name=\"theme-color\"]", source)
+        self.assertIn('themeColor.content = b.primaryColor', source)
+
     def test_brand_css_values_are_validated(self):
         original_path = brand.CONFIG_PATH
         try:

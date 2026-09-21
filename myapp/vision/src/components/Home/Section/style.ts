@@ -11,10 +11,10 @@ const sectionStyles = mergeStyles({
       lineHeight: '1.1',
       fontSize: 20,
       fontWeight: 'bold',
-      fontFamily: '"Raleway","Helvetica Neue",Helvetica,Arial,sans-serif;',
+      fontFamily: 'var(--mo-font-sans, Inter, "PingFang SC", "Microsoft YaHei", sans-serif)',
     },
     '.expand-button': {
-      color: '#005cd2',
+      color: 'var(--mo-brand-primary, #17191D)',
       marginRight: 24,
       fontSize: 14,
       marginBottom: 12,
@@ -60,7 +60,7 @@ const addIconStyles = mergeStyles({
   padding: '42px 0 29px',
   cursor: 'pointer',
   textAlign: 'center',
-  color: '#005cd2',
+  color: 'var(--mo-brand-primary, #17191D)',
 });
 
 const sampleImgStyles = mergeStyles({

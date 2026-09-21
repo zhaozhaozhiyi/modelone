@@ -52,7 +52,7 @@ const commandButtonStyle = mergeStyles({
 });
 
 const commonIcon = mergeStyles({
-    color: '#015cda !important',
+    color: 'var(--mo-brand-primary, #17191D) !important',
 });
 
 const toggleStyle: Partial<IToggleStyles> = {
@@ -81,7 +81,7 @@ const comboBoxStyle: Partial<IComboBoxStyles> = {
     backgroundColor: '#ffffff',
     padding: '0px 20px 0px 4px',
     selectors: {
-      '&.is-open::after': { borderBottom: '2px solid #015cda' },
+      '&.is-open::after': { borderBottom: '2px solid var(--mo-brand-primary, #17191D)' },
       '&::after': {
         border: 'none',
         borderBottom: 0,
