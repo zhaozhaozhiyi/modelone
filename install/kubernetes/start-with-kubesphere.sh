@@ -1,4 +1,9 @@
 #!/bin/bash
+if [ $# -eq 0 ]; then
+  echo "错误：请提供 内网ip地址 作为参数"
+  exit 1
+fi
+
 : "${MODELONE_ASSET_BASE_URL:?Set the enterprise resource base URL}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/modelone-manifests.sh" || exit 1
@@ -10,7 +15,7 @@ mkdir -p kubeconfig && echo "" > kubeconfig/dev-kubeconfig
 
 ARCH=$(uname -m)
 
-wget ${MODELONE_ASSET_BASE_URL%/}/install/kubectl && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
+wget "${MODELONE_ASSET_BASE_URL%/}/install/kubectl" && chmod +x kubectl  && cp kubectl /usr/bin/ && mv kubectl /usr/local/bin/
 
 version=`kubectl version --short | awk '/Server Version:/ {print $3}'`
 echo "kubernets versison" $version
