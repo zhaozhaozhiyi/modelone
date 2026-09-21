@@ -19,6 +19,7 @@ jobs:
       - run: python scripts/test_modelone_notebook.py
       - run: python scripts/test_modelone_nodes.py
       - run: python scripts/test_modelone_resources.py
+      - run: python scripts/test_modelone_image_bundle.py
       - run: python scripts/brand_scan.py
       - name: Build all product frontends
         # Upstream lint warnings remain visible; brand and source-map gates

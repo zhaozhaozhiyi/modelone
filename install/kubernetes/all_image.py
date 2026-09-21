@@ -133,61 +133,37 @@ for file in (ROOT / 'myapp/init').iterdir():
     if not file.is_file():
         continue
     content = file.read_text(encoding='utf-8')
-    matchs = re.findall('"(modelone/.*)"', content)
+    matchs = re.findall(r'(?<![\w/.-])modelone/[a-z0-9][a-z0-9./_-]*(?::[A-Za-z0-9_.-]+)?', content)
     for match in matchs:
         if match not in example_images:
             example_images.append(match.strip())
 
-images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline + modelone_images + user_image + job_template_images + example_images
+snapshot = json.loads((ROOT / 'config/resource-sources.json').read_text())
+catalog_images = ['modelone/' + row['source'].split('/', 2)[2]
+                  for row in snapshot['resources'] if row['kind'] == 'image']
+images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline + modelone_images + user_image + job_template_images + example_images + catalog_images
 images = list(set(images))
 init_images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline
 
 
 
-# 通过私有仓库，将镜像下发到内网每台机器。仓库地址不写入源码或生成脚本默认值。
-image_registry = os.environ.get('MODELONE_IMAGE_REGISTRY', '').strip().rstrip('/')
-if not image_registry:
-    raise SystemExit('MODELONE_IMAGE_REGISTRY is required, for example registry.example.com/team')
-harbor_repo = image_registry + '/modelone/'
-pull_file = open('pull_images.sh',mode='w')
-push_harbor_file = open('push_harbor.sh',mode='w')
-pull_harbor_file = open('pull_harbor.sh', mode='w')
+# Generate a reviewable plan. Product images must exist in the enterprise
+# registry; image copy and packaging run only when generated scripts are invoked.
+import argparse
+import sys
+sys.path.insert(0, str(ROOT / 'scripts'))
+from image_bundle import generate, manifest_images
 
-pull_save_file = open('image_save.sh',mode='w')
-load_image_file = open('image_load.sh',mode='w')
-
-# push_harbor_file.write(f'准备登录: {harbor_repo}\n')
-push_harbor_file.write('docker login '+harbor_repo[:harbor_repo.index('/')]+"\n")
-pull_harbor_file.write('docker login '+harbor_repo[:harbor_repo.index('/')]+"\n")
-
-for image in images:
-    # print(image)
-    # print(image)
-    image = image.replace('<none>', '')
-    new_image = harbor_repo + image.replace('modelone/', '').replace('/', '-')
-
-    # 可联网机器上拉取公有镜像并推送到私有仓库
-    # print('docker pull %s && docker tag %s %s && docker push %s &' % (image,image,image_name,image_name))
-    push_harbor_file.write('docker pull %s && docker tag %s %s && docker push %s &\n' % (image,image,new_image,new_image))
-    pull_save_file.write('docker pull %s && docker save %s | gzip > %s.tar.gz &\n' % (image, image, image.replace('/','-').replace(':','-')))
-
-    # # # 内网机器上拉取私有仓库镜像
-    # print("docker pull %s && docker tag %s %s &" % (image_name,image_name,image))
-    if image in init_images:
-        pull_harbor_file.write("docker pull %s && docker tag %s %s &\n" % (new_image,new_image,image))
-    load_image_file.write('gunzip -c %s.tar.gz | docker load &\n' % (image.replace('/','-').replace(':','-')))
-
-    # # 拉取公有镜像
-    # print("docker pull %s && docker tag %s %s &" % (image_name,image_name,image))
-    # print("docker pull %s &" % (image,))
-    pull_file.write("docker pull %s &\n" % (image,))
-
-pull_file.write('\nwait\n')
-pull_save_file.write('\nwait\n')
-load_image_file.write('\nwait\n')
-pull_harbor_file.write('\nwait\n')
-push_harbor_file.write('\nwait\n')
-
-print('若服务器可以链网，直接执行sh pull_images.sh')
-print('若服务器无法联网，替换本代码中的内网harbor仓库名，先在可联网机器上执行push_harbor.sh，再在内网机器上执行pull_harbor.sh')
-
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate modelOne image transfer scripts without pulling images')
+    parser.add_argument('--output', type=Path, default=Path.cwd())
+    parser.add_argument('--manifest', type=Path, action='append', default=[], help='include concrete image fields from a rendered deployment; may be repeated')
+    parser.add_argument('--image-list', type=Path, help='additional newline-delimited runtime images')
+    args = parser.parse_args()
+    try:
+        images += manifest_images(args.manifest)
+        if args.image_list:
+            images += [line.strip() for line in args.image_list.read_text().splitlines() if line.strip()]
+        generate(images, os.environ.get('MODELONE_IMAGE_REGISTRY', ''), args.output)
+    except ValueError as error:
+        parser.error(str(error))

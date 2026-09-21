@@ -22,7 +22,7 @@ bash install/kubernetes/rancher/批量ssh/batch-ssh.sh
 | 11 | 检测 Docker | 无 |
 | 2 | 安装 NFS 客户端并挂载 /data/nfs | MODELONE_NFS_SERVER、MODELONE_NFS_EXPORT |
 | 22 | 检测 NFS | 无 |
-| 3 | 从共享安装目录导入 Rancher 镜像 | MODELONE_INSTALL_ROOT |
+| 3 | 从共享离线包导入并校验 Rancher 镜像 | MODELONE_RANCHER_BUNDLE_DIR，包含生成的 images.json 和 archives |
 | 33 | 检测 Rancher 镜像 | 无 |
 | 4 | 查看网卡 IPv4 地址 | 可选 MODELONE_NODE_INTERFACE，默认 eth0 |
 | 44 | 加入 Rancher 工作节点 | RANCHER_SERVER_URL、RANCHER_AGENT_TOKEN、RANCHER_AGENT_CA_CHECKSUM；可选 RANCHER_AGENT_IMAGE、MODELONE_NODE_INTERFACE |

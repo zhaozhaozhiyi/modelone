@@ -20,7 +20,7 @@ git config --global http.postBuffer 1048576000
 
 1、自建docker镜像仓库或者直接使用云厂商免费镜像仓库。 如果内网无法连接到互联网的话，则可以使用Harbor自建一个内网仓库，并将私有仓库添加到docker的insecure-registries配置中。
 
-2、如果内网是无法连接外网的，需要我们在机器上提前拉好镜像。 修改install/kubernetes/rancher/all_image.py中内网仓库地址，运行导出推送和拉取脚本。联网机器上运行 pull_rancher_images.sh将镜像推送到内网仓库 或 rancher_image_save.sh将镜像压缩成文件再导入到内网机器。 不能联网机器上运行，每台机器运行 pull_rancher_harbor.sh 从内网仓库中拉取镜像 或 rancher_image_load.sh 从压缩文件中导入镜像 。
+2、离线镜像包使用 `MODELONE_IMAGE_REGISTRY` 和 `python3 install/kubernetes/rancher/all_image.py --output <新目录>` 生成。联网复制使用 `push_rancher_harbor.sh`，打包使用 `rancher_image_save.sh`；将完整目录送到离线节点后运行 `rancher_image_load.sh`，导入前自动校验所有归档。详细流程见[离线安装](../offline.md)。
 
 
 # 3. centos8/centos8 stream/OpenCloudOS Server 8/Redhat 9 系统初始化

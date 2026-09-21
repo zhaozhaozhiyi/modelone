@@ -66,8 +66,8 @@ if [ "$stage" = "22" ]; then
 fi
 ## =================拉取rancher镜像=====================
 if [ "$stage" = "3" ]; then
-  : "${MODELONE_INSTALL_ROOT:?Set MODELONE_INSTALL_ROOT to the mounted modelOne installation root}"
-  sh "$MODELONE_INSTALL_ROOT/install/kubernetes/rancher/pull_rancher_images.sh"
+  : "${MODELONE_RANCHER_BUNDLE_DIR:?Set the mounted Rancher image bundle directory}"
+  sh "$MODELONE_RANCHER_BUNDLE_DIR/rancher_image_load.sh"
 fi
 # =================检测：拉取rancher镜像==================
 if [ "$stage" = "33" ]; then

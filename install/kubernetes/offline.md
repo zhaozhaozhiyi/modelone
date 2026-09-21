@@ -62,11 +62,15 @@ cp -r offline /data/k8s/kubeflow/pipeline/workspace/admin/
 
 ## 转移rancher镜像
 
-修改install/kubernetes/rancher/all_image.py中内网仓库地址，运行导出推送和拉取脚本.
+设置 `MODELONE_IMAGE_REGISTRY` 为企业仓库 host/path，先在联网机器登录仓库，再生成独立目录：
 
-联网机器上运行 pull_rancher_images.sh将镜像推送到内网仓库 或 rancher_image_save.sh将镜像压缩成文件再导入到内网机器
+```sh
+python3 install/kubernetes/rancher/all_image.py --output dist/modelone/rancher-images
+bash dist/modelone/rancher-images/push_rancher_harbor.sh
+bash dist/modelone/rancher-images/rancher_image_save.sh
+```
 
-不能联网机器上运行，每台机器运行 pull_rancher_harbor.sh 从内网仓库中拉取镜像 或 rancher_image_load.sh 从压缩文件中导入镜像
+`push_rancher_harbor.sh` 才会复制并推送镜像；`pull_rancher_images.sh` 只拉取来源镜像。将整个输出目录（包括脚本、images.json、archives 和许可证）复制到离线节点，再执行 `rancher_image_load.sh`。若内网仓库可访问，可执行 `pull_rancher_harbor.sh`，无须传输压缩包。节点批量工具的阶段 3 使用 `MODELONE_RANCHER_BUNDLE_DIR` 指向这个完整离线包，只做校验和导入。
 
 ## 内网部署 k8s
 
@@ -74,15 +78,23 @@ cp -r offline /data/k8s/kubeflow/pipeline/workspace/admin/
 
 ## 转移 modelOne 基础镜像
 
-修改all_image.py中内网仓库地址，运行导出推送和拉取脚本.
+先重建需要品牌、安全或业务代码改造的企业镜像。脚本不会尝试从公共仓库拉取 `modelone/` 镜像，产品镜像必须已存在于企业仓库中。
 
-联网机器上运行 push_harbor.sh 将镜像推送到内网仓库 或 image_save.sh将镜像压缩成文件再导入到内网机器
+```sh
+python3 install/kubernetes/all_image.py --output dist/modelone/platform-images
+bash dist/modelone/platform-images/push_harbor.sh
+bash dist/modelone/platform-images/image_save.sh
+```
 
-不能联网机器上运行，每台机器运行 pull_harbor.sh 从内网仓库中拉取镜像 或 image_load.sh 从压缩文件中导入镜像
+默认包含受管理资源快照与基础服务清单；按实际部署补全第三方镜像。可重复传入 `--manifest <已渲染的部署文件>` 收集其中的容器、初始化容器和服务镜像，用 `--image-list <逐行镜像文件>` 补充注入器、运行时选择及自定义任务的镜像。未展开的模板表达式会报错。每次生成使用新的输出目录，避免覆盖已完成的校验记录。
+
+镜像目标、原运行引用与来源记录在 `images.json`。第三方目标保留完整仓库层级，避免同名冲突。所有操作逐项检查结果，任一失败立即退出。`image_save.sh` 只导出本机已有目标镜像，不联网；成功后记录 SHA-256、镜像 ID 和架构。将整个目录复制到离线节点，运行 `image_load.sh`。它先验证全部压缩包，再开始导入；导入后再次核对镜像 ID。Docker 打包针对本机架构，多架构仓库迁移另用资源工具的 skopeo 流程。
+
+内网仓库已就绪时也可使用 `pull_harbor.sh`。部署文件和运行配置中的镜像必须改成计划中的 `target`，工具不再恢复旧公共镜像别名，避免运行时继续从外部拉取。镜像包仅是离线安装的一部分；软件包、控制器注入镜像、模型数据、许可证清单与离线网络检查仍须完整验收。
 
 ## 内网部署 modelOne
 
-1、修改init_node.sh中pull_images.sh 修改为pull_harbor.sh，表示从内网拉取镜像，每台机器都要执行。
+1、在每个节点执行生成的 `image_load.sh` 校验并导入完整离线包，或通过 `pull_harbor.sh` 从企业内网仓库拉取。平台部署前审核节点初始化配置，避免直接套用发行版和网络配置示例。
 
 2、取消start.sh脚本中下载kubectl，注释掉
 ```bash

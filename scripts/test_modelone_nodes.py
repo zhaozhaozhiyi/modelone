@@ -77,6 +77,16 @@ class NodeTests(unittest.TestCase):
         self.assertFalse(marker.exists())
         self.assertNotIn(token, result.stdout + result.stderr)
 
+    def test_offline_stage_runs_bundle_loader_and_propagates_its_failure(self):
+        directory = self.folder / 'offline bundle'
+        directory.mkdir()
+        (directory / 'rancher_image_load.sh').write_text('#!/bin/sh\necho bundle-checked\nexit 6\n')
+        self.config.write_text(json.dumps({'STAGE': '3', 'MODELONE_RANCHER_BUNDLE_DIR': str(directory)}))
+        _, _, payload = batch.prepare(self.env)
+        result = subprocess.run(['bash', '-s'], input=payload, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 6)
+        self.assertEqual(result.stdout.strip(), 'bundle-checked')
+
 
 if __name__ == '__main__':
     unittest.main()

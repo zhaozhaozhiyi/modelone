@@ -492,7 +492,7 @@ class Notebook_ModelView_Base():
         username=g.user.username
         if not exist_pod:
 
-            pre_command = '(nohup sh /init.sh > /notebook_init.log 2>&1 &) ; (nohup sh /mnt/%s/init.sh > /init.log 2>&1 &) ; ' % username
+            pre_command = initialization_command(username)
             working_dir = '/mnt/%s' % username
             command = ["sh", "-c", "%s jupyter lab --notebook-dir=%s --ip=0.0.0.0 "
                                    "--no-browser --allow-root --port=%s "

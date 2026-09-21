@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 FIELDS = {
-    'STAGE', 'MODELONE_INSTALL_ROOT', 'MODELONE_NODE_INTERFACE',
+    'STAGE', 'MODELONE_RANCHER_BUNDLE_DIR', 'MODELONE_NODE_INTERFACE',
     'MODELONE_NFS_SERVER', 'MODELONE_NFS_EXPORT',
     'RANCHER_SERVER_URL', 'RANCHER_AGENT_TOKEN', 'RANCHER_AGENT_CA_CHECKSUM',
     'RANCHER_AGENT_IMAGE',
@@ -44,7 +44,7 @@ def prepare(env):
     if stage not in STAGES:
         raise ValueError('Select an explicit supported STAGE')
     required = {'2': ['MODELONE_NFS_SERVER', 'MODELONE_NFS_EXPORT'],
-                '3': ['MODELONE_INSTALL_ROOT'],
+                '3': ['MODELONE_RANCHER_BUNDLE_DIR'],
                 '44': ['RANCHER_SERVER_URL', 'RANCHER_AGENT_TOKEN', 'RANCHER_AGENT_CA_CHECKSUM']}
     if any(not config.get(key) for key in required.get(stage, [])):
         raise ValueError('Required settings for the selected stage are missing')

@@ -13,6 +13,7 @@ python3 scripts/test_modelone_auth.py
 python3 scripts/test_modelone_notebook.py
 python3 scripts/test_modelone_nodes.py
 python3 scripts/test_modelone_resources.py
+python3 scripts/test_modelone_image_bundle.py
 for app in frontend vision visionPlus; do
   npm ci --prefix "myapp/$app" --legacy-peer-deps --no-audit --no-fund
   npm run build --prefix "myapp/$app"
@@ -71,7 +72,7 @@ kubectl -n infra rollout status deployment/kubeflow-dashboard
 
 已有数据库或 Redis 不要使用 `--kubernetes-new-install` 覆盖凭据。将现有 `MYSQL_SERVICE` 和 Redis 密码写入权限为 600 的私密 JSON，再运行 `python3 scripts/init_modelone_secrets.py --infrastructure-from-json <文件> --output .modelone-secrets/modelone-infrastructure.json`，并单独生成或恢复 `modelone-auth`。已有自建 MySQL 还需创建 `modelone-mysql` Secret，使 MySQL Pod 的 root 初始化变量与原持久卷凭据一致；不要对已有数据卷重新初始化。
 
-正式域名和 TLS 证书需要在实际入口网关配置并验证。当前未配置目标集群，尚未执行上述集群命令。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
+正式域名和 TLS 证书需要在实际入口网关配置并验证。当前未配置目标集群，尚未执行上述集群命令。平台和 Rancher 镜像计划、完整归档校验与离线导入流程见[离线安装](../../install/kubernetes/offline.md)。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
 
 ## 本地隔离容器验证
 
