@@ -5,17 +5,8 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-# Only install rendered release manifests. Applying the source Argo/Kustomize
-# files here would bypass enterprise image and asset migration checks.
-MODELONE_RELEASE_DIR="${MODELONE_RELEASE_DIR:-../../dist/modelone}"
-MODELONE_KUBERNETES_MANIFEST="${MODELONE_KUBERNETES_MANIFEST:-$MODELONE_RELEASE_DIR/kubernetes.yaml}"
-MODELONE_ARGO_MANIFEST_DIR="${MODELONE_ARGO_MANIFEST_DIR:-$MODELONE_RELEASE_DIR/platform-manifests/argo}"
-for manifest in "$MODELONE_KUBERNETES_MANIFEST" "$MODELONE_ARGO_MANIFEST_DIR/install-3.4.3-all.yaml"; do
-  if [ ! -f "$manifest" ]; then
-    echo "错误：缺少 modelOne 发布清单 $manifest，请先生成并校验企业镜像清单"
-    exit 1
-  fi
-done
+source "$(dirname "${BASH_SOURCE[0]}")/modelone-manifests.sh" || exit 1
+cd "$MODELONE_SOURCE_ROOT" || exit 1
 
 bash init_node.sh
 mkdir -p ~/.kube && rm -rf ~/.kube/config && cp config ~/.kube/config
@@ -167,6 +158,4 @@ fi
 
 # 配置入口
 echo "打开网址：http://$1"
-
-
 

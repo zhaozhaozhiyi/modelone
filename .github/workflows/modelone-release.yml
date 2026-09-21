@@ -43,6 +43,7 @@ jobs:
           MODELONE_PRIVACY_URL: https://www.example.test/modelone/privacy
         run: |
           python install/kubernetes/all_image.py \
+            --manifest-root install/kubernetes \
             --output dist/modelone/ci-images
           python scripts/render_deployment.py \
             --release \
@@ -52,7 +53,6 @@ jobs:
           python scripts/rewrite_deployment_images.py \
             --plan dist/modelone/ci-images/images.json \
             --output-dir dist/modelone/ci-manifests \
-            --manifest install/kubernetes/argo/install-3.4.3-all.yaml \
-            --manifest install/kubernetes/argo/workflow.yaml
+            --source-root install/kubernetes
           python scripts/brand_scan.py --artifact dist/modelone/ci-manifests
       - run: git diff --check

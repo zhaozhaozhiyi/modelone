@@ -123,6 +123,28 @@ class BundleTests(unittest.TestCase):
         self.assertIn(mapping['busybox:1.36'], rewritten)
         self.assertIn(mapping['redis:7'], rewritten)
 
+    def test_kustomization_images_and_manifest_tree_are_rewritten(self):
+        plan = self.plan(['redis:7'])
+        source_root = self.folder / 'source'
+        (source_root / 'nested').mkdir(parents=True)
+        (source_root / 'nested' / 'kustomization.yaml').write_text(
+            'apiVersion: kustomize.config.k8s.io/v1beta1\n'
+            'kind: Kustomization\n'
+            'images:\n'
+            '- name: redis\n'
+            '  newName: redis\n'
+            '  newTag: "7"\n'
+        )
+        output = self.folder / 'rewritten-tree'
+        result = subprocess.run([
+            sys.executable, str(ROOT / 'scripts/rewrite_deployment_images.py'),
+            '--plan', str(plan), '--output-dir', str(output), '--source-root', str(source_root)
+        ], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rewritten = (output / 'nested' / 'kustomization.yaml').read_text()
+        self.assertIn('registry.example.test/team/modelone/third-party/docker.io/library/redis', rewritten)
+        self.assertIn('newTag:', rewritten)
+
     @unittest.skipUnless(os.environ.get('MODELONE_BUNDLE_TEST_IMAGE'), 'optional cached-image integration check')
     def test_real_local_save_load_and_corruption_rejection(self):
         runtime = 'modelone/bundle-test:' + uuid.uuid4().hex

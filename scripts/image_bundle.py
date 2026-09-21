@@ -183,9 +183,33 @@ def rewrite_image_tokens(value, mapping):
 def rewrite_manifest(plan_path, source_path, output_path):
     import yaml
     documents = list(yaml.safe_load_all(source_path.read_text()))
-    rewrite_images(documents, image_mapping(plan_path))
+    mapping = image_mapping(plan_path)
+    rewrite_images(documents, mapping)
+    rewrite_kustomization_images(documents, mapping)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(yaml.safe_dump_all(documents, allow_unicode=True, sort_keys=False))
+
+
+def rewrite_kustomization_images(documents, mapping):
+    """Rewrite Kustomize image transformers alongside workload image fields."""
+    for document in documents:
+        if not isinstance(document, dict) or document.get('kind') != 'Kustomization':
+            continue
+        for image in document.get('images', []):
+            if not isinstance(image, dict) or not isinstance(image.get('name'), str):
+                continue
+            name = image['name']
+            candidate = name
+            if image.get('newTag'):
+                candidate += ':' + str(image['newTag'])
+            target = mapping.get(candidate) or mapping.get(name)
+            if not target:
+                raise ValueError('Kustomize image is missing from the transfer plan: ' + candidate)
+            target_name, separator, target_tag = target.rpartition(':')
+            if not separator or '/' in target_tag:
+                raise ValueError('Kustomize target must include a tag: ' + target)
+            image['newName'] = target_name
+            image['newTag'] = target_tag
 
 
 def inspect(image):

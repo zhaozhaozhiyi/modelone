@@ -82,7 +82,9 @@ bash dist/modelone/rancher-images/rancher_image_save.sh
 先重建需要品牌、安全或业务代码改造的企业镜像。脚本不会尝试从公共仓库拉取 `modelone/` 镜像，产品镜像必须已存在于企业仓库中。
 
 ```sh
-python3 install/kubernetes/all_image.py --output dist/modelone/platform-images
+python3 install/kubernetes/all_image.py \
+  --manifest-root install/kubernetes \
+  --output dist/modelone/platform-images
 bash dist/modelone/platform-images/push_harbor.sh
 bash dist/modelone/platform-images/image_save.sh
 ```
@@ -96,18 +98,17 @@ bash dist/modelone/platform-images/image_save.sh
 ```sh
 python3 scripts/rewrite_deployment_images.py \
   --plan dist/modelone/platform-images/images.json \
-  --output-dir dist/modelone/platform-manifests/argo \
-  --manifest install/kubernetes/argo/install-3.4.3-all.yaml \
-  --manifest install/kubernetes/argo/workflow.yaml
+  --output-dir dist/modelone/platform-manifests/kubernetes \
+  --source-root install/kubernetes
 ```
 
-该命令会重写每个 `image`、`initContainers[].image` 以及控制器 `args`/`command` 中的计划镜像引用；缺少镜像、模板表达式或重复输出文件名会直接失败。集群安装使用 `dist/modelone/platform-manifests` 中的重写文件，不直接应用源码清单。镜像包仅是离线安装的一部分；软件包、控制器注入镜像、模型数据、许可证清单与离线网络检查仍须完整验收。
+该命令会递归重写每个 `image`、Kustomize `images`、`initContainers[].image` 以及控制器 `args`/`command` 中的计划镜像引用，并保留源码相对路径；缺少镜像、模板表达式或未重写引用会直接失败。集群启动入口使用 `dist/modelone/platform-manifests/kubernetes` 中的整棵重写文件树，不直接应用源码清单。镜像包仅是离线安装的一部分；软件包、控制器注入镜像、模型数据、许可证清单与离线网络检查仍须完整验收。
 
 ## 内网部署 modelOne
 
 1、在每个节点执行生成的 `image_load.sh` 校验并导入完整离线包，或通过 `pull_harbor.sh` 从企业内网仓库拉取。平台部署前审核节点初始化配置，避免直接套用发行版和网络配置示例。
 
-2、在联网环境完成企业镜像计划、Argo 清单重写和发布清单扫描，确保 `dist/modelone/kubernetes.yaml` 与 `dist/modelone/platform-manifests/argo/install-3.4.3-all.yaml` 已随交付包提供。集群启动脚本拒绝直接应用源码清单。
+2、在联网环境完成企业镜像计划、整棵 Kubernetes 清单重写和发布清单扫描，确保 `dist/modelone/kubernetes.yaml` 与 `dist/modelone/platform-manifests/kubernetes` 已随交付包提供。集群启动脚本拒绝直接应用源码清单。
 
 3、复制 k8s 的 config 文件，设置 `MODELONE_RELEASE_DIR`（默认 `../../dist/modelone`）和可选的 `MODELONE_SERVICE_EXTERNAL_IP`，再执行 `bash install/kubernetes/start.sh <节点地址>`。脚本会把节点地址注入 modelOne 工作负载，不会修改源码配置文件。
 

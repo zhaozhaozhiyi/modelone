@@ -164,10 +164,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate modelOne image transfer scripts without pulling images')
     parser.add_argument('--output', type=Path, default=Path.cwd())
     parser.add_argument('--manifest', type=Path, action='append', default=[], help='include concrete image fields from a rendered deployment; may be repeated')
+    parser.add_argument('--manifest-root', type=Path,
+                        help='include every YAML manifest below a source root')
     parser.add_argument('--image-list', type=Path, help='additional newline-delimited runtime images')
     args = parser.parse_args()
     try:
         images += manifest_images(args.manifest)
+        if args.manifest_root:
+            paths = sorted(args.manifest_root.rglob('*.yaml')) + sorted(args.manifest_root.rglob('*.yml'))
+            images += manifest_images(paths)
         if args.image_list:
             images += [line.strip() for line in args.image_list.read_text().splitlines() if line.strip()]
         registry = os.environ.get('MODELONE_IMAGE_REGISTRY') or brand_module.BRAND['image_registry']

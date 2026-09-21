@@ -252,6 +252,14 @@ class BrandTests(unittest.TestCase):
                 configured_plan = json.loads((Path(configured_folder) / 'images.json').read_text())
                 self.assertTrue(all(row['target'].startswith('registry.config.example.test/team/modelone/')
                                     for row in configured_plan['images']))
+            with tempfile.TemporaryDirectory() as manifest_folder:
+                rooted = subprocess.run([
+                    'python3', str(script), '--manifest-root', str(ROOT / 'install/kubernetes'),
+                    '--output', manifest_folder,
+                ], cwd=ROOT, env=env, capture_output=True, text=True)
+                self.assertEqual(rooted.returncode, 0, rooted.stderr)
+                rooted_plan = json.loads((Path(manifest_folder) / 'images.json').read_text())
+                self.assertIn('nginx', {row['runtime'] for row in rooted_plan['images']})
 
     def test_release_and_resource_gates_require_enterprise_inputs(self):
         config_path = ROOT / 'config/modelone.json'
@@ -386,13 +394,17 @@ class BrandTests(unittest.TestCase):
     def test_cluster_entrypoints_require_rendered_release_manifests(self):
         for name in ('start.sh', 'start-with-kubesphere.sh'):
             source = (ROOT / 'install/kubernetes' / name).read_text(encoding='utf-8')
-            self.assertIn('MODELONE_KUBERNETES_MANIFEST', source)
-            self.assertIn('MODELONE_ARGO_MANIFEST_DIR', source)
-            self.assertIn('install-3.4.3-all.yaml', source)
+            self.assertIn('modelone-manifests.sh', source)
             self.assertIn('kubectl apply -f "$MODELONE_KUBERNETES_MANIFEST"', source)
             self.assertIn('MODELONE_SERVICE_EXTERNAL_IP', source)
+            self.assertIn('cd "$MODELONE_SOURCE_ROOT"', source)
             self.assertNotIn('kubectl apply -k cube/overlays', source)
             self.assertNotIn('kubectl apply -f argo/install-3.4.3-all.yaml', source)
+        helper = (ROOT / 'install/kubernetes/modelone-manifests.sh').read_text(encoding='utf-8')
+        self.assertIn('MODELONE_MANIFEST_ROOT', helper)
+        self.assertIn('modelone_manifest', helper)
+        self.assertIn('modelone_kustomize', helper)
+        self.assertIn('command kubectl', helper)
         for path in ('install/kubernetes/cube/overlays/config/config.py', 'install/docker/config.py'):
             source = (ROOT / path).read_text(encoding='utf-8')
             self.assertIn('MODELONE_SERVICE_EXTERNAL_IP', source)

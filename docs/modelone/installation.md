@@ -38,14 +38,21 @@ done
 python3 scripts/brand_scan.py --built
 python3 scripts/resource_inventory.py
 python3 scripts/compliance_inventory.py
-python3 install/kubernetes/all_image.py --output dist/modelone/platform-images
+python3 install/kubernetes/all_image.py \
+  --manifest-root install/kubernetes \
+  --output dist/modelone/platform-images
 python3 scripts/render_deployment.py \
   --release \
   --image-plan dist/modelone/platform-images/images.json
+python3 scripts/rewrite_deployment_images.py \
+  --plan dist/modelone/platform-images/images.json \
+  --source-root install/kubernetes \
+  --output-dir dist/modelone/platform-manifests/kubernetes
 python3 scripts/brand_scan.py \
   --artifact dist/modelone/compose.yaml \
   --artifact dist/modelone/kubernetes.yaml \
-  --artifact dist/modelone/brand.json
+  --artifact dist/modelone/brand.json \
+  --artifact dist/modelone/platform-manifests/kubernetes
 ```
 
 `--release` 要求企业仓库、完整 HTTP(S) 资源 CDN、版权方、帮助、支持、用户协议和隐私地址配置；相对资源路径、含凭据的 URL 和错误仓库格式会被拒绝，不等于完整发布验收。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。产物扫描只针对 Compose、Kubernetes 和品牌清单，资源迁移报告保留原始来源作为审计证据，不应作为运行时交付目录直接发布。
@@ -100,7 +107,7 @@ kubectl -n infra rollout status deployment/kubeflow-dashboard
 
 正式域名和 TLS 证书需要在实际入口网关配置并验证。当前未配置目标集群，尚未执行上述集群命令。平台和 Rancher 镜像计划、完整归档校验与离线导入流程见[离线安装](../../install/kubernetes/offline.md)。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
 
-`install/kubernetes/start.sh` 和 `start-with-kubesphere.sh` 只接受已经渲染并通过品牌/镜像扫描的发布清单：默认读取 `../../dist/modelone/kubernetes.yaml` 和 `../../dist/modelone/platform-manifests/argo/install-3.4.3-all.yaml`，也可通过 `MODELONE_RELEASE_DIR`、`MODELONE_KUBERNETES_MANIFEST` 和 `MODELONE_ARGO_MANIFEST_DIR` 指定路径。脚本不会直接应用源码中的 Argo 清单或 Kustomize overlay。节点地址通过 `MODELONE_SERVICE_EXTERNAL_IP` 注入工作负载；未设置时使用启动脚本的节点地址参数。
+`install/kubernetes/start.sh` 和 `start-with-kubesphere.sh` 只接受已经渲染并通过品牌/镜像扫描的发布清单：默认读取 `../../dist/modelone/kubernetes.yaml` 和 `../../dist/modelone/platform-manifests/kubernetes/argo/install-3.4.3-all.yaml`，并把所有源码 `-f/-k` 引用映射到 `../../dist/modelone/platform-manifests/kubernetes`。也可通过 `MODELONE_RELEASE_DIR`、`MODELONE_KUBERNETES_MANIFEST`、`MODELONE_MANIFEST_ROOT` 和 `MODELONE_ARGO_MANIFEST_DIR` 指定路径。脚本不会直接应用源码中的 Argo 清单或 Kustomize overlay。节点地址通过 `MODELONE_SERVICE_EXTERNAL_IP` 注入工作负载；未设置时使用启动脚本的节点地址参数。
 
 ## 本地隔离容器验证
 
