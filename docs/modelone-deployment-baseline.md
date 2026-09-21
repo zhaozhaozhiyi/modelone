@@ -9,6 +9,7 @@
 | `MODELONE_CONFIG` | JSON 配置文件路径 |
 | `MODELONE_IMAGE_REGISTRY` | 企业镜像仓库，不带 `/modelone` |
 | `MODELONE_ASSET_BASE_URL` | 企业资源根地址 |
+| `MODELONE_MNIST_BASE_URL` | MNIST 示例资源根地址；任务会在其下读取 `datasets/mnist/` |
 | `MODELONE_COPYRIGHT_HOLDER` / `MODELONE_COPYRIGHT_YEAR` | 企业版权 |
 | `MODELONE_HELP_URL` / `MODELONE_SUPPORT_URL` | 帮助与技术支持 |
 | `MODELONE_TERMS_URL` / `MODELONE_PRIVACY_URL` | 用户协议与隐私 |
