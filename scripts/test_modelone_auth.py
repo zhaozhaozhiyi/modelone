@@ -120,7 +120,7 @@ class AuthenticationTests(unittest.TestCase):
         rabbit = (ROOT / 'myapp/example/pipeline/offline-inference/predict_model.py').read_text()
         datax = (ROOT / 'myapp/example/pipeline/datax/mysql-csv.json').read_text()
         ml_datax = (ROOT / 'myapp/example/pipeline/ml/mysql-csv.json').read_text()
-        batch_ssh = (ROOT / 'install/kubernetes/rancher/批量ssh/batch-ssh.sh').read_text()
+        batch_ssh = (ROOT / 'install/kubernetes/rancher/批量ssh/batch_ssh.py').read_text()
         batch_init = (ROOT / 'install/kubernetes/rancher/批量ssh/init.sh').read_text()
         cluster = (ROOT / 'install/kubernetes/rancher/kubekey/config-cluster.yaml').read_text()
         cluster_offline = (ROOT / 'install/kubernetes/rancher/kubekey/config-cluster-offline.yaml').read_text()

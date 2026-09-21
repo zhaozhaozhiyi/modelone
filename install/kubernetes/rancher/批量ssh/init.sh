@@ -1,4 +1,10 @@
+#!/bin/bash
+set -euo pipefail
 stage=${STAGE:-}
+case "$stage" in
+  1|11|2|22|3|33|4|44) ;;
+  *) echo 'Select an explicit supported STAGE' >&2; exit 2 ;;
+esac
 # 先检查下面的命令中的参数，比如内网仓库的地址，docker根目录的地址，nfs的地址，rancher server的加入地址，机器的网卡名称
 # =================安装docker==================
 if [ "$stage" = "1" ]; then
@@ -44,12 +50,14 @@ if [ "$stage" = "2" ]; then
   apt update
   apt install -y nfs-kernel-server
   apt install -y nfs-common
-  export server=10.0.0.76
+  : "${MODELONE_NFS_SERVER:?Set the NFS server}"
+  : "${MODELONE_NFS_EXPORT:?Set the NFS export path}"
   mkdir -p /data/nfs
-  echo "${server}:/data/nfs  /data/nfs   nfs   defaults  0  0" >> /etc/fstab
+  nfs_entry="${MODELONE_NFS_SERVER}:${MODELONE_NFS_EXPORT} /data/nfs nfs defaults 0 0"
+  grep -Fxq "$nfs_entry" /etc/fstab || echo "$nfs_entry" >> /etc/fstab
   mount -a
   mkdir -p /data/nfs/k8s
-  ln -s /data/nfs/k8s /data/
+  if [ ! -e /data/k8s ]; then ln -s /data/nfs/k8s /data/k8s; fi
 
 fi
 # =================检测：挂载nfs==================
@@ -68,8 +76,7 @@ fi
 
 ## ==================检测网卡对应的ip是不是对的=====================
 if [ "$stage" = "4" ]; then
-  ip=`ifconfig eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'`
-  echo $ip
+  ip -4 addr show dev "${MODELONE_NODE_INTERFACE:-eth0}"
 fi
 ## ==================加入rancher集群=====================
 if [ "$stage" = "44" ]; then
@@ -77,6 +84,7 @@ if [ "$stage" = "44" ]; then
   : "${RANCHER_AGENT_TOKEN:?Set the short-lived Rancher agent token}"
   : "${RANCHER_AGENT_CA_CHECKSUM:?Set the Rancher agent CA checksum}"
   RANCHER_AGENT_IMAGE="${RANCHER_AGENT_IMAGE:-rancher/rancher-agent:v2.8.5}"
-  ip=`ifconfig eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'`
-  sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run "$RANCHER_AGENT_IMAGE" --server "$RANCHER_SERVER_URL" --token "$RANCHER_AGENT_TOKEN" --ca-checksum "$RANCHER_AGENT_CA_CHECKSUM" --worker --node-name "$ip"
+  node_ip=$(ip -4 -o addr show dev "${MODELONE_NODE_INTERFACE:-eth0}" scope global | awk 'NR == 1 {split($4, address, "/"); print address[1]}')
+  : "${node_ip:?No IPv4 address found on the selected interface}"
+  sudo -n docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run "$RANCHER_AGENT_IMAGE" --server "$RANCHER_SERVER_URL" --token "$RANCHER_AGENT_TOKEN" --ca-checksum "$RANCHER_AGENT_CA_CHECKSUM" --worker --node-name "$node_ip"
 fi
