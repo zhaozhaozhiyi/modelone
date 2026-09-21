@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ brand.description }}">
+  <link rel="icon" type="image/svg+xml" href="{{ brand.favicon_url }}">
+  <title>{{ brand.title }}</title>
+  <style>
+    :root {
+      --brand-primary: {{ brand.primary_color or '#17191d' }};
+      --brand-surface: #ffffff;
+      --brand-background: #f4f6f8;
+      --brand-border: #d9dee5;
+      --brand-muted: #667085;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--brand-background);
+      color: var(--brand-primary);
+      font-family: {{ brand.font_family or 'Inter, "PingFang SC", "Microsoft YaHei", sans-serif' }};
+    }
+    .login-shell { width: min(100%, 420px); }
+    .login-card {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 8px;
+      padding: 36px;
+      box-shadow: 0 16px 40px rgba(23, 25, 29, 0.08);
+    }
+    .brand-logo { display: block; width: min(100%, 220px); height: auto; margin: 0 auto 24px; }
+    h1 { margin: 0; font-size: 22px; line-height: 1.35; text-align: center; }
+    .login-description { margin: 8px 0 28px; color: var(--brand-muted); text-align: center; font-size: 14px; }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; margin-bottom: 7px; font-size: 14px; font-weight: 600; }
+    .field input {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 11px;
+      border: 1px solid var(--brand-border);
+      border-radius: 6px;
+      color: var(--brand-primary);
+      background: #fff;
+      font: inherit;
+    }
+    .field input:focus { outline: 2px solid color-mix(in srgb, var(--brand-primary) 25%, transparent); outline-offset: 1px; }
+    .field-error { margin: 6px 0 0; color: #b42318; font-size: 12px; }
+    .form-error { margin: 0 0 16px; color: #b42318; font-size: 13px; }
+    .login-submit {
+      width: 100%;
+      min-height: 42px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--brand-primary);
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .login-submit:hover { opacity: 0.9; }
+    .login-footer { margin-top: 24px; color: var(--brand-muted); font-size: 12px; text-align: center; }
+    .login-footer a { color: var(--brand-primary); }
+    @media (max-width: 480px) { .login-card { padding: 28px 22px; } }
+  </style>
+</head>
+<body>
+  <main class="login-shell">
+    <section class="login-card" aria-labelledby="login-title">
+      <img class="brand-logo" src="{{ brand.logo_url }}" alt="{{ brand.name }}">
+      <h1 id="login-title">{{ brand.name }}</h1>
+      <p class="login-description">{{ brand.description }}</p>
+      <form method="post" action="{{ request.full_path }}" novalidate>
+        {{ form.hidden_tag() }}
+        {% if form.errors.get('__all__') %}
+          <p class="form-error" role="alert">{{ form.errors['__all__']|join('；') }}</p>
+        {% endif %}
+        <div class="field">
+          {{ form.username.label }}
+          {{ form.username(autocomplete="username", autofocus=true) }}
+          {% for error in form.username.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field">
+          {{ form.password.label }}
+          {{ form.password(autocomplete="current-password") }}
+          {% for error in form.password.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        <button class="login-submit" type="submit">登录</button>
+      </form>
+      {% if brand.help_url or brand.support_url or brand.copyright %}
+        <footer class="login-footer">
+          {% if brand.help_url %}<a href="{{ brand.help_url }}" target="_blank" rel="noreferrer">帮助中心</a>{% endif %}
+          {% if brand.help_url and brand.support_url %} · {% endif %}
+          {% if brand.support_url %}<a href="{{ brand.support_url }}" target="_blank" rel="noreferrer">技术支持</a>{% endif %}
+          {% if brand.copyright %}<div>{{ brand.copyright }}</div>{% endif %}
+        </footer>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

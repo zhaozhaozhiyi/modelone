@@ -74,6 +74,13 @@ class BrandTests(unittest.TestCase):
         self.assertIn("conf.get('REPOSITORY_ORG') or 'modelone/'", source)
         self.assertNotIn('harbor.oa.com/modelone/', source)
 
+    def test_login_template_is_modelone_branded_and_csrf_ready(self):
+        template = (ROOT / 'myapp/templates/appbuilder/general/security/login_db.html').read_text(encoding='utf-8')
+        for value in ('{{ brand.title }}', '{{ brand.logo_url }}', '{{ form.hidden_tag() }}',
+                      'request.full_path', 'autocomplete="current-password"'):
+            self.assertIn(value, template)
+        self.assertNotIn('CubeStudio', template)
+
     def test_sql_migration_preserves_ids_and_handles_optional_modules(self):
         engine = sa.create_engine('sqlite://')
         with engine.begin() as db:
