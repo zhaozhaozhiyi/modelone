@@ -121,6 +121,8 @@ class NotebookTests(unittest.TestCase):
         self.env['USERNAME'] = '../escape'
         with self.assertRaises(ValueError):
             self.initialize()
+        with self.assertRaises(ValueError):
+            runtime.initialization_command('../escape')
 
     @unittest.skipUnless(os.environ.get('MODELONE_NOTEBOOK_TEST_IMAGE'), 'optional local container check')
     def test_launcher_waits_for_initialization_and_propagates_failure(self):

@@ -17,6 +17,8 @@ def parse_environment(value):
 
 
 def initialization_command(username):
+    if not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]*', username or ''):
+        raise ValueError('Notebook username must be a single directory name')
     user_init = shlex.quote('/mnt/' + username + '/init.sh')
     # Platform setup completes before the IDE starts. User startup hooks remain
     # asynchronous for compatibility with long-running environment installers.
