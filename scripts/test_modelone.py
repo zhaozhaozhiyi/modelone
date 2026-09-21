@@ -106,6 +106,7 @@ class BrandTests(unittest.TestCase):
     def test_runtime_brand_script_updates_browser_theme_color(self):
         source = (ROOT / 'scripts/generate_brand.py').read_text(encoding='utf-8')
         self.assertIn("meta[name=\"theme-color\"]", source)
+        self.assertIn("link[rel=\"apple-touch-icon\"]", source)
         self.assertIn('themeColor.content = b.primaryColor', source)
 
     def test_brand_css_values_are_validated(self):

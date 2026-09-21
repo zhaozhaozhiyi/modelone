@@ -4,6 +4,8 @@ window.applyModeloneBrand = function () {
   document.title = b.title;
   var icon = document.querySelector('link[rel="icon"]');
   if (icon && b.faviconUrl) icon.href = b.faviconUrl;
+  var touchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+  if (touchIcon && b.faviconUrl) touchIcon.href = b.faviconUrl;
   var description = document.querySelector('meta[name="description"]');
   if (description) description.content = b.description;
   var themeColor = document.querySelector('meta[name="theme-color"]');
