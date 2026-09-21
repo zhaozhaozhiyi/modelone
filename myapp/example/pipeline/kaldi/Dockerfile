@@ -1,5 +1,5 @@
 
-# docker build --network=host -t ccr.ccs.tencentyun.com/cube-studio/kaldi:gpu-ubuntu18.04-cuda10.0-2023-05-08 .
+# docker build --network=host -t modelone/kaldi:gpu-ubuntu18.04-cuda10.0-2023-05-08 .
 
 FROM kaldiasr/kaldi:gpu-ubuntu18.04-cuda10.0-2023-05-08
 

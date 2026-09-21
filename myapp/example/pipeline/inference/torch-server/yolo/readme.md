@@ -22,7 +22,7 @@ yolo export model=yolo11x.pt format=torchscript imgsz=640
 torch-model-archiver --model-name yolo11x   --version 1.0   --serialized-file yolo11x.torchscript   --handler yolo_handler:handle   --extra-files class_names.json,yolo_handler.py   --export-path .  --force
 
 # 推理服务
-推理镜像：ccr.ccs.tencentyun.com/cube-studio/torchserve:0.9.0-cpu
+推理镜像：modelone/torchserve:0.9.0-cpu
 模型地址：/mnt/admin/pipeline/example/inference/torch-server/yolo/yolo11x.mar
 算力 30G 15核
 配置文件：
