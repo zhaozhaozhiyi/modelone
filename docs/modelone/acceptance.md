@@ -17,7 +17,7 @@
 | 11. 自动阻止旧品牌回归 | 扫描器回归通过；CI 包含源码、构建产物门禁 | 自有仓库运行 CI 并将检查设为合并/发布必需项 |
 | 12. 许可证与版权 | 原 LICENSE 保持不变，生成已安装依赖的声明与证据清单 | 4,675 条依赖记录中 1,619 条待人工复核；最终 Python/系统/镜像 SBOM 与许可证归档 |
 
-本地品牌回归九项、认证回归六项通过；MySQL、前端镜像和应用容器验证通过。实际 HTTP 已验证密码登录、CSRF、拒绝用户名/Host 绕过、令牌签名与有效期、任务用途限制、账号停用、退出及重复管理员初始化。报告保存在 `dist/modelone/app-smoke-validation.json`，密钥渲染检查为 `deployment-auth-validation.json`。
+本地品牌回归九项、认证回归七项通过；MySQL、前端镜像和应用容器验证通过。实际 HTTP 已验证密码登录、CSRF、拒绝用户名/Host 绕过、令牌签名与有效期、任务用途限制、账号停用、退出及重复管理员初始化。报告保存在 `dist/modelone/app-smoke-validation.json`，密钥渲染检查为 `deployment-auth-validation.json`。
 
 前端构建仍有既有 lint、依赖和包体积告警，Kustomize 有旧配置语法提示。应用初始化记录到已捕获的 `nickname` 列重复提示，需在企业升级演练核对。认证绕过已在本地修复；[安全检查](security-review.md)中的企业认证、基础设施生产配置、旧凭据迁移及目标环境检查仍未验收。
 

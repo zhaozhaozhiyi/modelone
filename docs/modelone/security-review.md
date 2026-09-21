@@ -14,7 +14,7 @@
 - 会话与 JWT 使用独立随机密钥，缺失、弱值或重复值会阻止启动。初始管理员要求受保护密码配置；重复初始化不改已有管理员密码。生成器仅创建权限为 600 的新文件，不覆盖原密钥。
 - 新生成 Pipeline 和调试任务注入有时限的任务令牌，仅允许数据集、项目、模型登记和推理接口；禁止用它创建浏览器会话或访问用户管理。相关启动器去除用户名回退和局部变量跟踪；企业任务镜像需要重新构建。
 
-上述登录行为通过隔离 MySQL/Redis/后端容器的真实 HTTP 请求验证；报告为 `dist/modelone/app-smoke-validation.json`。六项独立认证回归覆盖令牌格式、无效声明、任务用途、私密配置及密钥生成。生产 Secure cookie 默认值由配置测试覆盖，HTTPS 代理链尚待目标环境验证。
+上述登录行为通过隔离 MySQL/Redis/后端容器的真实 HTTP 请求验证；报告为 `dist/modelone/app-smoke-validation.json`。七项独立认证回归覆盖令牌格式、无效声明、任务用途、私密配置及密钥生成。Grafana 管理员密码和签名密钥改由 Secret 注入，初始化示例、Celery 和离线推理示例不再携带固定可用凭据。生产 Secure cookie 默认值由配置测试覆盖，HTTPS 代理链尚待目标环境验证。
 
 Compose 已通过生成的私密环境文件解析；数据库和 Redis 不再使用示例密码，也不暴露主机端口，前端默认只绑定回环地址。Kubernetes 四个后端工作负载引用 `modelone-auth` 和 `modelone-infrastructure`，MySQL/Redis 使用 Secret，前端不接收认证密钥，生成的品牌配置不包含私密值。此项为本地渲染检查，未向集群应用。
 
