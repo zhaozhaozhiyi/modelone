@@ -15,6 +15,13 @@ import { handleTips } from './api';
 import { setTheme } from './theme';
 import LoadingStar from './components/LoadingStar/LoadingStar';
 import globalConfig from './global.config';
+import { brand } from './brand';
+
+document.title = brand.title;
+const description = document.querySelector('meta[name="description"]');
+if (description) {
+  description.setAttribute('content', brand.description);
+}
 
 Spin.setDefaultIndicator(<LoadingStar />)
 

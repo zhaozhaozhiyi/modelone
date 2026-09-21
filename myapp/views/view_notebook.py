@@ -336,7 +336,7 @@ class Notebook_ModelView_Base():
             if file_name.split('.')[-1] not in text_file_extensions:
                 file_path = file_path.replace(file_name,'')
 
-        images = data.get('images',f'{conf.get("REPOSITORY_ORG","ccr.ccs.tencentyun.com/cube-studio/")}notebook:jupyter-ubuntu22.04')
+        images = data.get('images',f'{conf.get("REPOSITORY_ORG","modelone/")}notebook:jupyter-ubuntu22.04')
         project = db.session.query(Project).filter(Project.name==project_name).filter(Project.type=='org').first()
         if not project:
             res = make_response("项目组%s不存在"%project_name)

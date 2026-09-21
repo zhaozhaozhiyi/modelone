@@ -126,7 +126,8 @@
     "build": "npm run buildSelf",
     "buildSelf": "cross-env TSC_COMPILE_ON_ERROR=true APP_ENV=frontend NODE_OPTIONS=--max-old-space-size=8192 node scripts/build.js",
     "buildFab": "cross-env TSC_COMPILE_ON_ERROR=true APP_ENV=fab NODE_OPTIONS=--max-old-space-size=8192 node scripts/build.js",
-    "test": "node scripts/test.js"
+    "test": "node scripts/test.js",
+    "prebuild": "python3 ../../scripts/generate_brand.py"
   },
   "eslintConfig": {
     "extends": [

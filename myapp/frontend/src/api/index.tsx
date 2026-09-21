@@ -1,7 +1,7 @@
 import Axios, { AxiosResponse } from 'axios';
 import { notification } from 'antd';
 import cookies from 'js-cookie';
-const baseApi = process.env.REACT_APP_BASE_URL || 'http://localhost/'
+const baseApi = process.env.REACT_APP_BASE_URL || window.location.origin
 
 export type AxiosResFormat<T> = Promise<AxiosResponse<ResponseFormat<T>>>;
 export interface ResponseFormat<T = any> {

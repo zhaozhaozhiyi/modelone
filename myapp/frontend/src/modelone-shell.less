@@ -1,0 +1,226 @@
+body {
+  background: var(--mo-bg);
+  color: var(--mo-text);
+  font-family: var(--mo-font-sans);
+}
+
+a {
+  color: var(--mo-brand-primary);
+}
+
+a:hover {
+  color: var(--mo-ink);
+}
+
+.content-container {
+  background: var(--mo-bg);
+}
+
+.navbar {
+  height: var(--mo-topbar);
+  background: var(--mo-ink);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  color: #fff;
+}
+
+.navbar a,
+.navbar .ant-menu,
+.navbar .ant-menu-item,
+.navbar .ant-menu-submenu-title {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.navbar .ant-menu {
+  background: transparent;
+  border-bottom: 0;
+}
+
+.navbar .ant-menu-item:hover,
+.navbar .ant-menu-submenu-title:hover,
+.navbar .ant-menu-item-active,
+.navbar .ant-menu-submenu-active {
+  color: #fff;
+  background: var(--mo-ink-hover);
+}
+
+.navbar .ant-menu-item-selected,
+.navbar .ant-menu-submenu-selected {
+  color: #fff;
+  background: transparent;
+}
+
+.navbar .ant-menu-horizontal > .ant-menu-item::after,
+.navbar .ant-menu-horizontal > .ant-menu-submenu::after {
+  border-bottom: 3px solid var(--mo-brand-contrast);
+}
+
+.navbar .ant-dropdown-trigger,
+.navbar .anticon {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.main-content-container {
+  background: var(--mo-bg);
+}
+
+.side-menu {
+  width: var(--mo-sider);
+  background: var(--mo-surface);
+  border-right: 1px solid var(--mo-border);
+}
+
+.side-menu .ant-menu {
+  background: var(--mo-surface);
+  color: var(--mo-text-secondary);
+}
+
+.side-menu .ant-menu-item,
+.side-menu .ant-menu-submenu-title {
+  color: var(--mo-text-secondary);
+  border-radius: 0;
+}
+
+.side-menu .ant-menu-item:hover,
+.side-menu .ant-menu-submenu-title:hover {
+  color: var(--mo-ink);
+  background: var(--mo-surface-hover);
+}
+
+.side-menu .ant-menu-item-selected {
+  color: var(--mo-ink);
+  background: var(--mo-surface-selected);
+}
+
+.side-menu .ant-menu-inline .ant-menu-item::after {
+  border-right: 3px solid var(--mo-brand-primary);
+}
+
+.side-menu .ant-menu-item-selected .anticon,
+.side-menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: var(--mo-brand-primary);
+}
+
+.ant-layout,
+.ant-layout-content,
+#componentContainer {
+  background: var(--mo-bg);
+}
+
+.ant-card,
+.ant-table-wrapper,
+.ant-form,
+.ant-tabs-card > .ant-tabs-content,
+.ant-collapse {
+  border-radius: var(--mo-radius-control);
+}
+
+.ant-card {
+  border-color: var(--mo-border);
+  box-shadow: none;
+}
+
+.ant-card-head,
+.ant-table-thead > tr > th {
+  background: var(--mo-surface-muted);
+  border-color: var(--mo-border);
+  color: var(--mo-text);
+}
+
+.ant-table-tbody > tr > td {
+  border-color: var(--mo-border);
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--mo-surface-hover);
+}
+
+.ant-btn {
+  border-radius: var(--mo-radius-control);
+}
+
+.ant-btn-primary {
+  color: var(--mo-brand-contrast);
+  background: var(--mo-brand-primary);
+  border-color: var(--mo-brand-primary);
+  box-shadow: none;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  color: var(--mo-brand-contrast);
+  background: var(--mo-brand-primary-hover);
+  border-color: var(--mo-brand-primary-hover);
+}
+
+.ant-btn-primary:active {
+  color: var(--mo-brand-contrast);
+  background: var(--mo-brand-primary-active);
+  border-color: var(--mo-brand-primary-active);
+}
+
+.ant-btn-dangerous.ant-btn-primary {
+  color: #fff;
+  background: var(--mo-danger);
+  border-color: var(--mo-danger);
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused {
+  border-color: var(--mo-brand-primary);
+  box-shadow: 0 0 0 2px rgba(23, 25, 29, 0.18);
+}
+
+.ant-tag {
+  border-radius: var(--mo-radius-sm);
+}
+
+.title-header {
+  background: var(--mo-surface);
+  border-bottom-color: var(--mo-border);
+}
+
+.mono,
+code,
+pre,
+.ant-table-column-sorter,
+.ant-statistic-content-value {
+  font-family: var(--mo-font-mono);
+}
+
+@media (max-width: 767px) {
+  .navbar {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .navbar > .d-f {
+    min-width: 0;
+  }
+
+  .navbar > .d-f:first-child {
+    padding-left: 12px;
+  }
+
+  .navbar > .d-f:last-child {
+    padding-right: 12px;
+    padding-left: 8px;
+  }
+
+  .navbar .star-topmenu {
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .side-menu {
+    flex: 0 0 var(--mo-sider-collapsed);
+    width: var(--mo-sider-collapsed);
+  }
+
+  .side-menu .ant-menu {
+    min-width: var(--mo-sider-collapsed);
+  }
+}

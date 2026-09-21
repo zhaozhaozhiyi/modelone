@@ -8,6 +8,7 @@ import {
 } from "../../../api/home";
 import dayjs from "dayjs";
 import { DeleteOutlined } from "@ant-design/icons";
+import "./PipelineList.less";
 
 const { TabPane } = Tabs;
 
@@ -69,7 +70,7 @@ const PipelineList: React.FC = () => {
           }
 
           if (!name) {
-            return <span style={{ color: "#999" }}>-</span>;
+            return <span className="pipeline-empty">-</span>;
           }
 
           return (
@@ -79,7 +80,7 @@ const PipelineList: React.FC = () => {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#1890ff" }}
+              className="pipeline-link"
               dangerouslySetInnerHTML={{ __html: displayHtml }}
             />
           );

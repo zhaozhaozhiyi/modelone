@@ -76,5 +76,5 @@ const blue: IThemeConfig = {
 
 ```js
 // 文件路径：myapp/frontend/public/index.html
-<img src="%PUBLIC_URL%/cubeStudioLogo.png" alt="">
+<img src="%PUBLIC_URL%/modelone-mark.svg" alt="">
 ```

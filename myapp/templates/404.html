@@ -1,7 +1,4 @@
-
-{% block content %}
-<!-- <h2><center>{{_('Page not found')}}<center></h2> -->
-<div style="width: 100%; height: calc( 100vh - 224px ); display: flex; align-items: center; justify-content: center;">
-    <img src="/static/assets/images/404.jpg" alt="404" style="max-height: 100%;" />
-</div>
-{% endblock %}
+{% set error_code = 404 %}
+{% set error_title = '页面不存在' %}
+{% set error_message = '此页面可能已移动或删除，请返回工作台继续操作。' %}
+{% include 'modelone-error.html' %}

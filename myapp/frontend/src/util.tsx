@@ -183,7 +183,7 @@ export function drawWater() {
     if (!id)
         id = '';
     const content = username;
-    const src = id + " @CubeStudio";
+    const src = id + " @modelOne";
 
     window.onload = function () {
         drawWaterMark({ content: content, src: src });
@@ -198,7 +198,7 @@ export function drawWaterNow() {
     if (!id)
         id = '';
     const content = username;
-    const src = id + " @CubeStudio";
+    const src = id + " @modelOne";
 
     drawWaterMark({ content: content, src: src });
 }

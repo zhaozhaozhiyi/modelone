@@ -343,7 +343,7 @@ const AppWrapper = (props: IProps) => {
               <div className="cp pr16" style={{ width: 'auto' }} onClick={() => {
                 navigate('/', { replace: true })
               }}>
-                <img style={{ height: 42 }} src={globalConfig.appLogo.default} alt="img" />
+                <img style={{ height: 42 }} src={globalConfig.appLogo.default} alt={globalConfig.brand.name} />
               </div>
 
               {
@@ -381,6 +381,9 @@ const AppWrapper = (props: IProps) => {
             }
 
             <Dropdown overlay={<Menu>
+              {globalConfig.brand.termsUrl && <Menu.Item><a href={globalConfig.brand.termsUrl} target="_blank" rel="noreferrer">用户协议</a></Menu.Item>}
+              {globalConfig.brand.privacyUrl && <Menu.Item><a href={globalConfig.brand.privacyUrl} target="_blank" rel="noreferrer">隐私政策</a></Menu.Item>}
+              {globalConfig.brand.copyright && <Menu.Item disabled>{globalConfig.brand.copyright}</Menu.Item>}
               <Menu.Item onClick={() => {
                 navigate('/user')
               }}>{"用户中心"}</Menu.Item>

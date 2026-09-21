@@ -1036,7 +1036,7 @@ AI:
                     # 可以根据不同的配置来决定对数据做什么处理，比如
                     # "config":{
                     #     "file":{
-                    #         "cube-studio.csv":{
+                    #         "modelone.csv":{
                     #             "embedding_columns": ["问题"],
                     #             "llm_columns": ['问题', '答案'],
                     #             "keywork_columns": [],
@@ -1466,7 +1466,7 @@ AI:
                 for i in range(pic_num):
                     # 示例输入
                     time.sleep(1)
-                    status, image = 0,f'https://cube-studio.oss-cn-hangzhou.aliyuncs.com/aihub/aigc/aigc{i+1}.jpeg'
+                    status, image = 0,f'/static/assets/modelone/aihub/aigc/aigc{i+1}.jpeg'
 
                     if not status:
                         all_result_image.append(image)

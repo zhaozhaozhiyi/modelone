@@ -34,6 +34,19 @@ CONFIG_MODULE = os.environ.get("MYAPP_CONFIG", "myapp.config")
 app.config.from_object(CONFIG_MODULE)
 conf = app.config
 
+from myapp.brand import BRAND, public_brand
+
+@app.context_processor
+def modelone_context():
+    return {'brand': BRAND}
+
+@app.route('/myapp/brand.js')
+def modelone_brand_config():
+    payload = json.dumps(public_brand(), ensure_ascii=True)
+    script = 'window.MODELONE_BRAND = ' + payload + ';document.title = window.MODELONE_BRAND.title;if(window.applyModeloneBrand)window.applyModeloneBrand();'
+    return app.response_class(script, mimetype='application/javascript', headers={'Cache-Control': 'no-store'})
+
+
 if conf.get('DATA_DIR', ''):
     if not os.path.exists(conf['DATA_DIR']):
         os.makedirs(conf['DATA_DIR'], exist_ok=True)
@@ -261,7 +274,7 @@ import jwt
 # @pysnooper.snoop()
 def check_login():
     # /static下面不少地方静态文件直接访问。所以不能加权限限制
-    static_urls = ['/static/', '/logout', '/login','/register', '/health', '/wechat','/wework', '/dingtalk','/proxy','/message_modelview/api/']
+    static_urls = ['/myapp/brand.js', '/static/', '/logout', '/login','/register', '/health', '/wechat','/wework', '/dingtalk','/proxy','/message_modelview/api/']
     for url in static_urls:
         if url in request.path:
             return
@@ -313,7 +326,7 @@ def myapp_after_request(resp):
 @app.after_request
 def apply_http_headers(response):
     """Applies the configuration's http headers to all responses"""
-    for k, v in conf.get("HTTP_HEADERS").items():
+    for k, v in conf.get("HTTP_HEADERS", {}).items():
         response.headers[k] = v
     # response.headers.add("Access-Control-Allow-Origin", "*")
     return response
@@ -327,6 +340,18 @@ def page_not_found(e):
         ),
         404,
     )
+
+@app.errorhandler(401)
+@app.errorhandler(403)
+@app.errorhandler(500)
+@app.errorhandler(503)
+def modelone_error(error):
+    code = getattr(error, 'code', 500)
+    titles = {401: '请重新登录', 403: '访问受限', 500: '服务暂时异常', 503: '服务暂不可用'}
+    messages = {401: '登录状态已失效，请返回工作台重新登录。', 403: '请确认账号权限，或联系管理员申请访问。', 500: '请稍后重试。如问题持续，请联系管理员。', 503: '服务正在恢复，请稍后重试。'}
+    if request.is_json or '/api/' in request.path:
+        return {'message': titles[code], 'status': code}, code
+    return render_template('modelone-error.html', error_code=code, error_title=titles[code], error_message=messages[code]), code
 
 # 配置werkzeug的日志级别为error，这样就不会频繁的打印访问路径了。
 # log = logging.getLogger('werkzeug').setLevel(logging.ERROR)

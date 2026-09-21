@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col, Typography, Spin, message } from "antd";
+import { Row, Col, Typography, Spin } from "antd";
 import {
   PlayCircleOutlined,
   FileTextOutlined,
@@ -8,8 +8,8 @@ import {
 import FeatureCard from "./components/FeatureCard";
 import VideoCard from "./components/VideoCard";
 import PipelineList from "./components/PipelineList";
-import api from "../../api/index";
 import "./Home.less";
+import { brandAsset } from '../../brand';
 
 const { Title } = Typography;
 
@@ -37,14 +37,12 @@ const Home: React.FC = () => {
         {
           name: '新人制作一个pipeline',
           img: "/static/assets/images/ad/video-cover1-thumb.png",
-          video:
-            "https://cube-studio.oss-cn-hangzhou.aliyuncs.com/cube-studio.mp4",
+          video: brandAsset('tutorial-pipeline.mp4'),
         },
         {
           name: '自定义任务模板',
           img: "/static/assets/images/ad/video-cover2-thumb.png",
-          video:
-            "https://cube-studio.oss-cn-hangzhou.aliyuncs.com/job-template.mp4",
+          video: brandAsset('tutorial-job-template.mp4'),
         },
       ]);
     } catch (error: any) {

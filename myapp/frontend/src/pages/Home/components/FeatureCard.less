@@ -4,27 +4,27 @@
 }
 
 .feature-card {
-  height: 180px;
+  height: 164px;
   min-width: 0;
-  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-  border-radius: 8px;
-  border: 1px solid #f0f0f0;
+  transition: border-color 160ms ease, background 160ms ease;
+  border-radius: var(--mo-radius-control);
+  border: 1px solid var(--mo-border);
+  background: var(--mo-surface);
   overflow: hidden;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-color: #1890ff;
+    border-color: var(--mo-brand-primary);
+    background: var(--mo-surface-hover);
   }
 
   .feature-card-image {
-    height: 130px;
+    height: 112px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fafafa;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: var(--mo-surface-muted);
+    border-bottom: 1px solid var(--mo-border);
 
     img {
       width: 100%;
@@ -38,8 +38,8 @@
     text-align: center;
     min-width: 0;
     overflow: hidden;
-    color: rgba(0, 0, 0, 0.85);
-    font-weight: 400;
+    color: var(--mo-text);
+    font-weight: 500;
   }
   .feature-card-title {
     display: -webkit-box;
@@ -55,7 +55,7 @@
 
   .ant-card-body {
     padding: 0;
-    height: 45px;
+    height: 51px;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ brand.title }}</title>
+  <meta name="description" content="{{ brand.description }}">
+  <link rel="icon" href="{{ brand.favicon_url }}">
+  <style>
+    :root { --ink:#17191d; --muted:#50545c; --surface:#f5f6f7; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.6 Inter,"PingFang SC","Microsoft YaHei",sans-serif; }
+    main { max-width:640px; margin:12vh auto; padding:32px; }
+    img { width:160px; max-width:100%; }
+    .code { margin:64px 0 0; color:var(--muted); font-size:14px; letter-spacing:.08em; }
+    h1 { font-size:32px; line-height:1.2; letter-spacing:-.02em; font-weight:600; }
+    p { max-width:50ch; }
+    a { display:inline-block; color:var(--ink); padding:12px 0; margin-right:24px; text-underline-offset:4px; }
+    a:focus-visible { outline:2px solid var(--ink); outline-offset:4px; }
+    footer { margin-top:64px; font-size:13px; color:var(--muted); }
+  </style>
+</head>
+<body><main>
+  <img src="{{ brand.logo_url }}" alt="{{ brand.name }}">
+  <p class="code">{{ error_code }}</p>
+  <h1>{{ error_title }}</h1>
+  <p>{{ error_message }}</p>
+  <a href="/frontend/">返回工作台</a>
+  {% if brand.support_url %}<a href="{{ brand.support_url }}">联系技术支持</a>{% endif %}
+  {% if brand.copyright %}<footer>{{ brand.copyright }}</footer>{% endif %}
+</main></body>
+</html>

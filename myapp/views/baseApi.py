@@ -320,7 +320,7 @@ class MyappModelRestApi(ModelRestApi):
     ops_link = [
         # {
         #     "text": "git",
-        #     "url": "https://github.com/data-infra/cube-studio"
+        #     "url": ""
         # }
     ]
 

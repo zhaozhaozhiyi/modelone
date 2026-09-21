@@ -353,7 +353,7 @@ class MyappSecurityManager(SecurityManager):
                 password=password,
                 hashed_password=hashed_password,
                 org=org_name,               # 添加组织架构
-                email=username + f"@{conf.get('APP_NAME','cube-studio').replace(' ','').lower()}.com" if not email else email,
+                email=username + f"@{conf.get('APP_NAME','modelOne').replace(' ','').lower()}.com" if not email else email,
                 roles=[self.find_role(self.auth_user_registration_role)] if self.find_role(self.auth_user_registration_role) else []  #  org_role   添加gamma默认角色,    组织架构角色先不自动添加
             )
         elif not user.is_active:  # 如果用户未激活不允许接入
