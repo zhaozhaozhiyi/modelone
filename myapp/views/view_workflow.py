@@ -18,6 +18,7 @@ from myapp.models.model_job import Pipeline, Workflow
 from flask_appbuilder.actions import action
 from myapp.project import push_message
 from myapp import app, appbuilder, db, event_logger, cache
+from myapp.brand import download_filename
 from flask import request
 from sqlalchemy import or_
 from flask import Markup
@@ -507,6 +508,7 @@ class Workflow_ModelView_Base():
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)
                 minioClient.fget_object('mlpipeline', key, save_path)
                 response = make_response(send_from_directory(os.path.dirname(save_path), os.path.basename(save_path), as_attachment=True,conditional=True))
+                response.headers['Content-Disposition'] = 'attachment; filename=%s' % download_filename(os.path.basename(save_path))
                 return response
             response = None
             try:

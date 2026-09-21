@@ -42,6 +42,16 @@ class BrandTests(unittest.TestCase):
         finally:
             brand.BRAND.clear(); brand.BRAND.update(before)
 
+    def test_download_filenames_are_branded_and_keep_extensions(self):
+        before = brand.BRAND['internal_name']
+        try:
+            brand.BRAND['internal_name'] = 'modelone'
+            self.assertEqual(brand.download_filename('records', 'csv'), 'modelone-records.csv')
+            self.assertEqual(brand.download_filename('/tmp/modelone-report.csv', 'csv'), 'modelone-report.csv')
+            self.assertEqual(brand.download_filename('workflow.log'), 'modelone-workflow.log')
+        finally:
+            brand.BRAND['internal_name'] = before
+
     def test_sql_migration_preserves_ids_and_handles_optional_modules(self):
         engine = sa.create_engine('sqlite://')
         with engine.begin() as db:

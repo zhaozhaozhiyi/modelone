@@ -72,6 +72,7 @@ from flask_appbuilder.security.decorators import permission_name, protect
 from flask_appbuilder.api import BaseModelApi, BaseApi, ModelRestApi
 from sqlalchemy.sql import sqltypes
 from myapp import app, appbuilder, db, event_logger, cache
+from myapp.brand import download_filename
 from myapp.forms import MySelectMultipleField
 from myapp.models.favorite import Favorite
 
@@ -361,8 +362,7 @@ class MyappModelRestApi(ModelRestApi):
         response = make_response(send_file(file_path, as_attachment=True, conditional=True))
         if not file_name:
             file_name = os.path.basename(file_path)
-        if '.csv' not in file_name:
-            file_name = file_name + ".csv"
+        file_name = download_filename(file_name, 'csv')
         response.headers["Content-Disposition"] = f"attachment; filename={file_name}".format(file_name=file_name)
         return response
 
@@ -1714,7 +1714,7 @@ class MyappModelRestApi(ModelRestApi):
         sql_engine = create_engine(uri)
         table_name = self.datamodel.obj.__tablename__
         # sql = 'select `%s` from %s' % ('`,`'.join(self.show_columns), table_name)
-        file_name = '%s.csv' % table_name
+        file_name = download_filename('%s.csv' % table_name)
         csv_file_path = os.path.abspath(file_name)
         if os.path.exists(csv_file_path):
             os.remove(csv_file_path)

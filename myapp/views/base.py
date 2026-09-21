@@ -20,6 +20,7 @@ from wtforms.fields.core import Field, UnboundField
 from flask_appbuilder import ModelView
 from flask_appbuilder.baseviews import BaseCRUDView, BaseView, expose
 from myapp import conf, db, get_feature_flags, security_manager, event_logger
+from myapp.brand import download_filename
 from myapp.exceptions import MyappException, MyappSecurityException
 from myapp.utils import core
 from flask_appbuilder.urltools import (
@@ -93,8 +94,8 @@ def data_payload_response(payload_json, has_error=False):
 
 # 产生下载csv的响应header
 def generate_download_headers(extension, filename=None):
-    filename = filename if filename else datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    content_disp = "attachment; filename={}.{}".format(filename, extension)
+    filename = download_filename(filename or datetime.datetime.now().strftime("%Y%m%d_%H%M%S"), extension)
+    content_disp = "attachment; filename={}".format(filename)
     headers = {"Content-Disposition": content_disp}
     return headers
 

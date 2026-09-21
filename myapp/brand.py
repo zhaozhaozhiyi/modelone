@@ -80,6 +80,20 @@ def image_repository(path):
     base = BRAND['image_registry'].rstrip('/')
     return (base + '/' if base else '') + 'modelone/' + path.lstrip('/')
 
+
+def download_filename(filename=None, extension=None):
+    """Return a safe, product-branded filename for user downloads."""
+    value = os.path.basename(str(filename or 'download')).strip() or 'download'
+    prefix = BRAND.get('internal_name') or 'modelone'
+    if not re.match(r'^' + re.escape(prefix) + r'(?:[-_.]|$)', value, re.I):
+        value = prefix + '-' + value
+    if extension:
+        suffix = '.' + str(extension).lstrip('.')
+        if not value.lower().endswith(suffix.lower()):
+            value += suffix
+    return value
+
+
 def resolve_field(key, value):
     if key in ('gitpath', 'help_url') and isinstance(value, str) and value.startswith(('/job-template/', '/images/')):
         return BRAND['help_url']

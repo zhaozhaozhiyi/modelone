@@ -15,6 +15,7 @@ from myapp.utils.py.py_k8s import K8s, K8SStreamThread
 from flask import g, flash, request, render_template, send_from_directory, send_file, make_response, Markup, jsonify, redirect
 import datetime, time
 from myapp import app, appbuilder, db, event_logger,cache
+from myapp.brand import download_filename
 from .base import BaseMyappView
 
 from myapp.utils.py.py_k8s import K8s
@@ -179,6 +180,7 @@ class K8s_View(BaseMyappView):
             file.write(logs)
             file.close()
             response = make_response(send_file(pod_name, as_attachment=True, conditional=True))
+            response.headers['Content-Disposition'] = 'attachment; filename=%s' % download_filename(pod_name, 'log')
             return response
         except Exception as e:
             traceback.print_exc()
