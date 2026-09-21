@@ -25,12 +25,18 @@ def render(output, release=False, image_plan=None):
         raise ValueError('image plan does not exist: ' + str(image_plan))
     if release and image_plan is not None:
         try:
-            plan_registry = json.loads(image_plan.read_text()).get('registry', '').rstrip('/')
+            plan_data = json.loads(image_plan.read_text())
+            plan_registry = plan_data.get('registry', '').rstrip('/')
         except (OSError, ValueError) as error:
             raise ValueError('invalid image plan: ' + str(error))
         configured_registry = brand.BRAND['image_registry'].rstrip('/')
         if plan_registry != configured_registry:
             raise ValueError('image plan registry does not match MODELONE_IMAGE_REGISTRY')
+        target_prefix = configured_registry + '/modelone/'
+        invalid_targets = [row.get('target', '') for row in plan_data.get('images', [])
+                           if not row.get('target', '').startswith(target_prefix)]
+        if invalid_targets:
+            raise ValueError('image plan contains targets outside MODELONE_IMAGE_REGISTRY')
     output.mkdir(parents=True, exist_ok=True)
     env = {'MODELONE_' + key.upper(): value for key, value in brand.BRAND.items() if key != 'copyright'}
     compose = yaml.safe_load((ROOT / 'install/docker/docker-compose.yml').read_text())

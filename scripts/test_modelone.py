@@ -380,6 +380,39 @@ class BrandTests(unittest.TestCase):
             self.assertNotEqual(rendered.returncode, 0)
             self.assertIn('registry', rendered.stderr + rendered.stdout)
 
+    def test_release_rejects_targets_outside_the_configured_registry(self):
+        render_script = ROOT / 'scripts/render_deployment.py'
+        image_script = ROOT / 'install/kubernetes/all_image.py'
+        with tempfile.TemporaryDirectory() as folder:
+            env = {key: value for key, value in os.environ.items() if not key.startswith('MODELONE_')}
+            env.update({
+                'MODELONE_IMAGE_REGISTRY': 'registry.example.test/team',
+                'MODELONE_ASSET_BASE_URL': 'https://assets.example.test/modelone',
+                'MODELONE_COPYRIGHT_HOLDER': 'Validation Company',
+                'MODELONE_HELP_URL': 'https://help.example.test/modelone',
+                'MODELONE_SUPPORT_URL': 'https://support.example.test/modelone',
+                'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',
+                'MODELONE_PRIVACY_URL': 'https://www.example.test/modelone/privacy',
+            })
+            image_output = Path(folder) / 'images'
+            planned = subprocess.run(
+                ['python3', str(image_script), '--manifest-root', str(ROOT / 'install/kubernetes'),
+                 '--output', str(image_output)],
+                cwd=ROOT, env=env, capture_output=True, text=True,
+            )
+            self.assertEqual(planned.returncode, 0, planned.stderr)
+            plan_path = image_output / 'images.json'
+            plan = json.loads(plan_path.read_text())
+            plan['images'][0]['target'] = 'registry.other.example/team/modelone/foreign:v1'
+            plan_path.write_text(json.dumps(plan))
+            rendered = subprocess.run(
+                ['python3', str(render_script), '--release', '--image-plan', str(plan_path),
+                 '--output', str(Path(folder) / 'release')],
+                cwd=ROOT, env=env, capture_output=True, text=True,
+            )
+            self.assertNotEqual(rendered.returncode, 0)
+            self.assertIn('outside MODELONE_IMAGE_REGISTRY', rendered.stderr + rendered.stdout)
+
     def test_scan_blocks_legacy_text_and_maps(self):
         import tempfile
         spec = importlib.util.spec_from_file_location('scan', ROOT / 'scripts/brand_scan.py')
