@@ -59,50 +59,133 @@ def inventory():
         records.append(row)
     return records
 
-def run(args):
-    records = inventory()
-    if args.require_complete:
-        missing = [key for key in ('image_registry', 'asset_base_url') if not brand.BRAND[key]]
-        if missing:
-            raise ValueError('Missing enterprise settings: ' + ', '.join(missing))
+def digest_file(path):
+    with path.open('rb') as source:
+        return digest_stream(source)[0]
+
+
+def digest_stream(source):
+    hasher, size = hashlib.sha256(), 0
+    for chunk in iter(lambda: source.read(1024 * 1024), b''):
+        hasher.update(chunk)
+        size += len(chunk)
+    return hasher.hexdigest(), size
+
+
+def open_url(value, enterprise=False):
+    parsed = urlsplit(value)
+    if parsed.scheme not in ('http', 'https') or not parsed.hostname:
+        raise ValueError('Resource URL must be absolute HTTP(S)')
+    response = urlopen(urlunsplit(parsed._replace(path=quote(parsed.path, safe='/%:@-._~'))), timeout=60)
+    if enterprise and urlsplit(response.geturl()).hostname == BUCKET:
+        response.close()
+        raise ValueError('Enterprise resource redirects to the original storage')
+    return response
+
+
+def image_digest(value):
+    return subprocess.check_output(
+        ['skopeo', 'inspect', '--format', '{{.Digest}}', 'docker://' + value], text=True).strip()
+
+
+def save_report(path, records):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + '.part')
+    temporary.write_text(json.dumps(records, ensure_ascii=False, indent=2) + '\n')
+    temporary.replace(path)
+
+
+def restore_progress(records, report):
+    previous = {(row['kind'], row['source'], row['target']): row for row in report}
     for row in records:
-        if row['kind'] == 'image' and args.copy_images:
+        saved = previous.get((row['kind'], row['source'], row['target']), {})
+        if saved.get('path') != row.get('path'):
+            continue
+        for key in ('sha256', 'size', 'digest'):
+            if key in saved:
+                row[key] = saved[key]
+        # Every release check must re-read the current target. Persisted success
+        # alone must not certify deleted or changed remote objects.
+        if row.get('sha256'):
+            row['status'] = 'downloaded'
+        elif row.get('digest'):
+            row['status'] = 'copied'
+
+
+def process_record(row, args):
+    if row['status'] == 'template':
+        return
+    if row['kind'] == 'image':
+        if args.copy_images:
             if not brand.BRAND['image_registry']:
                 raise ValueError('MODELONE_IMAGE_REGISTRY is required for image copying')
-            subprocess.run(['skopeo','copy','--all','docker://' + row['source'],'docker://' + row['target']], check=True)
-            source_digest = subprocess.check_output(['skopeo','inspect','--format','{{.Digest}}','docker://' + row['source']], text=True).strip()
-            target_digest = subprocess.check_output(['skopeo','inspect','--format','{{.Digest}}','docker://' + row['target']], text=True).strip()
+            subprocess.run(['skopeo', 'copy', '--all', '--preserve-digests',
+                            'docker://' + row['source'], 'docker://' + row['target']], check=True)
+        if args.copy_images or args.verify_targets:
+            source_digest = row.get('digest') or image_digest(row['source'])
+            target_digest = image_digest(row['target'])
             if source_digest != target_digest:
-                raise ValueError('Image digest mismatch: ' + row['target'])
+                raise ValueError('Image digest mismatch')
             row.update(status='verified', digest=target_digest)
-        if row['kind'] == 'asset' and args.download_assets and row['status'] == 'pending':
-            destination = (args.download_assets / row['path']).resolve()
-            destination.relative_to(args.download_assets.resolve())
+        return
+    if args.download_assets:
+        destination = (args.download_assets / row['path']).resolve()
+        destination.relative_to(args.download_assets.resolve())
+        if not (destination.is_file() and row.get('sha256') == digest_file(destination)):
             destination.parent.mkdir(parents=True, exist_ok=True)
             temporary = destination.with_suffix(destination.suffix + '.part')
-            parsed = urlsplit(row['source'])
-            download_url = urlunsplit(parsed._replace(path=quote(parsed.path, safe='/%:@-._~')))
-            with urlopen(download_url, timeout=60) as response, temporary.open('wb') as output:
+            with open_url(row['source']) as response, temporary.open('wb') as output:
                 shutil.copyfileobj(response, output)
-            hasher = hashlib.sha256()
-            with temporary.open('rb') as source:
-                for chunk in iter(lambda: source.read(1024 * 1024), b''):
-                    hasher.update(chunk)
-            digest = hasher.hexdigest()
             temporary.replace(destination)
-            row.update(status='downloaded', sha256=digest, size=destination.stat().st_size)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
+        row.update(status='downloaded', sha256=digest_file(destination), size=destination.stat().st_size)
+    if args.verify_targets:
+        if not row.get('sha256'):
+            with open_url(row['source']) as source:
+                row['sha256'], row['size'] = digest_stream(source)
+        with open_url(row['target'], enterprise=True) as target:
+            digest, size = digest_stream(target)
+        if digest != row['sha256'] or size != row['size']:
+            raise ValueError('Asset checksum mismatch')
+        row['status'] = 'verified'
+
+
+def run(args):
+    records = inventory()
+    if args.require_complete or args.verify_targets:
+        brand.validate_release_settings(include_links=False)
+    if args.resume:
+        restore_progress(records, json.loads(args.resume.read_text()))
+    failures = 0
+    for row in records:
+        try:
+            process_record(row, args)
+        except (ValueError, OSError, subprocess.CalledProcessError) as error:
+            row.update(status='failed', error=type(error).__name__)
+            failures += 1
+        # Save each operation so interrupted migrations can be resumed.
+        if args.copy_images or args.download_assets or args.verify_targets:
+            save_report(args.output, records)
+    save_report(args.output, records)
     if args.require_complete:
-        incomplete = [row for row in records if row['status'] not in ('verified', 'downloaded')]
+        incomplete = [row for row in records if row['status'] != 'verified']
         if incomplete:
-            raise ValueError('%s resources remain pending; complete image copy and asset download before release' % len(incomplete))
+            raise ValueError('%s resources are not verified at enterprise targets; '
+                             'upload assets, then run --verify-targets --resume <report>' % len(incomplete))
+    if failures:
+        raise ValueError('%s resource operations failed; inspect the saved report' % failures)
     print('%s images, %s assets inventoried (%s templates); report: %s' % (sum(r['kind']=='image' for r in records), sum(r['kind']=='asset' for r in records), sum(r['status']=='template' for r in records), args.output))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output',type=Path,default=ROOT / 'dist/modelone/resource-inventory.json')
-    parser.add_argument('--copy-images',action='store_true')
-    parser.add_argument('--download-assets',type=Path)
-    parser.add_argument('--require-complete', action='store_true', help='fail unless every image and asset has been copied or downloaded')
-    run(parser.parse_args())
+    parser.add_argument('--output', type=Path, default=ROOT / 'dist/modelone/resource-inventory.json')
+    parser.add_argument('--copy-images', action='store_true')
+    parser.add_argument('--download-assets', type=Path)
+    parser.add_argument('--resume', type=Path, help='reuse checksums from an earlier report with identical source and target')
+    parser.add_argument('--verify-targets', action='store_true', help='read enterprise assets and image digests and compare with source checksums')
+    parser.add_argument('--require-complete', action='store_true', help='fail unless every target was verified during this run')
+    args = parser.parse_args()
+    try:
+        run(args)
+    except (ValueError, OSError) as error:
+        parser.error(str(error))

@@ -125,8 +125,7 @@ class BrandTests(unittest.TestCase):
     def test_offline_image_generator_requires_private_registry(self):
         script = ROOT / 'install/kubernetes/all_image.py'
         with tempfile.TemporaryDirectory() as folder:
-            env = os.environ.copy()
-            env.pop('MODELONE_IMAGE_REGISTRY', None)
+            env = {key: value for key, value in os.environ.items() if not key.startswith('MODELONE_')}
             missing = subprocess.run(['python3', str(script)], cwd=folder, env=env,
                                      capture_output=True, text=True)
             self.assertNotEqual(missing.returncode, 0)
@@ -146,9 +145,11 @@ class BrandTests(unittest.TestCase):
         inventory_script = ROOT / 'scripts/resource_inventory.py'
         with tempfile.TemporaryDirectory() as folder:
             config = json.loads(config_path.read_text())
+            for key in ('imageRegistry', 'assetBaseUrl', 'copyrightHolder', 'helpUrl', 'supportUrl', 'termsUrl', 'privacyUrl'):
+                config[key] = ''
             config_file = Path(folder) / 'modelone.json'
             config_file.write_text(json.dumps(config))
-            env = os.environ.copy()
+            env = {key: value for key, value in os.environ.items() if not key.startswith('MODELONE_')}
             env['MODELONE_CONFIG'] = str(config_file)
             rendered = subprocess.run(
                 ['python3', str(render_script), '--release', '--output', str(Path(folder) / 'release')],

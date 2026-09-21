@@ -4,6 +4,7 @@ import os
 import re
 from datetime import date
 from pathlib import Path
+from urllib.parse import urlsplit
 
 CONFIG_PATH = Path(os.environ.get('MODELONE_CONFIG', Path(__file__).resolve().parents[1] / 'config/modelone.json'))
 FIELDS = {
@@ -30,6 +31,31 @@ def load_brand():
     return brand
 
 BRAND = load_brand()
+
+
+def validate_release_settings(include_links=True):
+    required = ['image_registry', 'asset_base_url']
+    if include_links:
+        required += ['copyright_holder', 'help_url', 'support_url', 'terms_url', 'privacy_url']
+    missing = [key for key in required if not BRAND[key].strip()]
+    if missing:
+        raise ValueError('Missing enterprise settings: ' + ', '.join(missing))
+    registry = BRAND['image_registry'].rstrip('/')
+    if not re.fullmatch(r'[a-z0-9][a-z0-9.-]*(?::[0-9]{1,5})?(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)*', registry):
+        raise ValueError('image_registry must be a registry host/path without scheme or credentials')
+    if registry.endswith('/modelone'):
+        raise ValueError('image_registry must not include the modelone namespace')
+    for key in [key for key in required if key.endswith('_url')]:
+        value = BRAND[key]
+        parsed = urlsplit(value)
+        if (parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username
+                or parsed.password or any(c.isspace() for c in value)
+                or re.search(r'cube[-_]?studio|data-master\.net|github\.com/data-infra', value, re.I)):
+            raise ValueError(key + ' must be a full enterprise HTTP(S) URL without credentials')
+        if key == 'asset_base_url' and (parsed.query or parsed.fragment):
+            raise ValueError('asset_base_url must not contain a query or fragment')
+    if re.search(r'cube[-_]?studio|cube-argoproj', registry, re.I):
+        raise ValueError('image_registry must use an enterprise-owned namespace')
 
 # Source filenames remain in the migration inventory, while published media
 # use the same filenames as the modelOne tutorial cards.

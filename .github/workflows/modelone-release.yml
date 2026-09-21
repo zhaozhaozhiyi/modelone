@@ -16,6 +16,9 @@ jobs:
       - run: python -m pip install 'SQLAlchemy>=1.4,<3' PyYAML alembic 'PyJWT>=2.8,<3'
       - run: python scripts/test_modelone.py
       - run: python scripts/test_modelone_auth.py
+      - run: python scripts/test_modelone_notebook.py
+      - run: python scripts/test_modelone_nodes.py
+      - run: python scripts/test_modelone_resources.py
       - run: python scripts/brand_scan.py
       - name: Build all product frontends
         # Upstream lint warnings remain visible; brand and source-map gates
