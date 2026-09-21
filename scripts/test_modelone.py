@@ -54,6 +54,20 @@ class BrandTests(unittest.TestCase):
         finally:
             brand.BRAND['internal_name'] = before
 
+    def test_server_pages_use_the_shared_browser_title(self):
+        templates = (
+            'myapp/templates/myapp/basic.html',
+            'myapp/templates/pods.html',
+            'myapp/templates/log.html',
+            'myapp/templates/k8s_tail_log.html',
+            'myapp/templates/redirect.html',
+            'myapp/templates/close.html',
+            'myapp/templates/myapp/traceback.html',
+        )
+        for relative in templates:
+            text = (ROOT / relative).read_text(encoding='utf-8')
+            self.assertIn('<title>{{ brand.title }}</title>', text, relative)
+
     def test_sql_migration_preserves_ids_and_handles_optional_modules(self):
         engine = sa.create_engine('sqlite://')
         with engine.begin() as db:

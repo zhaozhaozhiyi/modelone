@@ -2,15 +2,7 @@
 <html>
 
 <head>
-  <title>
-    {% block title %}
-    {% if title %}
-    {{ title }}
-    {% elif appbuilder and appbuilder.app_name %}
-    {{ appbuilder.app_name }}
-    {% endif %}
-    {% endblock %}
-  </title>
+  <title>{{ brand.title }}</title>
   {% block head_meta %}{% endblock %}
   {% block head_css %}
   <link rel="icon" type="image/svg+xml" href="{{ brand.favicon_url }}">
