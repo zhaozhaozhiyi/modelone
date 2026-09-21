@@ -19,7 +19,7 @@
 
 本地品牌回归十九项、认证回归七项通过。2026-09-22 新增 Notebook 九项（八项通过、一项因未提供验证镜像而条件跳过）、节点部署五项、资源门禁七项和镜像包九项（八项通过、一项因未提供验证镜像而条件跳过）验证：Notebook 容器检查挂载当前启动脚本；节点测试替代 SSH/Docker，不连接真实节点；资源测试使用本地 HTTP 服务验证下载不足以发布、目标缺失、内容变化和断点校验；镜像包测试验证企业目标映射、归档校验、完整导入前检查、部署清单重写和批量重写 CLI。新增独立 modelOne 登录模板、`configure_modelone_remotes.py` 及回归测试，确保企业 `origin` 由参数显式设置、原仓库 `upstream` 禁止推送；镜像计划生成器可读取统一品牌配置，正式 Compose 产物改为企业镜像、命名数据卷和显式 kubeconfig 挂载。任务模板、三个前端 `public` 源目录和品牌静态资源均纳入扫描门禁；legacy `appbuilder` 静态资源移除了 source-map 引用，并删除了失效的 YOLOv8 旧安装钩子。
 
-较早的 MySQL、前端镜像和应用容器验证已通过，相关报告不代表 2026-09-22 后端及 Notebook 镜像已经重建。实际 HTTP 已验证密码登录、CSRF、拒绝用户名/Host 绕过、令牌签名与有效期、任务用途限制、账号停用、退出及重复管理员初始化。报告保存在 `dist/modelone/app-smoke-validation.json`，密钥渲染检查为 `deployment-auth-validation.json`。
+MySQL、前端镜像和应用容器验证已通过；本次使用当前 Dockerfile 从缓存基础镜像重建 `modelone/validation-backend:20260922`，实际 HTTP 已验证 modelOne 独立登录模板、密码登录、CSRF、拒绝用户名/Host 绕过、令牌签名与有效期、任务用途限制、账号停用、退出及重复管理员初始化。报告保存在 `dist/modelone/app-smoke-validation-20260922/app-smoke-validation.json`，密钥渲染检查为 `deployment-auth-validation.json`。该验证不代表企业正式镜像、Notebook 镜像或生产集群已经验收。
 
 前端构建仍有既有 lint、依赖和包体积告警，Kustomize 有旧配置语法提示。应用初始化记录到已捕获的 `nickname` 列重复提示，需在企业升级演练核对。认证绕过已在本地修复；[安全检查](security-review.md)中的企业认证、基础设施生产配置、旧凭据迁移及目标环境检查仍未验收。
 
