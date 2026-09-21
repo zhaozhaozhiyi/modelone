@@ -14,6 +14,8 @@
 | `MODELONE_TERMS_URL` / `MODELONE_PRIVACY_URL` | 用户协议与隐私 |
 | `MODELONE_LOGO_URL` / `MODELONE_LOGO_REVERSE_URL` / `MODELONE_FAVICON_URL` | 正式品牌图形 |
 | `MODELONE_PRIMARY_COLOR` | CSS 十六进制主色：`#RGB`、`#RGBA`、`#RRGGBB` 或 `#RRGGBBAA` |
+| `MODELONE_SECONDARY_COLOR` | CSS 十六进制辅助色，用于焦点、链接和编排器辅助强调 |
+| `MODELONE_LOGIN_BACKGROUND_COLOR` / `MODELONE_LOGIN_SURFACE_COLOR` | 登录页及错误页的背景色和面板色 |
 | `MODELONE_FONT_FAMILY` | 字体回退列表；只允许字体名、逗号、空格和常用名称字符 |
 
 发布前运行 `python3 scripts/test_modelone.py` 和 `python3 scripts/brand_scan.py --built`；渲染交付目录后，再用 `scripts/brand_scan.py --artifact` 检查 Compose、Kubernetes 和品牌清单。数据库迁移、资源同步、许可证和验收边界分别见交付手册。默认 `modelone/` 镜像和本地资源路径是待配置引用，不表示已经有可用镜像或已完成离线资源准备。
