@@ -19,6 +19,10 @@ spec.loader.exec_module(brand)
 def render(output, release=False, image_plan=None):
     if release:
         brand.validate_release_settings()
+        if image_plan is None:
+            raise ValueError('--release requires --image-plan generated from the deployment manifests')
+    if image_plan is not None and not image_plan.is_file():
+        raise ValueError('image plan does not exist: ' + str(image_plan))
     output.mkdir(parents=True, exist_ok=True)
     env = {'MODELONE_' + key.upper(): value for key, value in brand.BRAND.items() if key != 'copyright'}
     compose = yaml.safe_load((ROOT / 'install/docker/docker-compose.yml').read_text())

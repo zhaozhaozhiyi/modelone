@@ -288,6 +288,7 @@ class BrandTests(unittest.TestCase):
 
     def test_release_compose_is_portable_and_images_include_job_templates(self):
         render_script = ROOT / 'scripts/render_deployment.py'
+        image_script = ROOT / 'install/kubernetes/all_image.py'
         with tempfile.TemporaryDirectory() as folder:
             env = {key: value for key, value in os.environ.items() if not key.startswith('MODELONE_')}
             env.update({
@@ -299,9 +300,17 @@ class BrandTests(unittest.TestCase):
                 'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',
                 'MODELONE_PRIVACY_URL': 'https://www.example.test/modelone/privacy',
             })
+            image_output = Path(folder) / 'images'
+            planned = subprocess.run(
+                ['python3', str(image_script), '--manifest-root', str(ROOT / 'install/kubernetes'),
+                 '--output', str(image_output)],
+                cwd=ROOT, env=env, capture_output=True, text=True,
+            )
+            self.assertEqual(planned.returncode, 0, planned.stderr)
             output = Path(folder) / 'release'
             rendered = subprocess.run(
-                ['python3', str(render_script), '--release', '--output', str(output)],
+                ['python3', str(render_script), '--release', '--image-plan',
+                 str(image_output / 'images.json'), '--output', str(output)],
                 cwd=ROOT, env=env, capture_output=True, text=True,
             )
             self.assertEqual(rendered.returncode, 0, rendered.stderr)
@@ -317,6 +326,26 @@ class BrandTests(unittest.TestCase):
             self.assertNotIn(str(ROOT), (output / 'compose.yaml').read_text())
             self.assertIn('COPY job-template /cube-studio/job-template',
                           (ROOT / 'install/docker/Dockerfile').read_text())
+
+    def test_release_requires_an_image_plan(self):
+        render_script = ROOT / 'scripts/render_deployment.py'
+        with tempfile.TemporaryDirectory() as folder:
+            env = {key: value for key, value in os.environ.items() if not key.startswith('MODELONE_')}
+            env.update({
+                'MODELONE_IMAGE_REGISTRY': 'registry.example.test/team',
+                'MODELONE_ASSET_BASE_URL': 'https://assets.example.test/modelone',
+                'MODELONE_COPYRIGHT_HOLDER': 'Validation Company',
+                'MODELONE_HELP_URL': 'https://help.example.test/modelone',
+                'MODELONE_SUPPORT_URL': 'https://support.example.test/modelone',
+                'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',
+                'MODELONE_PRIVACY_URL': 'https://www.example.test/modelone/privacy',
+            })
+            rendered = subprocess.run(
+                ['python3', str(render_script), '--release', '--output', str(Path(folder) / 'release')],
+                cwd=ROOT, env=env, capture_output=True, text=True,
+            )
+            self.assertNotEqual(rendered.returncode, 0)
+            self.assertIn('--image-plan', rendered.stderr + rendered.stdout)
 
     def test_scan_blocks_legacy_text_and_maps(self):
         import tempfile
