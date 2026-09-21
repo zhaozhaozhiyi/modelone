@@ -140,6 +140,29 @@ class BrandTests(unittest.TestCase):
             self.assertIn('registry.example.test/team/modelone/', push)
             self.assertNotIn('xx.xx.xx.xx', push)
 
+    def test_release_and_resource_gates_require_enterprise_inputs(self):
+        config_path = ROOT / 'config/modelone.json'
+        render_script = ROOT / 'scripts/render_deployment.py'
+        inventory_script = ROOT / 'scripts/resource_inventory.py'
+        with tempfile.TemporaryDirectory() as folder:
+            config = json.loads(config_path.read_text())
+            config_file = Path(folder) / 'modelone.json'
+            config_file.write_text(json.dumps(config))
+            env = os.environ.copy()
+            env['MODELONE_CONFIG'] = str(config_file)
+            rendered = subprocess.run(
+                ['python3', str(render_script), '--release', '--output', str(Path(folder) / 'release')],
+                cwd=ROOT, env=env, capture_output=True, text=True
+            )
+            self.assertNotEqual(rendered.returncode, 0)
+            self.assertIn('asset_base_url', rendered.stderr + rendered.stdout)
+            inventoried = subprocess.run(
+                ['python3', str(inventory_script), '--require-complete', '--output', str(Path(folder) / 'inventory.json')],
+                cwd=ROOT, env=env, capture_output=True, text=True
+            )
+            self.assertNotEqual(inventoried.returncode, 0)
+            self.assertIn('image_registry', inventoried.stderr + inventoried.stdout)
+
     def test_scan_blocks_legacy_text_and_maps(self):
         import tempfile
         spec = importlib.util.spec_from_file_location('scan', ROOT / 'scripts/brand_scan.py')

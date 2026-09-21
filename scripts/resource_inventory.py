@@ -61,6 +61,10 @@ def inventory():
 
 def run(args):
     records = inventory()
+    if args.require_complete:
+        missing = [key for key in ('image_registry', 'asset_base_url') if not brand.BRAND[key]]
+        if missing:
+            raise ValueError('Missing enterprise settings: ' + ', '.join(missing))
     for row in records:
         if row['kind'] == 'image' and args.copy_images:
             if not brand.BRAND['image_registry']:
@@ -89,6 +93,10 @@ def run(args):
             row.update(status='downloaded', sha256=digest, size=destination.stat().st_size)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
+    if args.require_complete:
+        incomplete = [row for row in records if row['status'] not in ('verified', 'downloaded')]
+        if incomplete:
+            raise ValueError('%s resources remain pending; complete image copy and asset download before release' % len(incomplete))
     print('%s images, %s assets inventoried (%s templates); report: %s' % (sum(r['kind']=='image' for r in records), sum(r['kind']=='asset' for r in records), sum(r['status']=='template' for r in records), args.output))
 
 if __name__ == '__main__':
@@ -96,4 +104,5 @@ if __name__ == '__main__':
     parser.add_argument('--output',type=Path,default=ROOT / 'dist/modelone/resource-inventory.json')
     parser.add_argument('--copy-images',action='store_true')
     parser.add_argument('--download-assets',type=Path)
+    parser.add_argument('--require-complete', action='store_true', help='fail unless every image and asset has been copied or downloaded')
     run(parser.parse_args())

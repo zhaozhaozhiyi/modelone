@@ -17,7 +17,10 @@ spec.loader.exec_module(brand)
 
 def render(output, release=False):
     if release:
-        missing = [key for key in ('image_registry', 'copyright_holder', 'help_url', 'support_url') if not brand.BRAND[key]]
+        missing = [key for key in (
+            'image_registry', 'asset_base_url', 'copyright_holder',
+            'help_url', 'support_url', 'terms_url', 'privacy_url'
+        ) if not brand.BRAND[key]]
         if missing:
             raise ValueError('Missing enterprise settings: ' + ', '.join(missing))
     output.mkdir(parents=True, exist_ok=True)

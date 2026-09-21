@@ -20,13 +20,13 @@ python3 scripts/compliance_inventory.py
 python3 scripts/render_deployment.py --release
 ```
 
-`--release` 要求企业仓库、版权方、帮助和支持配置，不等于完整发布验收。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。
+`--release` 要求企业仓库、资源 CDN、版权方、帮助、支持、用户协议和隐私地址配置，不等于完整发布验收。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。
 
 镜像仓库配置格式为 `registry.example.com/team`，不要附加 `/modelone`。渲染器将工作负载镜像写为 `<仓库>/modelone/<镜像>:<标签>`。Compose 直接使用源文件时，`MODELONE_IMAGE_PREFIX` 必须包含尾随 `/`；后端的 `MODELONE_IMAGE_REGISTRY` 不包含尾随命名空间。环境变量覆盖通过渲染器写入容器；直接使用源 Compose 时以挂载的 JSON 配置为准。
 
 ## 镜像与资源
 
-清单中的 `pending` 项尚未同步，不能用不存在的 `modelone/` 默认镜像启动生产。审核清单并登录仓库后，可运行 `python3 scripts/resource_inventory.py --copy-images`；需要安装 skopeo，它保留多架构镜像并比对摘要。资源可用 `--download-assets <暂存目录>` 下载，工具记录 SHA-256；上传企业存储或打入离线包后需逐项验证访问与校验和。盘点包含历史文档和示例引用，需要按企业保留清单筛选。
+清单中的 `pending` 项尚未同步，不能用不存在的 `modelone/` 默认镜像启动生产。审核清单并登录仓库后，可运行 `python3 scripts/resource_inventory.py --copy-images`；需要安装 skopeo，它保留多架构镜像并比对摘要。资源可用 `--download-assets <暂存目录>` 下载，工具记录 SHA-256；上传企业存储或打入离线包后需逐项验证访问与校验和。发布前使用 `python3 scripts/resource_inventory.py --require-complete --copy-images --download-assets <暂存目录>`，任何未同步资源都会失败。盘点包含历史文档和示例引用，需要按企业保留清单筛选。
 
 当前清单去重后为 144 个镜像、939 个资源：已分离语音 CSV 的 URL 与转写文本，并将智能问答中的 4 张示例图展开为实际地址。教程文件的目标路径与页面使用的 `tutorial-pipeline.mp4`、`tutorial-job-template.mp4` 一致。清单保存原始来源供追溯；修改文件名不会修改媒体内容，视频和图片还需检查画面中的旧品牌，替换为正式素材后才能对外发布。
 
