@@ -114,7 +114,9 @@ def run_smoke(args):
                     text = r.read().decode()
                     if 'modelOne' not in text or 'cube-studio' in text.lower():
                         raise AssertionError('Unexpected brand response: ' + path)
-                    report['checks'].append(path + ' has modelOne brand')
+                    if path == '/login/' and ('login-card' not in text or 'modelone-logo.svg' not in text):
+                        raise AssertionError('Login response did not use the modelOne branded template')
+                    report['checks'].append(path + (' uses the branded login template' if path == '/login/' else ' has modelOne brand'))
             print('Fresh database initialized; checking authentication', flush=True)
 
             def client():
