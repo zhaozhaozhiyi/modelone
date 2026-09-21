@@ -13,6 +13,7 @@ import subprocess
 from urllib.parse import unquote, urlsplit
 from urllib.request import urlopen
 import shutil
+from string import Formatter
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = 'ccr.ccs.tencentyun.com/cube-studio/'
@@ -26,10 +27,15 @@ def inventory():
     # erase migration provenance. Targets are resolved from current config.
     snapshot = json.loads((ROOT / 'config/resource-sources.json').read_text())
     records = []
+    seen = set()
     for source in snapshot['resources']:
         row = dict(source)
+        identity = (row['kind'], row['source'])
+        if identity in seen:
+            continue
+        seen.add(identity)
         row['target'] = (brand.image_repository(row['source'][len(REGISTRY):]) if row['kind'] == 'image' else brand.brand_asset(row['path']))
-        row['status'] = 'pending'
+        row['status'] = 'template' if any(field for _, field, _, _ in Formatter().parse(row['source']) if field) else 'pending'
         records.append(row)
     return records
 
@@ -45,7 +51,7 @@ def run(args):
             if source_digest != target_digest:
                 raise ValueError('Image digest mismatch: ' + row['target'])
             row.update(status='verified', digest=target_digest)
-        if row['kind'] == 'asset' and args.download_assets:
+        if row['kind'] == 'asset' and args.download_assets and row['status'] == 'pending':
             destination = (args.download_assets / row['path']).resolve()
             destination.relative_to(args.download_assets.resolve())
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -61,7 +67,7 @@ def run(args):
             row.update(status='downloaded', sha256=digest, size=destination.stat().st_size)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n')
-    print('%s images, %s assets inventoried; report: %s' % (sum(r['kind']=='image' for r in records), sum(r['kind']=='asset' for r in records), args.output))
+    print('%s images, %s assets inventoried (%s templates); report: %s' % (sum(r['kind']=='image' for r in records), sum(r['kind']=='asset' for r in records), sum(r['status']=='template' for r in records), args.output))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

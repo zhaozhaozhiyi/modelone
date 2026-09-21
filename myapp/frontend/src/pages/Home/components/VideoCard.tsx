@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Modal, message } from "antd";
 import { PlayCircleOutlined } from "@ant-design/icons";
 import "./VideoCard.less";
+import { brandAsset } from "../../../brand";
 
 interface VideoCardProps {
   video: {
@@ -39,7 +40,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
               alt={video.name}
               onError={(e) => {
                 // 图片加载失败时使用默认图片
-                e.currentTarget.src = "/static/appbuilder/vison/logo.png";
+                e.currentTarget.src = brandAsset("modelone-mark.svg");
               }}
             />
             <div className="video-play-overlay">

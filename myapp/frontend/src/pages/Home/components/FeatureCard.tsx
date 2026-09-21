@@ -3,6 +3,7 @@ import { Card, Row, Col, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import "./FeatureCard.less";
 import { getDemoList, createPipeline } from "../../../api/home";
+import { brandAsset } from "../../../brand";
 
 interface FeatureItem {
   name: string;
@@ -30,14 +31,14 @@ const FeatureCard: React.FC = () => {
             const param = JSON.parse(item.parameter || "{}");
             return {
               name: item.describe || item.name,
-              img: param.img || "/static/appbuilder/vison/logo.png",
+              img: param.img || brandAsset("modelone-mark.svg"),
               type: "pipeline",
               args: { pipeline_id: item.id },
             };
           } catch (e) {
             return {
               name: item.describe || item.name,
-              img: "/static/appbuilder/vison/logo.png",
+              img: brandAsset("modelone-mark.svg"),
               type: "pipeline",
               args: { pipeline_id: item.id },
             };

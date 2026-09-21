@@ -68,6 +68,9 @@ class BrandTests(unittest.TestCase):
             self.assertTrue(scan.scan())
             (scan.ROOT / 'surface/view.py').write_text('label = "modelOne"')
             self.assertFalse(scan.scan())
+            (scan.ROOT / 'surface/view.py').write_text('img = "/static/appbuilder/vison/logo.png"')
+            self.assertTrue(scan.scan())
+            (scan.ROOT / 'surface/view.py').write_text('label = "modelOne"')
             (scan.ROOT / 'surface/app.js.map').write_text('{}')
             self.assertTrue(scan.scan())
 
