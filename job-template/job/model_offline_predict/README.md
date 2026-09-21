@@ -22,7 +22,7 @@ TASK_RESOURCE_GPU=0
             "range": "",
             "default": "modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9",
             "placeholder": "",
-            "describe": "worker镜像，直接运行你代码的环境镜像<a target='_blank' href='https://github.com/data-infra/modelone/tree/main/images'>基础镜像</a>",
+            "describe": "worker镜像，直接运行代码的环境镜像；参阅交付资料中的镜像构建说明",
             "editable": 1
         },
         "--working_dir": {

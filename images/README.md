@@ -46,7 +46,7 @@
 
 # 常用GPU基础镜像
 
-[构建脚本](https://github.com/data-infra/modelone/blob/main/images/ubuntu-gpu/build.sh)
+[构建脚本](ubuntu-gpu/build.sh)
 
 ## ubuntu
 

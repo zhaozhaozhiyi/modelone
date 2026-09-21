@@ -3,11 +3,11 @@ import json
 import re
 
 LEGACY_HELP = re.compile(r'https?://(?:github\.com|githubfast\.com)/data-infra/cube-studio[^\s<>"\']*', re.I)
-LEGACY_NAME = re.compile(r'(?<![A-Za-z0-9_/.:-])cube[- ]?studio(?![A-Za-z0-9_/.:-])', re.I)
+LEGACY_NAME = re.compile(r'(?<![A-Za-z0-9_/.:-])cube[-_ ]?studio(?![A-Za-z0-9_/.:-])', re.I)
 
 # Do not rename `name` identifiers: API URLs, jobs and unique constraints use them.
-DISPLAY_FIELDS = ('label', 'describe', 'description', 'hello', 'tips', 'prompt', 'doc', 'producer')
-RESOURCE_FIELDS = ('images', 'image', 'download_url', 'url', 'path', 'model_path', 'pic', 'pre_train_model', 'knowledge', 'service_config', 'args', 'expand', 'dataset', 'notebook', 'job_template', 'pipeline', 'inference', 'service')
+DISPLAY_FIELDS = ('label', 'describe', 'description', 'hello', 'tips', 'prompt', 'doc', 'producer', 'source')
+RESOURCE_FIELDS = ('images', 'image', 'download_url', 'url', 'path', 'model_path', 'pic', 'icon', 'gitpath', 'pre_train_model', 'knowledge', 'service_config', 'args', 'expand', 'demo', 'parameter', 'segment', 'dataset', 'notebook', 'job_template', 'pipeline', 'inference', 'service')
 TABLES = ('project', 'dataset', 'images', 'job_template', 'pipeline', 'task', 'service', 'inferenceservice', 'notebook', 'aihub', 'chat', 'model', 'training_model', 'train_model', 'repository', 'metadata_table')
 
 def rewrite(value, resolve_resources, help_url='', display=False):
@@ -30,7 +30,7 @@ def rewrite(value, resolve_resources, help_url='', display=False):
                 if isinstance(item, (list, dict)):
                     return walk(item)
                 return rewrite(item, resolve_resources, help_url, visible)
-            updated = walk(parsed)
+            updated = resolve_resources(walk(parsed))
             return value if updated == parsed else json.dumps(updated, ensure_ascii=False)
     value = re.sub(r'<a\b[^>]*href=["\']https?://(?:github\.com|githubfast\.com)/data-infra/cube-studio[^>]*>.*?</a>', '帮助中心' if help_url else '', value, flags=re.I | re.S)
     value = resolve_resources(value)
@@ -65,7 +65,8 @@ def migrate_connection(bind, brand, resolve_resources):
         for row in bind.execute(sa.select(table)).mappings().all():
             updates = {}
             for field in names:
-                value = rewrite(row[field], resolve_resources, brand.get('help_url', ''), field in DISPLAY_FIELDS or (name == 'metadata_table' and field == 'app'))
+                resolved = resolve_resources({field: row[field]})[field]
+                value = rewrite(resolved, resolve_resources, brand.get('help_url', ''), field in DISPLAY_FIELDS or (name == 'metadata_table' and field == 'app'))
                 # Preserve serialized JSON validity and untouched technical fields.
                 if isinstance(row[field], str) and row[field].lstrip().startswith(('{','[')):
                     try:

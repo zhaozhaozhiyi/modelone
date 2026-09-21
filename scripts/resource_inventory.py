@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit, urlunsplit
 from urllib.request import urlopen
 import shutil
 from string import Formatter
@@ -28,8 +28,28 @@ def inventory():
     snapshot = json.loads((ROOT / 'config/resource-sources.json').read_text())
     records = []
     seen = set()
+    sources = []
     for source in snapshot['resources']:
+        if source['source'] == 'https://' + BUCKET + '/aihub/aigc/aigc{i+1}.jpeg':
+            # Chat.aigc4 emits exactly four examples (pic_num=4), not an
+            # arbitrary Python expression to evaluate from inventory data.
+            for number in range(1, 5):
+                sources.append({**source, 'sourceTemplate': source['source'],
+                                'source': source['source'].replace('{i+1}', str(number)),
+                                'path': source['path'].replace('{i+1}', str(number))})
+        else:
+            sources.append(source)
+    for source in sources:
         row = dict(source)
+        if row['kind'] == 'asset':
+            # The original text scan captured the transcript column of ASR CSV
+            # rows as part of these URLs. Keep that evidence, download the URL.
+            clean = re.sub(r'(/labelstudio/asr/[^/,]+\.wav),.*$', r'\1', row['source'])
+            if clean != row['source']:
+                row['sourceReference'] = row['source']
+                row['source'] = clean
+                row['path'] = unquote(urlsplit(clean).path).lstrip('/')
+            row['path'] = brand.asset_path(row['path'])
         identity = (row['kind'], row['source'])
         if identity in seen:
             continue
@@ -56,7 +76,9 @@ def run(args):
             destination.relative_to(args.download_assets.resolve())
             destination.parent.mkdir(parents=True, exist_ok=True)
             temporary = destination.with_suffix(destination.suffix + '.part')
-            with urlopen(row['source'], timeout=60) as response, temporary.open('wb') as output:
+            parsed = urlsplit(row['source'])
+            download_url = urlunsplit(parsed._replace(path=quote(parsed.path, safe='/%:@-._~')))
+            with urlopen(download_url, timeout=60) as response, temporary.open('wb') as output:
                 shutil.copyfileobj(response, output)
             hasher = hashlib.sha256()
             with temporary.open('rb') as source:

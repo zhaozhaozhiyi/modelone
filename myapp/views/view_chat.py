@@ -8,6 +8,7 @@ import logging
 from flask_appbuilder.baseviews import expose_api
 
 from myapp.models.model_chat import Chat, ChatLog
+from myapp.brand import brand_asset
 import requests
 import time
 from myapp.forms import MySelect2Widget, MyBS3TextFieldWidget
@@ -1466,7 +1467,7 @@ AI:
                 for i in range(pic_num):
                     # 示例输入
                     time.sleep(1)
-                    status, image = 0,f'/static/assets/modelone/aihub/aigc/aigc{i+1}.jpeg'
+                    status, image = 0,brand_asset(f'aihub/aigc/aigc{i+1}.jpeg')
 
                     if not status:
                         all_result_image.append(image)

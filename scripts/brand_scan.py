@@ -8,8 +8,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SURFACES = ('myapp/frontend/public', 'myapp/frontend/src', 'myapp/vision/public', 'myapp/vision/src', 'myapp/visionPlus/public', 'myapp/visionPlus/src', 'myapp/templates', 'myapp/init', 'myapp/example', 'myapp/views', 'myapp/models', 'myapp/cli.py')
 BUILDS = ('myapp/static/appbuilder/frontend', 'myapp/static/appbuilder/vison', 'myapp/static/appbuilder/visonPlus')
-OLD = re.compile(r'cube[- ]?studio|开源版|商业版|开源社区|data-master\.net|/vison(?:Plus)?/logo\.png|cubeStudioLogo|logoCB', re.I)
-HOSTS = re.compile(r'cube-studio\.oss-cn-hangzhou\.aliyuncs\.com|ccr\.ccs\.tencentyun\.com/cube-studio|(?:github\.com|githubfast\.com)/data-infra/cube-studio', re.I)
+DOCUMENTATION = ('job-template/**/*.md', 'images/**/*.md')
+OLD = re.compile(r'cube[-_ ]?studio|开源版|商业版|开源社区|data-master\.net|/vison(?:Plus)?/logo\.png|cubeStudioLogo|logoCB', re.I)
+HOSTS = re.compile(r'cube-studio\.oss-cn-hangzhou\.aliyuncs\.com|ccr\.ccs\.tencentyun\.com/cube-studio|(?:github\.com|githubfast\.com)/data-infra/(?:cube-studio|modelone)', re.I)
 # Compatibility exceptions are syntactic tokens, not blanket file exclusions.
 TECHNICAL = (
     re.compile(r'\bcubestudio(?:\.[A-Za-z_][\w]*)+'),  # existing Python SDK imports
@@ -22,7 +23,7 @@ TECHNICAL = (
 
 def scan(include_build=False):
     failures = []
-    paths = []
+    paths = [path for pattern in DOCUMENTATION for path in ROOT.glob(pattern) if path.is_file()]
     for item in SURFACES + (BUILDS if include_build else ()):
         root = ROOT / item
         if not root.exists():

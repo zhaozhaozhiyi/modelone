@@ -19,6 +19,7 @@ import {
   Text,
 } from '@fluentui/react';
 import api from '@src/api';
+import { brandAsset } from '@src/brand';
 import Section from '@src/components/Home/Section';
 import { useAppDispatch, useAppSelector } from '@src/models/hooks';
 import { getPipelineList, selectPipelineList, selectAll, getAllList } from '@src/models/pipeline';
@@ -160,13 +161,13 @@ const Home: React.FC = () => {
       {
         name: '新人制作一个pipeline',
         img: '/static/assets/images/ad/video-cover1-thumb.png',
-        url: '/static/assets/modelone/tutorial-pipeline.mp4',
+        url: brandAsset('tutorial-pipeline.mp4'),
         type: 'video',
       },
       {
         name: '自定义任务模板',
         img: '/static/assets/images/ad/video-cover2-thumb.png',
-        url: '/static/assets/modelone/tutorial-job-template.mp4',
+        url: brandAsset('tutorial-job-template.mp4'),
         type: 'video',
       }
     ]);

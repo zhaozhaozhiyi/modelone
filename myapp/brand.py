@@ -31,30 +31,49 @@ def load_brand():
 
 BRAND = load_brand()
 
+# Source filenames remain in the migration inventory, while published media
+# use the same filenames as the modelOne tutorial cards.
+ASSET_ALIASES = {
+    'cube-studio.mp4': 'tutorial-pipeline.mp4',
+    'job-template.mp4': 'tutorial-job-template.mp4',
+}
+
+def asset_path(path):
+    path = path.lstrip('/')
+    return ASSET_ALIASES.get(path, path)
+
 def public_brand():
     # Explicit allowlist: infrastructure settings never reach the browser.
     return {field: BRAND[key] for key, field in FIELDS.items() if key not in ('image_registry', 'asset_base_url', 'deployment_name')} | {'assetBaseUrl': BRAND['asset_base_url'], 'copyright': BRAND['copyright']}
 
 def brand_asset(path):
     base = BRAND['asset_base_url'].rstrip('/') or '/static/assets/modelone'
-    return base + '/' + path.lstrip('/')
+    return base + '/' + asset_path(path)
 
 def image_repository(path):
     base = BRAND['image_registry'].rstrip('/')
     return (base + '/' if base else '') + 'modelone/' + path.lstrip('/')
 
+def resolve_field(key, value):
+    if key in ('gitpath', 'help_url') and isinstance(value, str) and value.startswith(('/job-template/', '/images/')):
+        return BRAND['help_url']
+    return resolve_resources(value)
+
 def resolve_resources(value):
     """Resolve only owned references; preserve API, mount and SDK identifiers."""
     if isinstance(value, dict):
-        return {key: resolve_resources(item) for key, item in value.items()}
+        return {key: resolve_field(key, item) for key, item in value.items()}
     if isinstance(value, list):
         return [resolve_resources(item) for item in value]
     if not isinstance(value, str):
         return value
+    for prefix in ('https://cube-studio.oss-cn-hangzhou.aliyuncs.com/', 'http://cube-studio.oss-cn-hangzhou.aliyuncs.com/', '/static/assets/modelone/'):
+        for old, new in ASSET_ALIASES.items():
+            value = re.sub(re.escape(prefix + old) + r'(?=$|[?\s#\x22\x27<>\]\}),])', lambda _: prefix + new, value)
     value = re.sub(r'https?://cube-studio\.oss-cn-hangzhou\.aliyuncs\.com/', brand_asset(''), value)
     if value == 'ccr.ccs.tencentyun.com/cube-studio':
         return image_repository('').rstrip('/')
     value = value.replace('ccr.ccs.tencentyun.com/cube-studio/', image_repository(''))
     # A registry prefix already resolved above must not be prefixed twice.
     value = re.sub(r'(?<![\w/.-])modelone/(?=[A-Za-z0-9])', lambda _: image_repository(''), value)
-    return value.replace('/static/assets/modelone/', brand_asset(''))
+    return re.sub(r'(?<![\w/.:])/static/assets/modelone/', lambda _: brand_asset(''), value)

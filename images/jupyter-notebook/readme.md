@@ -12,9 +12,9 @@
 
 ## 方法1：Dockerfile构建
 
-jupyter镜像的构建在：https://github.com/data-infra/modelone/tree/main/images/jupyter-notebook
+jupyter 镜像的构建脚本：[build.sh](build.sh)。
 
-vscode镜像的构建在：https://github.com/data-infra/modelone/tree/main/images/theia
+vscode 镜像的构建目录：[theia](../theia)。
 
 现在默认使用的镜像为
 ```

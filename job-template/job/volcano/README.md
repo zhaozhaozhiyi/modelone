@@ -46,7 +46,7 @@
 
 ## 3. 在任务模板中注册配置
 
-在 CubeStudio 中：**训练 → 任务模板 → 添加**，按下面方式配置即可将本模板注册到平台。
+在 modelOne 中：**训练 → 任务模板 → 添加**，按下面方式配置即可将本模板注册到平台。
 
 ### 3.1 基本信息
 
@@ -139,7 +139,7 @@ Launcher 会创建/删除 Volcano Job CRD 及查看 Pod 事件，需要具备对
       "range": "",
       "default": "modelone/ubuntu-gpu:cuda11.8.0-cudnn8-python3.9",
       "placeholder": "",
-      "describe": "Worker 镜像，直接运行你代码的环境镜像。不填则使用模板默认镜像。<a href='https://github.com/data-infra/modelone/tree/main/images'>基础镜像</a>",
+      "describe": "Worker 镜像，直接运行你代码的环境镜像。不填则使用模板默认镜像。基础镜像（参阅交付资料中的镜像构建说明）",
       "editable": 1
     }
   }
