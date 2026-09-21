@@ -109,6 +109,12 @@ class ResourceTests(unittest.TestCase):
             with patch.dict(resources.brand.BRAND, image_registry=registry), self.assertRaises(ValueError):
                 resources.brand.validate_release_settings(include_links=False)
 
+    def test_argo_images_use_the_same_collision_safe_target_as_image_bundle(self):
+        rows = resources.inventory()
+        argo = next(row for row in rows if row['source'].endswith('/cube-argoproj/argoexec:v3.4.3'))
+        self.assertEqual(argo['target'],
+                         'registry.example.test/team/modelone/third-party/ccr.ccs.tencentyun.com/argoproj/argoexec:v3.4.3')
+
 
 if __name__ == '__main__':
     unittest.main()

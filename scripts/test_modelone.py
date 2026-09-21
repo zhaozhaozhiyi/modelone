@@ -185,6 +185,20 @@ class BrandTests(unittest.TestCase):
             (scan.ROOT / 'surface/app.js.map').write_text('{}')
             self.assertTrue(scan.scan())
 
+    def test_artifact_scan_allows_mount_compatibility_but_blocks_legacy_hosts(self):
+        spec = importlib.util.spec_from_file_location('artifact_scan', ROOT / 'scripts/brand_scan.py')
+        scan = importlib.util.module_from_spec(spec); spec.loader.exec_module(scan)
+        with tempfile.TemporaryDirectory() as folder:
+            artifact = Path(folder) / 'kubernetes.yaml'
+            artifact.write_text('volume: /cube-studio/aihub\nimage: registry.example.test/team/modelone/app:v1\n')
+            self.assertFalse(scan.scan_artifacts([artifact]))
+            artifact.write_text('image: ccr.ccs.tencentyun.com/cube-argoproj/workflow:v3.4.3\n')
+            self.assertTrue(scan.scan_artifacts([artifact]))
+            artifact.write_text('label: Cube Studio\n')
+            self.assertTrue(scan.scan_artifacts([artifact]))
+            artifact.with_suffix('.map').write_text('{}')
+            self.assertTrue(scan.scan_artifacts([artifact.with_suffix('.map')]))
+
     def test_job_template_scan_allows_only_documented_compatibility_alias(self):
         import tempfile
         spec = importlib.util.spec_from_file_location('scan_job', ROOT / 'scripts/brand_scan.py')

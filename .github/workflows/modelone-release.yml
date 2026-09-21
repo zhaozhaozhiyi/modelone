@@ -32,4 +32,16 @@ jobs:
             npm run build --prefix "myapp/$app"
           done
       - run: python scripts/brand_scan.py --built
+      - name: Render and scan enterprise deployment artifacts
+        env:
+          MODELONE_IMAGE_REGISTRY: registry.example.test/team
+          MODELONE_ASSET_BASE_URL: https://assets.example.test/modelone
+          MODELONE_COPYRIGHT_HOLDER: Validation Company
+          MODELONE_HELP_URL: https://help.example.test/modelone
+          MODELONE_SUPPORT_URL: https://support.example.test/modelone
+          MODELONE_TERMS_URL: https://www.example.test/modelone/terms
+          MODELONE_PRIVACY_URL: https://www.example.test/modelone/privacy
+        run: |
+          python scripts/render_deployment.py --release --output dist/modelone/ci-release
+          python scripts/brand_scan.py --artifact dist/modelone/ci-release
       - run: git diff --check

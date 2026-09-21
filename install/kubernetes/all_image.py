@@ -1,8 +1,10 @@
 import json
 import os,re
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+snapshot = json.loads((ROOT / 'config/resource-sources.json').read_text())
 # 所需要的所有镜像
 kubeflow = [
     'mysql:8.0.32',  # 数据库
@@ -46,11 +48,9 @@ volcano = [
     'volcanosh/vc-webhook-manager:v1.7.0'  # 拦截器
 ]
 
-pipeline = [
-    'minio/minio:RELEASE.2023-04-20T17-56-55Z',
-    'ccr.ccs.tencentyun.com/cube-argoproj/argoexec:v3.4.3',
-    'ccr.ccs.tencentyun.com/cube-argoproj/workflow-controller:v3.4.3',
-    'ccr.ccs.tencentyun.com/cube-argoproj/argocli:v3.4.3'
+pipeline = ['minio/minio:RELEASE.2023-04-20T17-56-55Z'] + [
+    row['source'] for row in snapshot['resources']
+    if row['kind'] == 'image' and 'cube-argoproj/' in row['source']
 ]
 modelone_images = [
     # 前后端
@@ -138,9 +138,11 @@ for file in (ROOT / 'myapp/init').iterdir():
         if match not in example_images:
             example_images.append(match.strip())
 
-snapshot = json.loads((ROOT / 'config/resource-sources.json').read_text())
+catalog_registry = Counter(tuple(row['source'].split('/', 2)[:2])
+                           for row in snapshot['resources'] if row['kind'] == 'image').most_common(1)[0][0]
 catalog_images = ['modelone/' + row['source'].split('/', 2)[2]
-                  for row in snapshot['resources'] if row['kind'] == 'image']
+                  for row in snapshot['resources']
+                  if row['kind'] == 'image' and tuple(row['source'].split('/', 2)[:2]) == catalog_registry]
 images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline + modelone_images + user_image + job_template_images + example_images + catalog_images
 images = list(set(images))
 init_images = kubeflow + kubernetes_dashboard + new_gpu + new_prometheus + istio + volcano + pipeline

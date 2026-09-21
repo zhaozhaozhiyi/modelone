@@ -17,6 +17,7 @@ from string import Formatter
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = 'ccr.ccs.tencentyun.com/cube-studio/'
+ARGO_REGISTRY = 'ccr.ccs.tencentyun.com/cube-argoproj/'
 BUCKET = 'cube-studio.oss-cn-hangzhou.aliyuncs.com'
 spec = importlib.util.spec_from_file_location('brand', ROOT / 'myapp/brand.py')
 brand = importlib.util.module_from_spec(spec)
@@ -54,7 +55,17 @@ def inventory():
         if identity in seen:
             continue
         seen.add(identity)
-        row['target'] = (brand.image_repository(row['source'][len(REGISTRY):]) if row['kind'] == 'image' else brand.brand_asset(row['path']))
+        if row['kind'] == 'image':
+            if row['source'].startswith(REGISTRY):
+                row['target'] = brand.image_repository(row['source'][len(REGISTRY):])
+            elif row['source'].startswith(ARGO_REGISTRY):
+                # Match image_bundle.py's collision-safe third-party target.
+                row['target'] = brand.image_repository(
+                    'third-party/ccr.ccs.tencentyun.com/argoproj/' + row['source'][len(ARGO_REGISTRY):])
+            else:
+                raise ValueError('Unsupported image source registry: ' + row['source'])
+        else:
+            row['target'] = brand.brand_asset(row['path'])
         row['status'] = 'template' if any(field for _, field, _, _ in Formatter().parse(row['source']) if field) else 'pending'
         records.append(row)
     return records

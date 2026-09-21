@@ -22,9 +22,13 @@ python3 scripts/brand_scan.py --built
 python3 scripts/resource_inventory.py
 python3 scripts/compliance_inventory.py
 python3 scripts/render_deployment.py --release
+python3 scripts/brand_scan.py \
+  --artifact dist/modelone/compose.yaml \
+  --artifact dist/modelone/kubernetes.yaml \
+  --artifact dist/modelone/brand.json
 ```
 
-`--release` 要求企业仓库、完整 HTTP(S) 资源 CDN、版权方、帮助、支持、用户协议和隐私地址配置；相对资源路径、含凭据的 URL 和错误仓库格式会被拒绝，不等于完整发布验收。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。
+`--release` 要求企业仓库、完整 HTTP(S) 资源 CDN、版权方、帮助、支持、用户协议和隐私地址配置；相对资源路径、含凭据的 URL 和错误仓库格式会被拒绝，不等于完整发布验收。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。产物扫描只针对 Compose、Kubernetes 和品牌清单，资源迁移报告保留原始来源作为审计证据，不应作为运行时交付目录直接发布。
 
 镜像仓库配置格式为 `registry.example.com/team`，不要附加 `/modelone`。渲染器将工作负载镜像写为 `<仓库>/modelone/<镜像>:<标签>`。Compose 直接使用源文件时，`MODELONE_IMAGE_PREFIX` 必须包含尾随 `/`；后端的 `MODELONE_IMAGE_REGISTRY` 不包含尾随命名空间。环境变量覆盖通过渲染器写入容器；直接使用源 Compose 时以挂载的 JSON 配置为准。
 
@@ -32,7 +36,7 @@ python3 scripts/render_deployment.py --release
 
 清单中的 `pending` 项尚未同步，不能用不存在的 `modelone/` 默认镜像启动生产。审核清单并登录仓库后，可运行 `python3 scripts/resource_inventory.py --copy-images`；需要安装 skopeo，它保留多架构镜像并比对摘要。资源可用 `--download-assets <暂存目录>` 下载，工具记录 SHA-256；上传企业存储或打入离线包后需逐项验证访问与校验和。本地下载状态 `downloaded` 不满足发布条件。工具每项保存进度，可用 `--resume <报告>` 继续操作；更换来源、目标或路径后不会复用旧校验记录。上传后运行 `python3 scripts/resource_inventory.py --resume dist/modelone/resource-inventory.json --verify-targets --require-complete`，重新读取企业镜像摘要和 CDN 文件并比对；不存在、内容不同、跳转回原存储或仍待迁移的资源都会使门禁失败。已有报告中的 `verified` 不能跳过当次目标验证。盘点包含历史文档和示例引用，需要按企业保留清单筛选。
 
-当前清单去重后为 144 个镜像、939 个资源：已分离语音 CSV 的 URL 与转写文本，并将智能问答中的 4 张示例图展开为实际地址。教程文件的目标路径与页面使用的 `tutorial-pipeline.mp4`、`tutorial-job-template.mp4` 一致。清单保存原始来源供追溯；修改文件名不会修改媒体内容，视频和图片还需检查画面中的旧品牌，替换为正式素材后才能对外发布。
+当前清单去重后为 147 个镜像、939 个资源：已纳入 Argo 控制器镜像，分离语音 CSV 的 URL 与转写文本，并将智能问答中的 4 张示例图展开为实际地址。教程文件的目标路径与页面使用的 `tutorial-pipeline.mp4`、`tutorial-job-template.mp4` 一致。清单保存原始来源供追溯；修改文件名不会修改媒体内容，视频和图片还需检查画面中的旧品牌，替换为正式素材后才能对外发布。
 
 初始化任务模板中的帮助和镜像说明入口使用配置的帮助中心；尚未配置时隐藏入口，避免跳转到不存在的本地仓库路径。第三方工具的帮助链接仍指向其原文档。
 

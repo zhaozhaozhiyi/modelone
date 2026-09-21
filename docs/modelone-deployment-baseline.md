@@ -14,4 +14,4 @@
 | `MODELONE_TERMS_URL` / `MODELONE_PRIVACY_URL` | 用户协议与隐私 |
 | `MODELONE_LOGO_URL` / `MODELONE_LOGO_REVERSE_URL` / `MODELONE_FAVICON_URL` | 正式品牌图形 |
 
-发布前运行 `python3 scripts/test_modelone.py` 和 `python3 scripts/brand_scan.py --built`。数据库迁移、资源同步、许可证和验收边界分别见交付手册。默认 `modelone/` 镜像和本地资源路径是待配置引用，不表示已经有可用镜像或已完成离线资源准备。
+发布前运行 `python3 scripts/test_modelone.py` 和 `python3 scripts/brand_scan.py --built`；渲染交付目录后，再用 `scripts/brand_scan.py --artifact` 检查 Compose、Kubernetes 和品牌清单。数据库迁移、资源同步、许可证和验收边界分别见交付手册。默认 `modelone/` 镜像和本地资源路径是待配置引用，不表示已经有可用镜像或已完成离线资源准备。
