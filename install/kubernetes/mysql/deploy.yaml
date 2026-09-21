@@ -55,7 +55,19 @@ spec:
               protocol: TCP
           env:
           - name: MYSQL_ROOT_PASSWORD
-            value: admin
+            valueFrom:
+              secretKeyRef:
+                name: modelone-mysql
+                key: MYSQL_ROOT_PASSWORD
+          - name: MYSQL_DATABASE
+            value: kubeflow
+          - name: MYSQL_USER
+            value: modelone
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: modelone-mysql
+                key: MYSQL_PASSWORD
       volumes:
         - name: data
           persistentVolumeClaim:

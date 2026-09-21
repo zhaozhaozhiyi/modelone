@@ -42,7 +42,7 @@ elif [ "$STAGE" = "dev" ]; then
 elif [ "$STAGE" = "prod" ]; then
   export FLASK_APP=myapp:app
   python myapp/check_tables.py
-  gunicorn --bind  0.0.0.0:80 --workers 20 --worker-class=gevent --timeout 300 --forwarded-allow-ips="*" --limit-request-line 0 --limit-request-field_size 0 --log-level=info --access-logfile - --error-logfile - --capture-output myapp:app
+  exec gunicorn --bind 0.0.0.0:80 --workers "${MODELONE_WEB_WORKERS:-4}" --worker-class=gevent --timeout 300 --forwarded-allow-ips="${MODELONE_TRUSTED_PROXY_IPS:-127.0.0.1}" --limit-request-line 0 --limit-request-field_size 0 --log-level=info --access-logfile - --error-logfile - --capture-output myapp:app
 else
     myapp --help
 fi

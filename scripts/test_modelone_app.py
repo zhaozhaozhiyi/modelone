@@ -40,9 +40,10 @@ class Inputs(HTMLParser):
 def run_smoke(args):
     prefix = 'modelone-app-test-' + secrets.token_hex(5)
     password = secrets.token_urlsafe(24)
+    redis_password = secrets.token_urlsafe(32)
     credentials = {name: secrets.token_urlsafe(48) for name in
                    ('MODELONE_SECRET_KEY', 'MODELONE_JWT_KEY', 'MODELONE_ADMIN_PASSWORD')}
-    private_values = [password, *credentials.values()]
+    private_values = [password, redis_password, *credentials.values()]
 
     def redact(value):
         for secret in private_values:
@@ -64,11 +65,11 @@ def run_smoke(args):
         mysqlenv.write_text('MYSQL_ROOT_PASSWORD=' + password + '\nMYSQL_ROOT_HOST=%\n')
         mysqlenv.chmod(384)
         appenv = folder / 'app.env'
-        appenv.write_text('STAGE=dev\nENVIRONMENT=DEV\nMYSQL_SERVICE=mysql+pymysql://root:' + password + '@db:3306/kubeflow?charset=utf8mb4\nREDIS_HOST=redis\nREDIS_PORT=6379\nREDIS_PASSWORD=\nMODELONE_COPYRIGHT_HOLDER=Validation Company\n' + ''.join(k + '=' + v + '\n' for k, v in credentials.items()))
+        appenv.write_text('STAGE=dev\nENVIRONMENT=DEV\nMYSQL_SERVICE=mysql+pymysql://root:' + password + '@db:3306/kubeflow?charset=utf8mb4\nREDIS_HOST=redis\nREDIS_PORT=6379\nREDIS_PASSWORD=' + redis_password + '\nMODELONE_COPYRIGHT_HOLDER=Validation Company\n' + ''.join(k + '=' + v + '\n' for k, v in credentials.items()))
         appenv.chmod(384)
         run(['docker', 'network', 'create', '--label', 'modelone.validation=true', prefix])
         try:
-            for role, image, extras in [('db', args.mysql_image, ['--env-file', str(mysqlenv), '--tmpfs', '/var/lib/mysql:rw,size=1g']), ('redis', args.redis_image, ['--env', 'ALLOW_EMPTY_PASSWORD=yes'])]:
+            for role, image, extras in [('db', args.mysql_image, ['--env-file', str(mysqlenv), '--tmpfs', '/var/lib/mysql:rw,size=1g']), ('redis', args.redis_image, ['--env', 'REDIS_PASSWORD=' + redis_password])]:
                 name = prefix + '-' + role
                 run(['docker', 'run', '-d', '--pull', 'never', '--name', name, '--network', prefix, '--network-alias', role, '--label', 'modelone.validation=true', *extras, image])
                 containers.append(name)
@@ -81,7 +82,7 @@ def run_smoke(args):
             else:
                 raise RuntimeError('mysql did not become ready')
             for attempt in range(30):
-                if run(['docker', 'exec', prefix + '-redis', 'redis-cli', 'ping'], False).stdout.strip() == 'PONG':
+                if run(['docker', 'exec', prefix + '-redis', 'redis-cli', '-a', redis_password, 'ping'], False).stdout.strip() == 'PONG':
                     break
                 time.sleep(1)
             else:

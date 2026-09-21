@@ -41,30 +41,32 @@ python3 scripts/render_deployment.py --release
 也可通过 `MODELONE_BACKEND_BASE_IMAGE` 指定完整的企业后端基础镜像，通过 `MODELONE_NGINX_IMAGE` 指定企业 Nginx 镜像。构建会清理基础镜像中已有的产品静态目录后复制当前产物，保留 PWA 清单，并在 `/usr/share/licenses/modelone/LICENSE` 附带原许可证。后端镜像内包含 Docker 运行配置，部署时仍可用挂载文件覆盖。
 
 ```sh
-python3 scripts/init_modelone_secrets.py --output .modelone-secrets/auth.env
-docker compose --env-file .modelone-secrets/auth.env -f dist/modelone/compose.yaml config --quiet
-docker compose --env-file .modelone-secrets/auth.env -f dist/modelone/compose.yaml up -d
+python3 scripts/init_modelone_secrets.py --output .modelone-secrets/compose.env
+docker compose --env-file .modelone-secrets/compose.env -f dist/modelone/compose.yaml config --quiet
+docker compose --env-file .modelone-secrets/compose.env -f dist/modelone/compose.yaml up -d
 ```
 
 密钥生成只执行一次；文件权限为 600，默认目录已从 Git 与镜像构建上下文排除。通过受保护方式保存和分发该文件，不打印完整 Compose 配置或把密钥写入品牌 JSON。生成器拒绝覆盖已有文件，重启或新增副本必须复用同一套会话/JWT 密钥。
 
 `MODELONE_SECRET_KEY` 和 `MODELONE_JWT_KEY` 至少 32 字符且不同；`MODELONE_ADMIN_PASSWORD` 仅在初次创建 admin 时使用，至少 16 字符。已有管理员不会被重置。也可通过 `<变量名>_FILE` 向后端读取挂载文件；使用该方式时调整 Compose，移除对应直接环境变量的必填声明并挂载文件，不同时设置两种形式。
 
-启动前修改数据库和 Redis 凭据、确认持久化路径、配置 kubeconfig 并限制服务监听范围；源 Compose 的数据库和 Redis 仍是开发示例值，生产还需将 `STAGE` 改为 `prod` 并配置 HTTPS。生产会话 cookie 默认要求 HTTPS；仅隔离 HTTP 测试可显式设置 `MODELONE_COOKIE_SECURE=false`。平台计算任务须连接 Kubernetes。
+生成的 Compose 文件同时包含独立的 MySQL root/应用账号和 Redis 密码；不要改回示例值。确认持久化路径、配置 kubeconfig 并限制服务监听范围。默认只在本机 `127.0.0.1:8080` 暴露前端，可通过 `MODELONE_HTTP_BIND` 和 `MODELONE_HTTP_PORT` 配置入口。默认使用 `STAGE=prod`；生产会话 cookie 默认要求 HTTPS，仅隔离 HTTP 测试可显式设置 `MODELONE_COOKIE_SECURE=false`。平台计算任务须连接 Kubernetes。
 
 ## Kubernetes
 
 渲染器保留既有命名空间、服务名、选择器和 CRD，添加 modelone 应用标签和品牌 ConfigMap。企业环境需预建数据库、存储、控制器、镜像拉取 Secret 以及 kubeconfig；所需资源参照既有 install/kubernetes 基础设施目录。
 
 ```sh
-python3 scripts/init_modelone_secrets.py --kubernetes --output .modelone-secrets/auth.json
-kubectl apply -f .modelone-secrets/auth.json
+python3 scripts/init_modelone_secrets.py --kubernetes-new-install --output .modelone-secrets/kubernetes-secrets.json
+kubectl apply -f .modelone-secrets/kubernetes-secrets.json
 kubectl apply --dry-run=server -f dist/modelone/kubernetes.yaml
 kubectl apply -f dist/modelone/kubernetes.yaml
 kubectl -n infra rollout status deployment/kubeflow-dashboard
 ```
 
-在已有 `infra` 命名空间创建 `modelone-auth` Secret，再启动后端、worker、watch 和 schedule。多个副本及上述进程共用同一套密钥；前端不需要读取 Secret。生成文件也是私密数据，需纳入企业密钥备份。不要对已有安装重新生成密钥，升级操作见[升级迁移](upgrade.md)。
+新安装的 Secret 清单包含 `modelone-auth`、`modelone-infrastructure`（应用数据库 URL 和 Redis 密码）以及 `modelone-mysql`（MySQL 初始化密码）。先应用该清单，再启动 MySQL、Redis 和后端。多个副本及上述进程共用同一套密钥；前端不需要读取认证 Secret。生成文件也是私密数据，需纳入企业密钥备份。不要对已有安装重新生成密钥，升级操作见[升级迁移](upgrade.md)。
+
+已有数据库或 Redis 不要使用 `--kubernetes-new-install` 覆盖凭据。将现有 `MYSQL_SERVICE` 和 Redis 密码写入权限为 600 的私密 JSON，再运行 `python3 scripts/init_modelone_secrets.py --infrastructure-from-json <文件> --output .modelone-secrets/modelone-infrastructure.json`，并单独生成或恢复 `modelone-auth`。已有自建 MySQL 还需创建 `modelone-mysql` Secret，使 MySQL Pod 的 root 初始化变量与原持久卷凭据一致；不要对已有数据卷重新初始化。
 
 正式域名和 TLS 证书需要在实际入口网关配置并验证。当前未配置目标集群，尚未执行上述集群命令。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
 

@@ -69,13 +69,13 @@ spec:
                 key: REDIS_PORT
           - name: REDIS_PASSWORD
             valueFrom:
-              configMapKeyRef:
-                name: deploy-config
+              secretKeyRef:
+                name: modelone-infrastructure
                 key: REDIS_PASSWORD
           - name: MYSQL_SERVICE
             valueFrom:
-              configMapKeyRef:
-                name: deploy-config
+              secretKeyRef:
+                name: modelone-infrastructure
                 key: MYSQL_SERVICE
           - name: ENVIRONMENT
             valueFrom:

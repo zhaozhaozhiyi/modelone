@@ -59,7 +59,10 @@ spec:
               memory: 512Mi
           env:
             - name: REDIS_PASSWORD
-              value: admin
+              valueFrom:
+                secretKeyRef:
+                  name: modelone-infrastructure
+                  key: REDIS_PASSWORD
             - name: REDIS_PORT
               value: "6379"
           volumeMounts:

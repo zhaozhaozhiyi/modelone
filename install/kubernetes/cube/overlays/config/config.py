@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import sys
+from urllib.parse import quote
 
 from dateutil import tz
 
@@ -358,13 +359,16 @@ SQLALCHEMY_TRACK_MODIFICATIONS=False
 
 
 # redis的配置
-REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', 'admin')   # default must set None
+REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
+if not REDIS_PASSWORD:
+    raise ValueError('REDIS_PASSWORD must be provided through private deployment configuration')
+_REDIS_PASSWORD_URL = quote(REDIS_PASSWORD, safe='')
 REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = os.getenv('REDIS_PORT', '6379')
-SOCKETIO_MESSAGE_QUEUE = 'redis://:%s@%s:%s/2'%(REDIS_PASSWORD,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/2'%(REDIS_HOST,str(REDIS_PORT))
+SOCKETIO_MESSAGE_QUEUE = 'redis://:%s@%s:%s/2'%(_REDIS_PASSWORD_URL,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/2'%(REDIS_HOST,str(REDIS_PORT))
 
 # 数据库配置地址
-SQLALCHEMY_DATABASE_URI = os.getenv('MYSQL_SERVICE','')
+SQLALCHEMY_DATABASE_URI = os.environ['MYSQL_SERVICE']
 
 SQLALCHEMY_BINDS = {}
 from celery.schedules import crontab
@@ -376,18 +380,18 @@ CACHE_CONFIG = {
     'CACHE_TYPE': 'redis', # 使用 Redis
     'CACHE_REDIS_HOST': REDIS_HOST, # 配置域名
     'CACHE_REDIS_PORT': int(REDIS_PORT), # 配置端口号
-    'CACHE_REDIS_URL':'redis://:%s@%s:%s/1'%(REDIS_PASSWORD,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/1'%(REDIS_HOST,str(REDIS_PORT))   # 0，1为数据库编号（redis有0-16个数据库）
+    'CACHE_REDIS_URL':'redis://:%s@%s:%s/1'%(_REDIS_PASSWORD_URL,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/1'%(REDIS_HOST,str(REDIS_PORT))   # 0，1为数据库编号（redis有0-16个数据库）
 }
 # 异步任务和定时任务配置
 class CeleryConfig(object):
     # 任务队列
-    broker_url = 'redis://:%s@%s:%s/0'%(REDIS_PASSWORD,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/0'%(REDIS_HOST,str(REDIS_PORT))
+    broker_url = 'redis://:%s@%s:%s/0'%(_REDIS_PASSWORD_URL,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/0'%(REDIS_HOST,str(REDIS_PORT))
     # celery_task的定义模块
     imports = (
         'myapp.tasks',
     )
     # 结果存储
-    result_backend = 'redis://:%s@%s:%s/0'%(REDIS_PASSWORD,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/0'%(REDIS_HOST,str(REDIS_PORT))
+    result_backend = 'redis://:%s@%s:%s/0'%(_REDIS_PASSWORD_URL,REDIS_HOST,str(REDIS_PORT)) if REDIS_PASSWORD else 'redis://%s:%s/0'%(REDIS_HOST,str(REDIS_PORT))
     worker_redirect_stdouts = True
     worker_redirect_stdouts_level = 'DEBUG'
     # celery worker每次去redis取任务的数量

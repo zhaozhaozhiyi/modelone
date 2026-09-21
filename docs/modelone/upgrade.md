@@ -2,6 +2,8 @@
 
 升级前备份数据库、业务持久卷、配置与旧镜像；冻结写入后记录当前迁移版本。在隔离恢复库先执行 `myapp db upgrade`，核对迁移 `modelone_brand_20260921` 的结果，再安排正式升级。
 
+Docker Compose 升级时保留现有 `MYSQL_SERVICE`、`MODELONE_MYSQL_ROOT_PASSWORD`、`MODELONE_MYSQL_PASSWORD` 和 `REDIS_PASSWORD`，不要运行生成器覆盖它们；只在首次安装生成 Compose 凭据。Kubernetes 升级时保留 `modelone-infrastructure`、`modelone-mysql` 和 `modelone-auth` Secret 及其数据卷。若旧 MySQL 仍使用 root 连接或没有 `modelone` 应用账号，先在维护窗口创建最小权限账号或将 `MYSQL_SERVICE` 指向现有受控账号，再滚动升级后端。旧持久卷不会因 Secret 名称改变而自动重置密码。
+
 后续迁移 `modelone_brand_links_20260921` 补充镜像文档、数据集来源和预览图、Pipeline 卡片参数等字段。已安装早期品牌基线的环境也需执行到此版本。两次迁移均不修改作业名称和主键。
 
 迁移通过数据库结构检查跳过不存在的可选表，只修改允许列表中的展示字段和资源地址。保留业务名称、API 路径、挂载路径和 CRD，不批量重命名作业。SQL 错误会中止升级；重复执行品牌转换应不再产生修改。

@@ -92,6 +92,31 @@ class AuthenticationTests(unittest.TestCase):
             initializer.generate(secret, kubernetes=True)
             self.assertEqual(json.loads(secret.read_text())['metadata']['name'], 'modelone-auth')
 
+            new_install = Path(directory) / 'new-install.json'
+            initializer.generate(new_install, fresh_kubernetes=True)
+            manifest = json.loads(new_install.read_text())
+            self.assertEqual(manifest['kind'], 'List')
+            self.assertEqual({item['metadata']['name'] for item in manifest['items']},
+                             {'modelone-auth', 'modelone-infrastructure', 'modelone-mysql'})
+
+            source = Path(directory) / 'infrastructure.json'
+            source.write_text(json.dumps({'MYSQL_SERVICE': 'mysql+pymysql://root:p%40ss@mysql-service.infra:3306/kubeflow',
+                                          'REDIS_PASSWORD': 'redis-secret'}))
+            imported = Path(directory) / 'imported.json'
+            initializer.import_infrastructure(source, imported)
+            self.assertEqual(json.loads(imported.read_text())['metadata']['name'], 'modelone-infrastructure')
+
+    def test_deployment_does_not_ship_default_database_credentials(self):
+        compose = (ROOT / 'install/docker/docker-compose.yml').read_text()
+        overlay = (ROOT / 'install/kubernetes/cube/overlays/kustomization.yml').read_text()
+        mysql = (ROOT / 'install/kubernetes/mysql/deploy.yaml').read_text()
+        redis = (ROOT / 'install/kubernetes/redis/redis.yaml').read_text()
+        self.assertNotIn('MYSQL_ROOT_PASSWORD: admin', compose)
+        self.assertNotIn('REDIS_PASSWORD: admin', compose)
+        self.assertNotIn('REDIS_PASSWORD=admin', overlay)
+        self.assertIn('secretKeyRef', mysql)
+        self.assertIn('secretKeyRef', redis)
+
 
 if __name__ == '__main__':
     unittest.main()
