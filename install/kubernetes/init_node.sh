@@ -20,7 +20,8 @@ chmod -R 777 /data/k8s/monitoring/grafana/ /data/k8s/monitoring/prometheus/ /dat
 
 # 关闭swap分区
 swapoff -a
-# 拉取镜像
-sh pull_images_mini.sh
-
+# 导入由 modelOne 镜像计划生成的企业离线包；不会从公共仓库拉取镜像。
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+MODELONE_IMAGE_BUNDLE_DIR="${MODELONE_IMAGE_BUNDLE_DIR:?Set MODELONE_IMAGE_BUNDLE_DIR to a generated offline image package}" \
+  sh "$script_dir/pull_images_mini.sh"
 

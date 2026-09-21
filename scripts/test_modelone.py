@@ -135,9 +135,10 @@ class BrandTests(unittest.TestCase):
             generated = subprocess.run(['python3', str(script)], cwd=folder, env=env,
                                        capture_output=True, text=True)
             self.assertEqual(generated.returncode, 0, generated.stderr)
-            push = (Path(folder) / 'push_harbor.sh').read_text()
-            self.assertIn('registry.example.test/team/modelone/', push)
-            self.assertNotIn('xx.xx.xx.xx', push)
+            plan = json.loads((Path(folder) / 'images.json').read_text())
+            self.assertTrue(all(row['target'].startswith('registry.example.test/team/modelone/') for row in plan['images']))
+            self.assertTrue(all(not row['source'].startswith('modelone/') for row in plan['images']))
+            self.assertTrue((Path(folder) / 'push_harbor.sh').exists())
 
     def test_release_and_resource_gates_require_enterprise_inputs(self):
         config_path = ROOT / 'config/modelone.json'

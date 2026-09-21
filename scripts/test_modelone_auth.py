@@ -122,6 +122,7 @@ class AuthenticationTests(unittest.TestCase):
         ml_datax = (ROOT / 'myapp/example/pipeline/ml/mysql-csv.json').read_text()
         batch_ssh = (ROOT / 'install/kubernetes/rancher/批量ssh/batch_ssh.py').read_text()
         batch_init = (ROOT / 'install/kubernetes/rancher/批量ssh/init.sh').read_text()
+        offline_loader = (ROOT / 'install/kubernetes/pull_images_mini.sh').read_text()
         cluster = (ROOT / 'install/kubernetes/rancher/kubekey/config-cluster.yaml').read_text()
         cluster_offline = (ROOT / 'install/kubernetes/rancher/kubekey/config-cluster-offline.yaml').read_text()
         cluster_doc = (ROOT / 'install/kubernetes/rancher/kubekey/kubekey部署modelone.md').read_text()
@@ -153,6 +154,9 @@ class AuthenticationTests(unittest.TestCase):
         self.assertIn('RANCHER_AGENT_TOKEN', batch_init)
         self.assertNotIn('--token tpl', batch_init)
         self.assertNotIn('https://10.0.0.76', batch_init)
+        self.assertIn('MODELONE_IMAGE_BUNDLE_DIR', offline_loader)
+        self.assertNotIn('docker pull modelone/', offline_loader)
+        self.assertNotIn('cube-argoproj', offline_loader)
         for template in (cluster, cluster_offline, cluster_doc):
             self.assertNotIn('1qaz2wsx', template)
             self.assertNotIn('Qcloud@123', template)
