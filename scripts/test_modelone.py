@@ -69,6 +69,11 @@ class BrandTests(unittest.TestCase):
             text = (ROOT / relative).read_text(encoding='utf-8')
             self.assertIn('<title>{{ brand.title }}</title>', text, relative)
 
+    def test_repository_form_uses_shared_registry_default(self):
+        source = (ROOT / 'myapp/views/view_images.py').read_text(encoding='utf-8')
+        self.assertIn("conf.get('REPOSITORY_ORG') or 'modelone/'", source)
+        self.assertNotIn('harbor.oa.com/modelone/', source)
+
     def test_sql_migration_preserves_ids_and_handles_optional_modules(self):
         engine = sa.create_engine('sqlite://')
         with engine.begin() as db:

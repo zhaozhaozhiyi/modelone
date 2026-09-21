@@ -23,6 +23,11 @@ from flask import g
 from myapp import security_manager
 conf = app.config
 
+# The repository form must follow the same enterprise registry configuration as
+# notebook, Docker build, and deployment defaults.  ``modelone/`` remains a
+# local-development fallback when no registry host has been configured.
+_default_repository = conf.get('REPOSITORY_ORG') or 'modelone/'
+
 
 
 
@@ -56,8 +61,8 @@ class Repository_ModelView_Base():
         "server": SelectField(
             _('服务地址'),
             widget=MySelect2Widget(can_input=True),
-            default='harbor.oa.com/modelone/',
-            choices=[['harbor.oa.com/modelone/','harbor.oa.com/modelone/'],['modelone/','modelone/'],['registry.docker-cn.com','registry.docker-cn.com']],
+            default=_default_repository,
+            choices=[[_default_repository, _default_repository], ['modelone/', 'modelone/']],
             # description= _("镜像仓库地址")
             description= _("镜像仓库地址，示例：")+conf.get('REPOSITORY_ORG',''),
             validators=[DataRequired(),Regexp('^[a-zA-Z0-9\-._:@\/]*$')]
