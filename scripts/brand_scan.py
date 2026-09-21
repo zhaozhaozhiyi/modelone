@@ -7,6 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SURFACES = (
+    'config/modelone.json',
     'myapp/frontend/public', 'myapp/frontend/src',
     'myapp/vision/public', 'myapp/vision/src',
     'myapp/visionPlus/public', 'myapp/visionPlus/src',

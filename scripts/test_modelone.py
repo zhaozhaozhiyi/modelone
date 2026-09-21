@@ -325,6 +325,7 @@ class BrandTests(unittest.TestCase):
         self.assertIn('myapp/frontend/public', scan.SURFACES)
         self.assertIn('myapp/vision/public', scan.SURFACES)
         self.assertIn('myapp/visionPlus/public', scan.SURFACES)
+        self.assertIn('config/modelone.json', scan.SURFACES)
         self.assertIn('myapp/static/assets/modelone', scan.SURFACES)
         with tempfile.TemporaryDirectory() as folder:
             scan.ROOT = Path(folder); scan.SURFACES = ('surface',); scan.BUILDS = ()
