@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -97,6 +98,28 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(document['spec']['initContainers'][0]['image'], mapping['busybox:1.36'])
         with self.assertRaisesRegex(ValueError, 'missing from the transfer plan'):
             bundle.rewrite_images({'image': 'unplanned/image:v1'}, mapping)
+
+    def test_batch_manifest_rewrite_cli_covers_init_containers(self):
+        plan = self.plan(['redis:7', 'busybox:1.36'])
+        source = self.folder / 'argo.yaml'
+        source.write_text(
+            'apiVersion: v1\n'
+            'spec:\n'
+            '  initContainers:\n'
+            '  - image: busybox:1.36\n'
+            '  containers:\n'
+            '  - image: redis:7\n'
+        )
+        output = self.folder / 'rewritten'
+        result = subprocess.run([
+            sys.executable, str(ROOT / 'scripts/rewrite_deployment_images.py'),
+            '--plan', str(plan), '--output-dir', str(output), '--manifest', str(source)
+        ], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rewritten = (output / 'argo.yaml').read_text()
+        mapping = bundle.image_mapping(plan)
+        self.assertIn(mapping['busybox:1.36'], rewritten)
+        self.assertIn(mapping['redis:7'], rewritten)
 
     @unittest.skipUnless(os.environ.get('MODELONE_BUNDLE_TEST_IMAGE'), 'optional cached-image integration check')
     def test_real_local_save_load_and_corruption_rejection(self):

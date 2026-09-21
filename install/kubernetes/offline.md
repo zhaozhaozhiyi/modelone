@@ -90,7 +90,17 @@ bash dist/modelone/platform-images/image_save.sh
 
 镜像目标、原运行引用与来源记录在 `images.json`。第三方目标保留完整仓库层级，避免同名冲突。所有操作逐项检查结果，任一失败立即退出。`image_save.sh` 只导出本机已有目标镜像，不联网；成功后记录 SHA-256、镜像 ID 和架构。将整个目录复制到离线节点，运行 `image_load.sh`。它先验证全部压缩包，再开始导入；导入后再次核对镜像 ID。Docker 打包针对本机架构，多架构仓库迁移另用资源工具的 skopeo 流程。
 
-内网仓库已就绪时也可使用 `pull_harbor.sh`。部署文件和运行配置中的镜像必须改成计划中的 `target`，工具不再恢复旧公共镜像别名，避免运行时继续从外部拉取。镜像包仅是离线安装的一部分；软件包、控制器注入镜像、模型数据、许可证清单与离线网络检查仍须完整验收。
+内网仓库已就绪时也可使用 `pull_harbor.sh`。部署文件和运行配置中的镜像必须改成计划中的 `target`，工具不再恢复旧公共镜像别名，避免运行时继续从外部拉取。对 Argo 清单和其他独立基础设施清单，使用同一份计划批量重写并只把输出目录交付：
+
+```sh
+python3 scripts/rewrite_deployment_images.py \
+  --plan dist/modelone/platform-images/images.json \
+  --output-dir dist/modelone/platform-manifests/argo \
+  --manifest install/kubernetes/argo/install-3.4.3-all.yaml \
+  --manifest install/kubernetes/argo/workflow.yaml
+```
+
+该命令会检查每个 `image` 和 `initContainers[].image` 都出现在计划中；缺少镜像、模板表达式或重复输出文件名会直接失败。集群安装使用 `dist/modelone/platform-manifests` 中的重写文件，不直接应用源码清单。镜像包仅是离线安装的一部分；软件包、控制器注入镜像、模型数据、许可证清单与离线网络检查仍须完整验收。
 
 ## 内网部署 modelOne
 
