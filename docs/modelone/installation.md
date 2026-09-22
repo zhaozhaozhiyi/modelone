@@ -150,3 +150,5 @@ MySQL 测试额外需要 PyMySQL、mysql 和 mysqldump 客户端；测试实例�
 应用测试加 `--https` 时需要本机 OpenSSL：使用 `STAGE=prod` 的真实 Gunicorn 进程、Secure cookie 和额外的隔离 TLS 网关，后端仅信任测试前端 IP。临时证书仅加入本次 Python 客户端的信任上下文，验证主机名与证书，并检查默认客户端拒绝该证书；不修改系统或浏览器证书库。测试验证 HTTPS 同源登录、跨站拒绝、直连后端伪造转发头被拒绝，以及网关覆盖客户端协议头。可与 `--nginx-config` 合用以检查 Kubernetes 前端配置。临时网络、证书和容器自动清理；该模式不连接正式证书、Ingress/Istio、企业 SSO 或真实集群，未纳入需要企业后端镜像的远程 CI。
 
 报告为 `dist/modelone/mysql-validation.json`、`frontend-image-validation.json` 和 `app-smoke-validation.json`。通过后仍须对正式企业镜像、目标数据库和 Kubernetes 集群复测。
+
+应用测试还会在密码登录后读取 20 组业务列表及页面元数据，覆盖项目、Notebook、Pipeline、任务模板、模型、推理、AIHub 全部及分类、数据集、问答、ETL 和 AutoML，并检查 6 个导航/首页快捷列表。校验包括 JSON 与业务状态、默认示例是否初始化、全部分页记录无缺漏/重复、旧品牌与旧资源地址扫描。测试仅使用自动创建的临时数据库，将尚未启动的示例 Notebook 标为离线以避免 Kubernetes 状态查询；不会跟随部署、运行、重置或删除链接。报告只保存各接口状态、记录数及错误字段位置，不保存业务响应正文。这些检查不替代实际浏览器、普通用户权限、集群作业、外部资源或企业历史数据验收。

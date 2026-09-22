@@ -21,6 +21,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen, build_opener, HTTPCookieProcessor, HTTPRedirectHandler, HTTPSHandler, Request
 from datetime import datetime, timezone
+from brand_scan import OLD, HOSTS, TECHNICAL
 ROOT = Path(__file__).resolve().parents[1]
 
 class NoRedirect(HTTPRedirectHandler):
@@ -38,6 +39,141 @@ class Inputs(HTMLParser):
         attrs = dict(attrs)
         if tag == 'input' and attrs.get('name'):
             self.values[attrs['name']] = attrs.get('value', '')
+
+
+def check_business_apis(expect, browser, sql, report):
+    """Read fresh-install page APIs; never follow action/deployment links.
+
+    Some serializers consult Kubernetes for live resources. The isolated fresh
+    database must contain no online resources before we read these lists. Mark
+    the unstarted sample notebook offline in this temporary database only.
+    Response bodies (which may contain tokens) stay in memory.
+    """
+    if sql("SELECT COUNT(*) FROM inferenceservice WHERE model_status='online'") != '0':
+        raise AssertionError('Business API smoke requires an idle fresh database')
+    sql("UPDATE notebook SET expand=JSON_SET(COALESCE(NULLIF(expand,''),'{}'), '$.status', 'offline')")
+    report['businessFixtures'] = 'Fresh-install sample notebooks marked offline in the temporary database to avoid Kubernetes status lookup; no resources deployed.'
+
+    def check_brand(value, location):
+        if isinstance(value, dict):
+            for key, item in value.items():
+                check_brand(item, location + '.' + key)
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                check_brand(item, location + '[' + str(index) + ']')
+        elif isinstance(value, str):
+            safe = value
+            for pattern in TECHNICAL:
+                safe = pattern.sub('', safe)
+            if HOSTS.search(value) or OLD.search(safe):
+                # Include only a field location, never a credential-bearing body.
+                raise AssertionError('Legacy brand/resource in ' + location)
+
+    def fetch(path):
+        _, headers, body = expect(path, 200, browser=browser)
+        if headers.get_content_type() != 'application/json':
+            raise AssertionError('Expected JSON from ' + path.split('?')[0])
+        payload = json.loads(body)
+        if isinstance(payload, dict) and payload.get('status', 0) != 0:
+            raise AssertionError('Nonzero application status from ' + path.split('?')[0])
+        check_brand(payload, path.split('?')[0])
+        return payload
+
+    def row_ids(rows, primary_key):
+        if not isinstance(rows, list):
+            raise AssertionError('List rows are missing')
+        ids = []
+        for row in rows:
+            if not isinstance(row, dict) or primary_key not in row:
+                raise AssertionError('List row lacks its primary key')
+            ids.append(row[primary_key])
+            ids.extend(row_ids(row.get('children', []), primary_key))
+        return ids
+
+    # Only reviewed read endpoints: no arbitrary URLs from server responses.
+    endpoints = [
+        ('Projects', '/project_modelview/api/', True),
+        ('Project groups', '/project_modelview/org/api/', True),
+        ('Notebook', '/notebook_modelview/api/', True),
+        ('Pipeline', '/pipeline_modelview/api/', True),
+        ('Pipeline home', '/pipeline_modelview/home/api/', True),
+        ('Task templates', '/job_template_modelview/api/', True),
+        ('Training models', '/training_model_modelview/api/', True),
+        ('Training model page', '/training_model_modelview/web/api/', True),
+        ('Inference', '/inferenceservice_modelview/api/', True),
+        ('AIHub', '/model_market/all/api/', True),
+        ('AIHub visual', '/model_market/visual/api/', False),
+        ('AIHub voice', '/model_market/voice/api/', False),
+        ('AIHub language', '/model_market/language/api/', False),
+        ('AIHub multimodal', '/model_market/multimodal/api/', False),
+        ('AIHub generative', '/model_market/aigc/api/', False),
+        ('Datasets', '/dataset_modelview/api/', True),
+        ('Chat configuration', '/chat_modelview/api/', True),
+        ('Chat sessions', '/aitalk_modelview/api/', True),
+        ('ETL', '/etl_pipeline_modelview/api/', True),
+        ('AutoML', '/nni_modelview/api/', True),
+    ]
+    results = report['businessApis'] = []
+    failures = []
+    for label, base, seeded in endpoints:
+        result = {'module': label, 'base': base}
+        results.append(result)
+        try:
+            info = fetch(base + '_info')
+            if (not isinstance(info, dict) or info.get('route_base') != base
+                    or not isinstance(info.get('list_columns'), list) or not info['list_columns']
+                    or not isinstance(info.get('label_columns'), dict)
+                    or not info.get('primary_key')):
+                raise AssertionError('Missing or inconsistent page metadata')
+            # The generic project API feeds a selector and has no page title.
+            if base != '/project_modelview/api/' and not info.get('list_title'):
+                raise AssertionError('Missing page title')
+            all_ids, page, count = [], 0, None
+            while True:
+                payload = fetch(base + '?' + urlencode({'form_data': json.dumps({
+                    'page': page, 'page_size': 20, 'str_related': 1})}))
+                if not isinstance(payload, dict) or payload.get('status') != 0:
+                    raise AssertionError('Missing list success status')
+                data = payload.get('result')
+                if not isinstance(data, dict) or type(data.get('count')) is not int:
+                    raise AssertionError('Missing list count')
+                if count is None:
+                    count = data['count']
+                    if count < (1 if seeded else 0):
+                        raise AssertionError('Expected initialized records')
+                elif count != data['count']:
+                    raise AssertionError('Unstable list count')
+                ids = row_ids(data.get('data'), info['primary_key'])
+                all_ids.extend(ids)
+                if len(all_ids) >= count:
+                    break
+                if not ids or page >= 100:
+                    raise AssertionError('Pagination did not reach the declared count')
+                page += 1
+            if len(all_ids) != count or len(set(all_ids)) != count:
+                raise AssertionError('Pagination omitted or repeated initialized records')
+            result.update(status='passed', records=count, pages=page + 1)
+        except (AssertionError, ValueError, KeyError, TypeError) as error:
+            result.update(status='failed', error=str(error))
+            failures.append(label)
+    for path in ['/myapp/menu', '/myapp/navbar_right', '/myapp/navbar_left', '/myapp/navbar_bottom',
+                 '/pipeline_modelview/api/my/list/', '/pipeline_modelview/api/demo/list/']:
+        result = {'path': path}
+        results.append(result)
+        try:
+            payload = fetch(path)
+            rows = payload.get('result') if isinstance(payload, dict) else payload
+            if not isinstance(rows, list):
+                raise AssertionError('Expected navigation or pipeline list')
+            if path.endswith(('/my/list/', '/demo/list/')) and not rows:
+                raise AssertionError('Expected initialized pipeline shortcuts')
+            result.update(status='passed', records=len(rows))
+        except (AssertionError, ValueError, KeyError, TypeError) as error:
+            result.update(status='failed', error=str(error))
+            failures.append(path)
+    if failures:
+        raise AssertionError('Business API validation failed: ' + ', '.join(failures))
+    report['checks'].append('authenticated business lists, full pagination, initialized records, page metadata and navigation pass runtime brand checks; no workloads started')
 
 
 def run_smoke(args):
@@ -318,6 +454,8 @@ def run_smoke(args):
                 raise AssertionError('Session cookie flags missing')
             if args.https and 'Secure' not in cookie:
                 raise AssertionError('Production session cookie is not Secure')
+            print('Password session established; checking business page APIs', flush=True)
+            check_business_apis(expect, browser, sql, report)
             expect('/logout', 302, browser=browser)
             expect(protected, 401, browser=browser)
             result = password_login('admin', credentials['MODELONE_ADMIN_PASSWORD'], client(), '?' + urlencode({'login_url': origin + protected}))
