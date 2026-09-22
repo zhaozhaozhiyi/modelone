@@ -1,7 +1,7 @@
 # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
 # 所有的注释都在上面的网址上
 
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: infra-kubeflow-dashboard
@@ -23,13 +23,16 @@ spec:
     - http:
         paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: kubeflow-dashboard
-              servicePort: 80
+              service:
+                name: kubeflow-dashboard
+                port:
+                  number: 80
 #      host: kubeflow.local.com
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kubeflow-kubeflow-dashboard
@@ -52,17 +55,23 @@ spec:
     - http:
         paths:
           - path: /minio/
+            pathType: Prefix
             backend:
-              serviceName: minio-service
-              servicePort: 9000
+              service:
+                name: minio-service
+                port:
+                  number: 9000
           - path: /pipeline/
+            pathType: Prefix
             backend:
-              serviceName: ml-pipeline-ui
-              servicePort: 80
+              service:
+                name: ml-pipeline-ui
+                port:
+                  number: 80
 #      host: kubeflow.local.com
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kube-system-kubeflow-dashboard
@@ -84,15 +93,18 @@ spec:
     - http:
         paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: kubernetes-dashboard-cluster
-              servicePort: 9090
+              service:
+                name: kubernetes-dashboard-cluster
+                port:
+                  number: 9090
 #      host: k8s.local.com      # 这里需要修改为自己的k8s dashboard的域名
 
 
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: monitoring-grafana
@@ -114,9 +126,11 @@ spec:
     - http:
         paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: grafana
-              servicePort: 3000
+              service:
+                name: grafana
+                port:
+                  number: 3000
 #      host: kubeflow.local.com       # 这里需要修改为自己的k8s dashboard的域名
-
 

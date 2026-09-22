@@ -80,6 +80,7 @@ jobs:
 
           gateway = [doc for doc in yaml.safe_load_all(Path('dist/modelone/ci-manifests/gateway.yaml').read_text()) if doc]
           virtual = [doc for doc in yaml.safe_load_all(Path('dist/modelone/ci-manifests/virtual.yaml').read_text()) if doc]
+          ingress = [doc for doc in yaml.safe_load_all(Path('dist/modelone/ci-manifests/ingress.yaml').read_text()) if doc]
           assert any(
               server.get('port', {}).get('number') == 443
               and server.get('tls', {}).get('credentialName') == 'modelone-tls'
@@ -93,6 +94,17 @@ jobs:
           assert all(
               host == 'modelone.example.test'
               for doc in virtual for host in doc.get('spec', {}).get('hosts', [])
+          )
+          assert all(doc.get('apiVersion') == 'networking.k8s.io/v1' for doc in ingress)
+          assert all(
+              rule.get('host') == 'modelone.example.test'
+              for doc in ingress for rule in doc.get('spec', {}).get('rules', [])
+          )
+          assert all(
+              doc.get('spec', {}).get('tls') == [
+                  {'hosts': ['modelone.example.test'], 'secretName': 'modelone-tls'}
+              ]
+              for doc in ingress
           )
           PY
       - name: Generate migration and compliance evidence

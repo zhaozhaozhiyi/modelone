@@ -17,13 +17,13 @@ brand_spec.loader.exec_module(brand)
 
 
 def render_network_manifest(path):
-    """Apply configured host and optional HTTPS settings to gateway manifests.
+    """Apply configured host and optional HTTPS settings to network manifests.
 
     Empty domain settings preserve the development wildcard HTTP behavior. A
-    configured domain removes wildcard hosts from both Istio resources, while
-    a configured Secret adds a dedicated HTTPS server to the main Gateway.
+    configured domain removes wildcard hosts from Istio and Ingress resources,
+    while a configured Secret enables their HTTPS endpoints.
     """
-    if path.name not in ('gateway.yaml', 'virtual.yaml'):
+    if path.name not in ('gateway.yaml', 'virtual.yaml', 'ingress.yaml'):
         return
     domain = brand.BRAND['public_domain']
     tls_secret = brand.BRAND['tls_secret_name']
@@ -37,6 +37,14 @@ def render_network_manifest(path):
         spec = document.get('spec') or {}
         if domain and kind == 'VirtualService':
             spec['hosts'] = [domain]
+        if kind == 'Ingress':
+            if domain:
+                for rule in spec.get('rules') or []:
+                    rule['host'] = domain
+            if tls_secret:
+                spec['tls'] = [{'hosts': [domain], 'secretName': tls_secret}]
+            document['spec'] = spec
+            continue
         if kind != 'Gateway':
             continue
         servers = spec.get('servers') or []

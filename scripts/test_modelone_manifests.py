@@ -138,6 +138,30 @@ class ManifestEntrypointTests(unittest.TestCase):
         virtual_doc = next(yaml.safe_load_all(virtual.read_text()))
         self.assertEqual(virtual_doc["spec"]["hosts"], ["modelone.example.test"])
 
+    def test_ingress_uses_stable_api_and_configured_tls(self):
+        ingress = self.root / "ingress.yaml"
+        ingress.write_text((ROOT / "install/kubernetes/ingress.yaml").read_text())
+        before = dict(rewrite.brand.BRAND)
+        try:
+            rewrite.brand.BRAND.update(public_domain="modelone.example.test", tls_secret_name="modelone-tls")
+            rewrite.render_network_manifest(ingress)
+        finally:
+            rewrite.brand.BRAND.clear()
+            rewrite.brand.BRAND.update(before)
+        documents = [document for document in yaml.safe_load_all(ingress.read_text()) if document]
+        self.assertTrue(documents)
+        for document in documents:
+            self.assertEqual(document["apiVersion"], "networking.k8s.io/v1")
+            self.assertEqual(
+                document["spec"]["tls"],
+                [{"hosts": ["modelone.example.test"], "secretName": "modelone-tls"}],
+            )
+            for rule in document["spec"]["rules"]:
+                self.assertEqual(rule["host"], "modelone.example.test")
+                for path in rule["http"]["paths"]:
+                    self.assertEqual(path["pathType"], "Prefix")
+                    self.assertIn("service", path["backend"])
+
 
 if __name__ == "__main__":
     unittest.main()
