@@ -13,6 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.28.15'
       - run: python -m pip install 'SQLAlchemy>=1.4,<3' PyYAML alembic 'PyJWT>=2.8,<3'
       - run: python scripts/test_modelone.py
       - run: python scripts/test_modelone_auth.py
@@ -32,6 +35,15 @@ jobs:
             npm run build --prefix "myapp/$app"
           done
       - run: python scripts/brand_scan.py --built
+      - name: Build and exercise the frontend delivery image
+        run: |
+          docker build --pull=false \
+            --build-arg MODELONE_NGINX_IMAGE=nginx:stable \
+            --tag modelone/ci-frontend \
+            --file install/docker/dockerFrontend/Dockerfile .
+          python scripts/test_modelone_frontend_image.py \
+            --image modelone/ci-frontend \
+            --report dist/modelone/ci-frontend-image-validation.json
       - name: Render and scan enterprise deployment artifacts
         env:
           MODELONE_IMAGE_REGISTRY: registry.example.test/team
