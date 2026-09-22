@@ -130,6 +130,12 @@ const getDefaultPanelPosition = () => {
 
 const AiChatBot: React.FC = () => {
   const location = useLocation()
+  // 左侧导轨「智能助手」菜单项通过该事件打开面板（UI 规范 3.0）
+  useEffect(() => {
+    const openFromRail = () => setIsOpen(true)
+    window.addEventListener('modelone:assistant-open', openFromRail)
+    return () => window.removeEventListener('modelone:assistant-open', openFromRail)
+  }, [])
   // 后端返回的智能助手配置（null 表示尚未加载）
   const [botConfig, setBotConfig] = useState<INavbarBottomItem | null>(null)
   // 面板开关状态

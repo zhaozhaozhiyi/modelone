@@ -14,13 +14,17 @@ import SubMenu from 'antd/lib/menu/SubMenu';
 import { clearWaterNow, drawWater, drawWaterNow, getParam, obj2UrlParam, parseParam2Obj } from './util'
 import { getAppHeaderConfig, getAppMenu, getCustomDialog, userLogout } from './api/kubeflowApi';
 import { IAppHeaderItem, IAppMenuItem, ICustomDialog } from './api/interface/kubeflowInterface';
-import { AppstoreOutlined, DownOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, CommentOutlined, LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
 import Cookies from 'js-cookie'
 import { handleTips } from './api';
 import globalConfig from './global.config'
 import AiChatBot from './components/AiChatBot/AiChatBot'
 import { ProjectSwitcher } from './projectSwitcher'
 const userName = Cookies.get('myapp_username')
+
+// UI 规范 3.0：左侧一级菜单常驻项与「更多」溢出项（仅展示层映射，不改后端菜单语义）
+const RESIDENT_NAV_NAMES = ['group', 'data', 'dev', 'train', 'service'];
+const HOIST_NAV_NAMES = ['security', 'link', 'resource_rental', 'cost', 'resource'];
 
 const RouterConfig = (config: RouteObject[]) => {
   let element = useRoutes(config);
@@ -59,6 +63,9 @@ const AppWrapper = (props: IProps) => {
   const [customDialogInfo, setCustomDialogInfo] = useState<ICustomDialog>()
   const [headerConfig, setHeaderConfig] = useState<IAppHeaderItem[]>([])
   const [navSelected, setNavSelected] = useState<string[]>([])
+  const [railCollapsed, setRailCollapsed] = useState(false)
+  const [railOpenKeys, setRailOpenKeys] = useState<string[]>([])
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const isShowNav = getParam('isShowNav')
 
   const navigate = useNavigate();
@@ -98,6 +105,15 @@ const AppWrapper = (props: IProps) => {
       handleCurrentRoute(sourceAppMap, getValidAppList(sourceAppList))
     }
   }, [location, sourceAppList, sourceAppMap])
+
+  // UI 规范 3.0 响应式：768-1099px 主导航折叠为 64px
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1099px)');
+    const apply = () => setRailCollapsed(query.matches);
+    apply();
+    if (query.addEventListener) query.addEventListener('change', apply);
+    return () => { if (query.removeEventListener) query.removeEventListener('change', apply); };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController()
@@ -163,6 +179,54 @@ const AppWrapper = (props: IProps) => {
     }
   }
 
+  const navApps = getValidAppList(sourceAppList);
+  const residentApps = RESIDENT_NAV_NAMES
+    .map(name => navApps.find(item => item.name === name))
+    .filter(Boolean) as IRouterConfigPlusItem[];
+  const hoistedApps = navApps.reduce((pre: IRouterConfigPlusItem[], item) => {
+    if (item.name === 'group' || item.name === 'ai_hub') {
+      (item.children || []).forEach(child => {
+        if (HOIST_NAV_NAMES.includes(child.name || '')) pre.push(child);
+      });
+    }
+    return pre;
+  }, []);
+  const overflowApps = [
+    ...navApps.filter(item => !RESIDENT_NAV_NAMES.includes(item.name || '')),
+    ...hoistedApps,
+    ...(globalConfig.brand.helpUrl ? [{ name: 'docs', title: '文档', path: '__docs', menu_type: 'out_link', url: globalConfig.brand.helpUrl } as unknown as IRouterConfigPlusItem] : []),
+    ...(globalConfig.brand.supportUrl ? [{ name: 'support', title: '技术支持', path: '__support', menu_type: 'out_link', url: globalConfig.brand.supportUrl } as unknown as IRouterConfigPlusItem] : []),
+  ];
+
+  const renderRailItems = (apps: IRouterConfigPlusItem[]) => apps.map(app => (
+    <Menu.Item key={app.path} disabled={!!app.disable} onClick={() => {
+      setMobileNavOpen(false);
+      handleClickNav(app);
+    }}>
+      <span className="icon-wrapper">
+        {
+          Object.prototype.toString.call(app.icon) === '[object String]' ? <span className="icon-custom svg16 mr8" dangerouslySetInnerHTML={{ __html: app.icon as string }}></span> : app.icon
+        }
+        <span>{app.title}</span>
+      </span>
+    </Menu.Item>
+  ));
+
+  const userMenu = (
+    <Menu>
+      {globalConfig.brand.termsUrl && <Menu.Item><a href={globalConfig.brand.termsUrl} target="_blank" rel="noreferrer">用户协议</a></Menu.Item>}
+      {globalConfig.brand.privacyUrl && <Menu.Item><a href={globalConfig.brand.privacyUrl} target="_blank" rel="noreferrer">隐私政策</a></Menu.Item>}
+      {globalConfig.brand.copyright && <Menu.Item disabled>{globalConfig.brand.copyright}</Menu.Item>}
+      <Menu.Item onClick={() => {
+        navigate('/user')
+      }}>{"用户中心"}</Menu.Item>
+      <Menu.Item onClick={() => {
+        Cookies.remove('myapp_username');
+        handleTips.userlogout()
+      }}>{"退出登录"}</Menu.Item>
+    </Menu>
+  );
+
   const renderMenu = () => {
     const { pathname } = location
     const currentNavMap = sourceAppMap
@@ -170,7 +234,7 @@ const AppWrapper = (props: IProps) => {
 
     if (currentNavMap && currentSelected && currentNavMap[currentSelected]?.children?.length) {
 
-      const currentAppMenu = currentNavMap[currentSelected].children
+      const currentAppMenu = (currentNavMap[currentSelected].children || []).filter((menu: IRouterConfigPlusItem) => !HOIST_NAV_NAMES.includes(menu.name || ''))
       if (currentAppMenu && currentAppMenu.length) {
 
         const menuContent = currentAppMenu.map(menu => {
@@ -277,136 +341,53 @@ const AppWrapper = (props: IProps) => {
     return null
   }
 
-  const renderNavTopMenu = () => {
-    return currentNavList.map((app) => {
-      if (!!app.hidden) {
-        return null
-      }
-      if (app.isSingleModule || app.isDropdown) {
-        return <Menu.SubMenu key={app.path} title={
-          <div className="star-topnav-submenu" onClick={() => {
-            if (app.isDropdown) {
-              return
-            }
-            handleClickNav(app)
-          }}>
-            {
-              Object.prototype.toString.call(app.icon) === '[object String]' ? <div className="icon-custom" dangerouslySetInnerHTML={{ __html: app.icon }}></div> : app.icon
-            }
-            <div className="mainapp-topmenu-name">{app.title}</div>
-            <DownOutlined className="ml8" />
-          </div>
-        }>
-          {
-            (app.children || []).map(subapp => {
-              return <Menu.Item key={subapp.path} onClick={() => {
-                handleClickNav(subapp, subapp.path)
-              }}>
-                <div className="d-f ac">
-                  {
-                    Object.prototype.toString.call(subapp.icon) === '[object String]' ? <div className="icon-custom" dangerouslySetInnerHTML={{ __html: subapp.icon }}></div> : subapp.icon
-                  }
-                  <div className="pl8">{subapp.title}</div>
-                </div>
-              </Menu.Item>
-            })
-          }
-        </Menu.SubMenu>
-      }
-      return <Menu.Item key={app.path} onClick={() => {
-        handleClickNav(app)
-      }}>
-        {
-          Object.prototype.toString.call(app.icon) === '[object String]' ? <div className="icon-custom" dangerouslySetInnerHTML={{ __html: app.icon }}></div> : app.icon
-        }
-        <div className="mainapp-topmenu-name">{app.title}</div>
-      </Menu.Item>
-    })
-  }
-
-  const renderSingleModule = () => {
-    const { pathname } = location
-    const [_, stLevel] = pathname.split('/')
-    const stLevelApp = sourceAppMap[`/${stLevel}`]
-    if (stLevelApp && stLevelApp.isSingleModule) {
-      return <Tag color="#1672fa">{stLevelApp.title}</Tag>
-    }
-    return null
-  }
-
   return (
-    <div className="content-container fade-in">
-      {/* Header */}
+    <div className="content-container fade-in mo-shell">
+      {/* 左侧主导航：浅色导轨（UI 规范 3.0），顶部 Logo/折叠、中部一级菜单、底部空间与用户 */}
       {
-        isShowNav === 'false' ? null : <div className="navbar">
-          <div className="d-f ac pl48 h100">
-            <div className="d-f ac">
-              <div className="cp pr16" style={{ width: 'auto' }} onClick={() => {
-                navigate('/', { replace: true })
-              }}>
-                <img style={{ height: 42 }} src={globalConfig.appLogo.default} alt={globalConfig.brand.name} />
-              </div>
-
-              {
-                renderSingleModule()
-              }
-            </div>
-            <ProjectSwitcher />
-            <div className="star-topmenu">
-              <Menu mode="horizontal" selectedKeys={navSelected}>
-                {renderNavTopMenu()}
-              </Menu>
-            </div>
+        isShowNav === 'false' ? null : <aside className={`mo-side-nav${railCollapsed ? ' is-collapsed' : ''}${mobileNavOpen ? ' is-open' : ''}`}>
+          <div className="mo-side-nav-top">
+            <img className="cp mo-side-logo" style={{ height: 28 }} src={railCollapsed ? globalConfig.loadingLogo.default : (globalConfig.brand.logoUrl || globalConfig.appLogo.default)} alt={globalConfig.brand.name} onClick={() => {
+              setMobileNavOpen(false);
+              navigate('/', { replace: true });
+            }} />
+            <button type="button" className="mo-side-nav-collapse" aria-label={railCollapsed ? '展开导航' : '折叠导航'} onClick={() => setRailCollapsed(!railCollapsed)}>
+              {railCollapsed ? <RightOutlined /> : <LeftOutlined />}
+            </button>
           </div>
-
-          <div className="d-f ac plr16 h100">
-            {
-              headerConfig.map(config => {
-                if (config.icon) {
-                  return <a
-                    href={config.link}
-                    target="_blank"
-                    className="mr12 d-f ac" rel="noreferrer"
-                  >
-                    <span className="pr4">{config.text}</span><span className="icon-custom" dangerouslySetInnerHTML={{ __html: config.icon }}></span>
-                  </a>
-                } else if (config.pic_url) {
-                  return <a
-                    href={config.link}
-                    target="_blank"
-                    className="mr12 d-f ac" rel="noreferrer"
-                  >
-                    <span className="pr4">{config.text}</span><img style={{ height: 30 }} src={config.pic_url} alt="" />
-                  </a>
-                }
-              })
-            }
-
-            <Dropdown overlay={<Menu>
-              {globalConfig.brand.termsUrl && <Menu.Item><a href={globalConfig.brand.termsUrl} target="_blank" rel="noreferrer">用户协议</a></Menu.Item>}
-              {globalConfig.brand.privacyUrl && <Menu.Item><a href={globalConfig.brand.privacyUrl} target="_blank" rel="noreferrer">隐私政策</a></Menu.Item>}
-              {globalConfig.brand.copyright && <Menu.Item disabled>{globalConfig.brand.copyright}</Menu.Item>}
-              <Menu.Item onClick={() => {
-                navigate('/user')
-              }}>{"用户中心"}</Menu.Item>
-              <Menu.Item onClick={() => {
-                Cookies.remove('myapp_username');
-                handleTips.userlogout()
-              }}>{"退出登录"}</Menu.Item>
-            </Menu>
-            }>
-              <img className="mr8 cp" style={{ borderRadius: 200, height: 32 }} src={imgUrlProtraits} onError={() => {
-                setImgUrlProtraits(require('./images/male.png'))
-              }} alt="img" />
+          <Menu mode="inline" className="mo-side-menu" inlineCollapsed={railCollapsed} selectedKeys={navSelected} openKeys={railOpenKeys} onOpenChange={(keys) => setRailOpenKeys(keys as string[])}>
+            <Menu.Item key="__assistant" className="mo-nav-assistant" onClick={() => {
+              setMobileNavOpen(false);
+              window.dispatchEvent(new Event('modelone:assistant-open'));
+            }}>
+              <span className="icon-wrapper"><CommentOutlined className="mr8" />{"智能助手"}</span>
+            </Menu.Item>
+            {renderRailItems(residentApps)}
+            {!!overflowApps.length && <Menu.SubMenu key="__more" title={<span className="icon-wrapper"><AppstoreOutlined className="mr8" />{"更多"}</span>}>
+              {renderRailItems(overflowApps)}
+            </Menu.SubMenu>}
+          </Menu>
+          <div className="mo-side-nav-bottom">
+            <ProjectSwitcher />
+            <Dropdown overlay={userMenu}>
+              <div className="mo-side-user cp">
+                <img style={{ borderRadius: 200, height: 28, width: 28 }} src={imgUrlProtraits} onError={() => {
+                  setImgUrlProtraits(require('./images/male.png'))
+                }} alt="user" />
+                {!railCollapsed && <span className="mo-side-user-name">{userName || '用户'}</span>}
+              </div>
             </Dropdown>
           </div>
-        </div>
+        </aside>
       }
+      <button type="button" className="mo-mobile-toggle" aria-label="打开导航" onClick={() => setMobileNavOpen(true)}>
+        <MenuOutlined />
+      </button>
 
-      <div className="main-content-container">
+      <div className="main-content-container mo-main">
         {isShowSlideMenu ? renderMenu() : null}
 
-        <div className="ov-a w100 bg-title p-r" id="componentContainer">
+        <div className="ov-a w100 p-r mo-content" id="componentContainer">
           {/* 自定义弹窗 */}
           {
             customDialogVisable ? <Drawer
