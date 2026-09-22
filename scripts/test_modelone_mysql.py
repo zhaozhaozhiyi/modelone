@@ -163,6 +163,29 @@ def run(args):
             backup.write_bytes(backup.read_bytes() + b'\n-- tampered\n')
             check('checksum does not match' in subprocess.run(restore_cmd, capture_output=True, text=True).stderr, 'Corrupt backup was not rejected')
             passed('restore rejects non-empty databases and corrupted backups')
+            space_spec = importlib.util.spec_from_file_location(
+                'space_migration', ROOT / 'myapp/migrations/versions/modelone_space_type_20260922.py')
+            space_migration = importlib.util.module_from_spec(space_spec)
+            space_spec.loader.exec_module(space_migration)
+            with admin.begin() as connection:
+                connection.execute(sa.text('CREATE DATABASE modelone_space CHARACTER SET utf8mb4'))
+            space_engine = sa.create_engine(url.set(database='modelone_space'))
+            engines.append(space_engine)
+            with space_engine.begin() as connection:
+                connection.execute(sa.text('CREATE TABLE project (id INT PRIMARY KEY, type VARCHAR(50), expand TEXT)'))
+                connection.execute(sa.text('CREATE TABLE project_user (id INT PRIMARY KEY, project_id INT)'))
+                connection.execute(sa.text('CREATE TABLE notebook (id INT PRIMARY KEY, project_id INT)'))
+                connection.execute(sa.text("INSERT INTO project VALUES (1, 'org', '{\"cluster\": \"dev\"}'), (2, NULL, '{}'), (3, NULL, '{}'), (4, 'job-template', '{}')"))
+                connection.execute(sa.text('INSERT INTO project_user VALUES (1, 1)'))
+                connection.execute(sa.text('INSERT INTO notebook VALUES (1, 2)'))
+                check(space_migration.upgrade_tables(connection) == 2, 'MySQL workspace rewrite changed the wrong row count')
+                types = {row[0]: row[1] for row in connection.execute(sa.text('SELECT id, type FROM project')).fetchall()}
+                check(types == {1: 'space', 2: 'space', 3: None, 4: 'job-template'}, 'MySQL workspace types wrong: %s' % types)
+                check(space_migration.upgrade_tables(connection) == 0, 'MySQL workspace rewrite is not idempotent')
+                check(space_migration.downgrade_tables(connection) == 2, 'MySQL workspace downgrade changed the wrong row count')
+                types = {row[0]: row[1] for row in connection.execute(sa.text('SELECT id, type FROM project')).fetchall()}
+                check(types == {1: 'org', 2: None, 3: None, 4: 'job-template'}, 'MySQL workspace downgrade did not restore types: %s' % types)
+            passed('MySQL workspace type rewrite is idempotent and exactly reversible')
             report['status'] = 'passed'
         except Exception as error:
             report['status'] = 'failed'

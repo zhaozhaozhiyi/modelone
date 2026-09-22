@@ -169,6 +169,16 @@ class Project(Model,AuditMixinNullable,MyappModelBase):
         return expand.get('org','public')
 
     @property
+    def quota(self):
+        # 空间配额池：expand.quota，缺省表示未设置上限
+        try:
+            expand = json.loads(self.expand) if self.expand else {}
+        except (TypeError, ValueError):
+            return ''
+        quota = expand.get('quota') if isinstance(expand, dict) else None
+        return json.dumps(quota, ensure_ascii=False) if quota else ''
+
+    @property
     def user_org(self):
         return self.org
 

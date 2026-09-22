@@ -44,10 +44,15 @@ class Creator_Filter(MyappFilter):
 class Project_Join_Filter(MyappFilter):
     # @pysnooper.snoop()
     def apply(self, query, value):
+        # 单层空间模型：升级前后 'org' 与 'space' 等价，均表示工作空间
+        if value in WORKSPACE_TYPES:
+            types = WORKSPACE_TYPES
+        else:
+            types = (value,)
         if g.user.is_admin():
-            return query.filter(self.model.type == value).order_by(self.model.id.desc())
+            return query.filter(self.model.type.in_(types)).order_by(self.model.id.desc())
         join_projects_id = security_manager.get_join_projects_id(db.session)
-        return query.filter(self.model.id.in_(join_projects_id)).filter(self.model.type==value).order_by(self.model.id.desc())
+        return query.filter(self.model.id.in_(join_projects_id)).filter(self.model.type.in_(types)).order_by(self.model.id.desc())
 
 # table show界面下的
 class Project_User_ModelView_Base():
@@ -129,10 +134,16 @@ class Project_User_ModelView_Api(Project_User_ModelView_Base, MyappModelRestApi)
 appbuilder.add_api(Project_User_ModelView_Api)
 
 
+# 单层空间模型：'org' 为升级前取值，'space' 为迁移后取值，两者等价
+WORKSPACE_TYPES = ('org', 'space')
+
+
 # 获取某类project分组
 class Project_Filter(MyappFilter):
     # @pysnooper.snoop()
     def apply(self, query, value):
+        if value in WORKSPACE_TYPES:
+            return query.filter(self.model.type.in_(WORKSPACE_TYPES)).order_by(self.model.id.desc())
         return query.filter(self.model.type == value).order_by(self.model.id.desc())
 
 
@@ -141,12 +152,12 @@ class Project_Filter(MyappFilter):
 def filter_join_org_project():
     query = db.session.query(Project)
     if g.user.is_admin():
-        return query.filter(Project.type == 'org').order_by(Project.id.desc())
+        return query.filter(Project.type.in_(WORKSPACE_TYPES)).order_by(Project.id.desc())
 
     my_user_id = g.user.get_id() if g.user else 0
     owner_ids_query = db.session.query(Project_User.project_id).filter(Project_User.user_id == my_user_id)
 
-    return query.filter(Project.id.in_(owner_ids_query)).filter(Project.type == 'org').order_by(Project.id.desc())
+    return query.filter(Project.id.in_(owner_ids_query)).filter(Project.type.in_(WORKSPACE_TYPES)).order_by(Project.id.desc())
 
 
 class Project_ModelView_Base():
@@ -361,6 +372,31 @@ class Project_ModelView_org_Api(Project_ModelView_Base, MyappModelRestApi):
             response['permissions'] = ['can_list', 'can_show']
 
 appbuilder.add_api(Project_ModelView_org_Api)
+
+
+class Project_ModelView_space_Api(Project_ModelView_Base, MyappModelRestApi):
+    # 单层空间模型的管理入口：迁移前后与 org 视图等价，迁移完成后 org 视图仅保留兼容
+    route_base = '/project_modelview/space/api'
+    datamodel = SQLAInterface(Project)
+    base_permissions = ['can_add', 'can_edit', 'can_delete', 'can_list', 'can_show']
+    base_order = ('id', 'desc')
+    order_columns = ['id']
+    add_columns = ['name', 'describe', 'expand']
+    search_columns = ["name"]
+    edit_columns = add_columns
+    project_type = 'space'
+    base_filters = [["id", Project_Filter, project_type]]
+    spec_label_columns = {
+        "cluster_name": _('集群'),
+        "org": _("资源组"),
+        "quota": _("配额池"),
+    }
+    list_columns = ['name', 'project_user', 'cluster_name', 'org', 'quota']
+    related_views = [Project_User_ModelView_Api, ]
+    label_title = _('空间列表')
+
+
+appbuilder.add_api(Project_ModelView_space_Api)
 
 class Project_ModelView_Api(Project_ModelView_Base, MyappModelRestApi):
     datamodel = SQLAInterface(Project)

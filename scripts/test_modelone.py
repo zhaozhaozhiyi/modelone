@@ -23,9 +23,9 @@ class BrandTests(unittest.TestCase):
     def test_migrations_have_one_head_without_starting_application(self):
         from alembic.script import ScriptDirectory
         scripts = ScriptDirectory(str(ROOT / 'myapp/migrations'))
-        self.assertEqual(scripts.get_heads(), ['modelone_brand_links_20260921'])
+        self.assertEqual(scripts.get_heads(), ['modelone_space_type_20260922'])
         revisions = list(scripts.iterate_revisions('head', '40e1215ccbd6'))
-        self.assertEqual([r.revision for r in revisions], ['modelone_brand_links_20260921', 'modelone_brand_20260921'])
+        self.assertEqual([r.revision for r in revisions], ['modelone_space_type_20260922', 'modelone_brand_links_20260921', 'modelone_brand_20260921'])
 
     def test_resource_resolution_is_idempotent(self):
         before = dict(brand.BRAND)
@@ -673,3 +673,56 @@ class BrandTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class SpaceTypeMigrationTests(unittest.TestCase):
+    """Single-layer workspace rewrite: idempotent upgrade, exact downgrade."""
+
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location(
+            'space_migration', ROOT / 'myapp/migrations/versions/modelone_space_type_20260922.py')
+        self.migration = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.migration)
+        self.engine = sa.create_engine('sqlite://')
+        with self.engine.begin() as connection:
+            connection.execute(sa.text('CREATE TABLE project (id INTEGER PRIMARY KEY, type VARCHAR(50), expand TEXT)'))
+            connection.execute(sa.text('CREATE TABLE project_user (id INTEGER PRIMARY KEY, project_id INTEGER)'))
+            connection.execute(sa.text('CREATE TABLE notebook (id INTEGER PRIMARY KEY, project_id INTEGER)'))
+            connection.execute(sa.text("INSERT INTO project VALUES (1, 'org', '{\"cluster\": \"dev\"}')"))
+            connection.execute(sa.text("INSERT INTO project VALUES (2, NULL, '{}')"))
+            connection.execute(sa.text("INSERT INTO project VALUES (3, NULL, '{}')"))
+            connection.execute(sa.text("INSERT INTO project VALUES (4, 'job-template', '{}')"))
+            connection.execute(sa.text("INSERT INTO project VALUES (5, 'space', '{}')"))
+            connection.execute(sa.text('INSERT INTO project_user VALUES (1, 1)'))
+            connection.execute(sa.text('INSERT INTO notebook VALUES (1, 2)'))
+
+    def types(self):
+        with self.engine.connect() as connection:
+            return {row[0]: row[1] for row in
+                    connection.execute(sa.text('SELECT id, type FROM project ORDER BY id'))}
+
+    def expands(self):
+        with self.engine.connect() as connection:
+            return {row[0]: row[1] for row in
+                    connection.execute(sa.text('SELECT id, expand FROM project ORDER BY id'))}
+
+    def test_upgrade_rewrite_is_idempotent_and_downgrade_restores(self):
+        with self.engine.begin() as connection:
+            changed = self.migration.upgrade_tables(connection)
+        self.assertEqual(changed, 2, 'org row and referenced untyped row must become spaces')
+        self.assertEqual(self.types(), {1: 'space', 2: 'space', 3: None, 4: 'job-template', 5: 'space'})
+        expand = json.loads(self.expands()[1])
+        self.assertEqual(expand.get('cluster'), 'dev', 'Existing expand keys must survive')
+        self.assertEqual(expand.get('_mo_space_from'), 'org')
+        with self.engine.begin() as connection:
+            self.assertEqual(self.migration.upgrade_tables(connection), 0, 'Upgrade must be idempotent')
+        with self.engine.begin() as connection:
+            restored = self.migration.downgrade_tables(connection)
+        self.assertEqual(restored, 2)
+        self.assertEqual(self.types(), {1: 'org', 2: None, 3: None, 4: 'job-template', 5: 'space'})
+        self.assertNotIn('_mo_space_from', json.loads(self.expands()[1]))
+        self.assertEqual(json.loads(self.expands()[1]).get('cluster'), 'dev')
+
+    def test_migration_head_includes_space_revision(self):
+        from alembic.script import ScriptDirectory
+        scripts = ScriptDirectory(str(ROOT / 'myapp/migrations'))
+        self.assertEqual(scripts.get_heads(), ['modelone_space_type_20260922'])

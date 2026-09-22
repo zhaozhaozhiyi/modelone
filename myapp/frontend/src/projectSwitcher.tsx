@@ -42,7 +42,7 @@ export const ProjectSwitcher: React.FC = () => {
 
   useEffect(() => {
     api
-      .get('/project_modelview/api/', {
+      .get('/project_modelview/space/api/', {
         params: { form_data: JSON.stringify({ page: 0, page_size: 500, str_related: 1 }) },
         headers: { 'X-Silent-Error': 'true' },
       })

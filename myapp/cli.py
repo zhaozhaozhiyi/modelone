@@ -57,11 +57,14 @@ def init():
                     "org": "public"
                 }
             print('add project',project_type,name,describe)
-            project = db.session.query(Project).filter_by(name=name).filter_by(type=project_type).first()
+            # 单层空间模型：org 与 space 等价查重，新装环境直接创建 space 类型
+            lookup_types = ('org', 'space') if project_type == 'org' else (project_type,)
+            create_type = 'space' if project_type == 'org' else project_type
+            project = db.session.query(Project).filter_by(name=name).filter(Project.type.in_(lookup_types)).first()
             if project is None:
                 try:
                     project = Project()
-                    project.type = project_type
+                    project.type = create_type
                     project.name = name
                     project.describe = describe
                     project.created_by_fk = 1
