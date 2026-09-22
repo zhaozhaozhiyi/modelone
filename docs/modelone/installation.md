@@ -122,7 +122,7 @@ kubectl -n infra rollout status deployment/kubeflow-dashboard
 
 可选的 `ingress.yaml` 使用 ingress-nginx：主入口 `/` 指向平台前端，`/grafana/` 指向 Grafana Service 的 8080 端口，`/k8s/dashboard/cluster/` 和 `/minio/` 去掉前缀后转发到各自服务。使用这些入口前需安装对应服务和 Ingress 控制器；标准集群启动脚本仍使用 Istio Gateway。Pipeline 页面由平台前端提供，不再转发到不存在的独立 UI 服务。Docker 和 Kubernetes 前端 Nginx 使用相对首页重定向，保留网关前的 HTTPS 协议。
 
-两套前端代理必须保留浏览器 `Origin`，后端才能拒绝外站及 `null` 来源的令牌登录；不要为 WebSocket 兼容而清空该请求头。生产 HTTPS 入口还需由受控网关覆盖 `X-Forwarded-Proto`，并将实际前端代理地址配置到后端 `MODELONE_TRUSTED_PROXY_IPS`；默认值仅信任回环地址。限制后端直接访问及代理链来源，避免信任客户端自带的转发头。正式 HTTPS 会话、同源登录和 WebSocket 连接仍须按实际拓扑验收。
+两套前端代理必须保留浏览器 `Origin`，后端才能拒绝外站及 `null` 来源的令牌登录；不要为 WebSocket 兼容而清空该请求头。生产 HTTPS 入口需由受控网关覆盖 `X-Forwarded-Proto`，并清除客户端传入的 `X-Forwarded-Protocol` 和 `X-Forwarded-Ssl`，避免不同协议头相互冲突。将实际直接连接后端的前端代理 IP 配置到 `MODELONE_TRUSTED_PROXY_IPS`（多个地址用逗号分隔），并随代理副本地址变化更新；默认值仅信任回环地址。限制后端直接访问及代理链来源，避免信任客户端自带的转发头。正式 HTTPS 会话、同源登录和 WebSocket 连接仍须按实际拓扑验收。
 
 正式域名和 TLS 证书需要在实际入口网关配置并验证。`install/kubernetes/ingress.yaml` 包含多个命名空间的兼容入口；启用 `MODELONE_TLS_SECRET_NAME` 时，必须在每个对应命名空间预置同名证书 Secret，或只使用统一 Istio Gateway 入口。当前未配置目标集群，尚未执行上述集群命令。平台和 Rancher 镜像计划、完整归档校验与离线导入流程见[离线安装](../../install/kubernetes/offline.md)。完全离线安装还需所有第三方镜像、软件包及模型文件的闭环验证。
 
@@ -137,12 +137,15 @@ python3 scripts/test_modelone_mysql.py --image <已缓存的MySQL-8.0镜像>
 python3 scripts/test_modelone_frontend_image.py --image <本地构建的前端镜像>
 python3 scripts/test_modelone_app.py --backend-image <本地构建的后端镜像> --mysql-image <已缓存的MySQL-8.0镜像> --redis-image <已缓存的兼容Bitnami配置的Redis镜像>
 python3 scripts/test_modelone_app.py --backend-image <本地构建的后端镜像> --frontend-image <本地构建的前端镜像> --mysql-image <已缓存的MySQL-8.0镜像> --redis-image <已缓存的兼容Bitnami配置的Redis镜像> --output dist/modelone/proxy-validation
+python3 scripts/test_modelone_app.py --https --backend-image <本地构建的后端镜像> --frontend-image <本地构建的前端镜像> --mysql-image <已缓存的MySQL-8.0镜像> --redis-image <已缓存的兼容Bitnami配置的Redis镜像> --output dist/modelone/tls-validation
 ```
 
-MySQL 测试额外需要 PyMySQL、mysql 和 mysqldump 客户端；测试实例使用原生密码认证以兼容旧客户端，不改变企业服务器认证配置。应用测试使用临时随机凭据和本地开发启动方式，验证空库初始化、健康/品牌页面、正确与错误密码、CSRF、禁止自动注册、令牌签名和有效期、任务用途限制、停用账号及重复管理员初始化。传入 `--frontend-image` 后，全部业务 HTTP 检查通过前端入口，额外验证三个产品入口、同源登录成功、外站及 `null` 来源不建立会话、401/404 页面使用部署品牌；可用 `--nginx-config <文件>` 挂载从 Kubernetes ConfigMap 提取的 `default.conf` 复测。它不运行 Notebook、训练或推理任务，也不验证企业 SSO、TLS 或实际浏览器。
+MySQL 测试额外需要 PyMySQL、mysql 和 mysqldump 客户端；测试实例使用原生密码认证以兼容旧客户端，不改变企业服务器认证配置。应用测试使用临时随机凭据和本地开发启动方式，验证空库初始化、健康/品牌页面、正确与错误密码、CSRF、禁止自动注册、令牌签名和有效期、任务用途限制、停用账号及重复管理员初始化。传入 `--frontend-image` 后，全部业务 HTTP 检查通过前端入口，额外验证三个产品入口、同源登录成功、外站及 `null` 来源不建立会话、401/404 页面使用部署品牌；可用 `--nginx-config <文件>` 挂载从 Kubernetes ConfigMap 提取的 `default.conf` 复测。默认 HTTP 模式不验证 TLS；所有模式均不运行 Notebook、训练或推理任务，也不验证企业 SSO 或实际浏览器。
 
 前端镜像测试检查三个入口的实际 HTTP 静态响应，并放入测试 source map 验证拒绝规则；它还用同一缓存镜像启动临时 Nginx 回显上游，验证 Origin、Host、认证、Cookie 和 WebSocket 升级头的透传。CI 会对 Docker 默认配置和 Kubernetes 配置运行此检查；回显检查仅验证代理传输行为，不能替代上述真实后端认证验证。
 
 该测试还会停止上游监听，确认 502 页面显示 modelOne、禁止缓存、Logo/favicon 仍可加载，并验证应用返回的 JSON 错误未被替换。使用 `--error-pages dist/modelone/frontend-errors` 检查部署生成的品牌页面；CI 会额外挂载带企业测试配置的页面执行同一故障检查。
+
+应用测试加 `--https` 时需要本机 OpenSSL：使用 `STAGE=prod` 的真实 Gunicorn 进程、Secure cookie 和额外的隔离 TLS 网关，后端仅信任测试前端 IP。临时证书仅加入本次 Python 客户端的信任上下文，验证主机名与证书，并检查默认客户端拒绝该证书；不修改系统或浏览器证书库。测试验证 HTTPS 同源登录、跨站拒绝、直连后端伪造转发头被拒绝，以及网关覆盖客户端协议头。可与 `--nginx-config` 合用以检查 Kubernetes 前端配置。临时网络、证书和容器自动清理；该模式不连接正式证书、Ingress/Istio、企业 SSO 或真实集群，未纳入需要企业后端镜像的远程 CI。
 
 报告为 `dist/modelone/mysql-validation.json`、`frontend-image-validation.json` 和 `app-smoke-validation.json`。通过后仍须对正式企业镜像、目标数据库和 Kubernetes 集群复测。

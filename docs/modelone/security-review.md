@@ -15,7 +15,9 @@
 - 会话与 JWT 使用独立随机密钥，缺失、弱值或重复值会阻止启动。初始管理员要求受保护密码配置；重复初始化不改已有管理员密码。生成器仅创建权限为 600 的新文件，不覆盖原密钥。
 - 新生成 Pipeline 和调试任务注入有时限的任务令牌，仅允许数据集、项目、模型登记和推理接口；禁止用它创建浏览器会话或访问用户管理。相关启动器去除用户名回退和局部变量跟踪；企业任务镜像需要重新构建。
 
-上述登录行为通过隔离 MySQL/Redis/后端容器的真实 HTTP 请求验证；报告为 `dist/modelone/app-smoke-validation.json`。七项独立认证回归覆盖令牌格式、无效声明、任务用途、私密配置及密钥生成。Grafana 管理员密码和签名密钥改由 Secret 注入，初始化示例、Celery 和离线推理示例不再携带固定可用凭据。生产 Secure cookie 默认值由配置测试覆盖，HTTPS 代理链尚待目标环境验证。
+上述登录行为通过隔离 MySQL/Redis/后端容器的真实 HTTP 请求验证；报告为 `dist/modelone/app-smoke-validation.json`。七项独立认证回归覆盖令牌格式、无效声明、任务用途、私密配置及密钥生成。Grafana 管理员密码和签名密钥改由 Secret 注入，初始化示例、Celery 和离线推理示例不再携带固定可用凭据。生产 Secure cookie 默认值由配置测试及下述隔离 HTTPS 联测覆盖；企业 HTTPS 代理链仍待目标环境验证。
+
+2026-09-22 HTTPS 补充验证：使用当前源码构建的后端镜像、真实生产 Gunicorn、前端代理及独立 TLS 网关，在本地分别挂载 Docker/Kubernetes 前端配置。临时证书仅在测试客户端信任，默认客户端仍拒绝；密码/令牌同源登录、Secure/HttpOnly/SameSite cookie、跨站来源拒绝、退出与账号停用均通过。后端只信任测试前端 IP，直连请求伪造 `X-Forwarded-Proto` 不能建立 HTTPS 登录会话；网关覆盖客户端协议头后，同源登录正常。报告为 `dist/modelone/tls-validation-20260922/docker/app-smoke-validation.json` 和 `kubernetes/app-smoke-validation.json`。未修改系统证书库，未验证企业证书、实际网关控制器、生产副本网络或 WebSocket 完整连接。
 
 Compose 已通过生成的私密环境文件解析；数据库和 Redis 不再使用示例密码，也不暴露主机端口，前端默认只绑定回环地址。Kubernetes 四个后端工作负载引用 `modelone-auth` 和 `modelone-infrastructure`，MySQL/Redis 使用 Secret，前端不接收认证密钥，生成的品牌配置不包含私密值。Rancher/Kubekey 模板、批量节点脚本、Notebook SSH 启动器和 SDK Notebook 不再携带固定密码、节点凭据或 API Token。此项为本地渲染检查，未向集群应用。
 
@@ -30,7 +32,7 @@ Compose 已通过生成的私密环境文件解析；数据库和 Redis 不再�
 | 认证类型尚未接入企业方案 | 安全管理器当前只接受 `AUTH_DB` | 用户确定本地账号、LDAP、OIDC 或企业认证后，实现相应回调、会话和角色映射并验证 |
 | 基础设施和企业认证尚未在目标环境验收 | 本地 Compose/Kustomize 已移除示例数据库/Redis 密码并使用 Secret；企业登录仍为 `AUTH_DB`，目标集群、TLS、镜像和网络策略尚未配置 | 在企业环境注入私密凭据，完成生产入口、企业认证、数据库/Redis、镜像漏洞和网络策略验收；不得把示例或测试 Secret 带入生产 |
 | 企业任务凭据迁移尚未运行 | 旧 SDK、排队工作流和已存在 Pod 可能仍依赖原认证方式 | 重发凭据，重建受影响启动器镜像，重新生成工作流，并验证业务链路；详见升级手册 |
-| 目标环境安全控制尚未验收 | 当前只验证本地 HTTP，未配置正式 TLS、入口代理和企业网络策略 | 完成 HTTPS/cookie/来源转发、最小权限、CSRF/API 写操作、登录限流及最终镜像漏洞检查 |
+| 目标环境安全控制尚未验收 | 已验证本地 HTTP 和隔离 HTTPS/Gunicorn 代理链，未配置企业正式证书、入口控制器和网络策略 | 完成正式环境 HTTPS/cookie/来源转发、最小权限、CSRF/API 写操作、登录限流及最终镜像漏洞检查 |
 
 认证绕过问题的本地修复已通过回归；剩余项不能通过执行 `--release` 渲染视为解决。当前基线仍用于隔离开发验证，未通过完整生产安全验收。
 
