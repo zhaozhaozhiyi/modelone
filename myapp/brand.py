@@ -168,6 +168,24 @@ def browser_config_script():
             'encodeURIComponent(manifestLink.getAttribute("data-modelone-app")) + ".json";\n')
 
 
+def proxy_error_pages():
+    """Render standalone proxy errors using the same template as the backend."""
+    from jinja2 import Environment, FileSystemLoader, StrictUndefined
+    templates = Path(__file__).resolve().parent / 'templates'
+    template = Environment(loader=FileSystemLoader(str(templates)), autoescape=True,
+                           trim_blocks=True, lstrip_blocks=True,
+                           undefined=StrictUndefined).get_template('modelone-error.html')
+    messages = {
+        500: ('服务暂时异常', '请稍后重新打开页面。如问题持续，请联系管理员。'),
+        502: ('暂时无法连接服务', '服务暂时无法响应，请稍后重新打开页面。如问题持续，请联系管理员。'),
+        503: ('服务暂不可用', '请稍后重新打开页面。如问题持续，请联系管理员。'),
+        504: ('服务响应超时', '本次请求未能及时完成，请稍后重新打开页面。'),
+    }
+    return {str(code) + '.html': template.render(brand=BRAND, error_code=code,
+            error_title=title, error_message=message) + '\n'
+            for code, (title, message) in messages.items()}
+
+
 def brand_asset(path):
     base = BRAND['asset_base_url'].rstrip('/') or '/static/assets/modelone'
     return base + '/' + asset_path(path)

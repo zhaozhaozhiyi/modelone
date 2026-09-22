@@ -11,7 +11,7 @@ SURFACES = (
     'myapp/frontend/public', 'myapp/frontend/src',
     'myapp/vision/public', 'myapp/vision/src',
     'myapp/visionPlus/public', 'myapp/visionPlus/src',
-    'myapp/static/assets/modelone', 'myapp/static/appbuilder',
+    'myapp/static/assets/modelone', 'myapp/static/appbuilder', 'myapp/static/modelone-errors',
     'myapp/templates', 'myapp/init', 'myapp/example', 'job-template',
     'myapp/views', 'myapp/models', 'myapp/cli.py', 'myapp/brand_web.py',
     'install/kubernetes/ingress.yaml', 'install/kubernetes/rancher/coredns.yaml',

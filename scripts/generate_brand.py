@@ -39,4 +39,8 @@ window.applyModeloneBrand();
             json.dumps(brand.public_manifest(), ensure_ascii=False, indent=2) + '\n',
             encoding='utf-8',
         )
-    print('Generated brand defaults for all three frontends')
+    errors = ROOT / 'myapp/static/modelone-errors'
+    errors.mkdir(parents=True, exist_ok=True)
+    for filename, html in brand.proxy_error_pages().items():
+        (errors / filename).write_text(html, encoding='utf-8')
+    print('Generated brand defaults for all three frontends and standalone proxy errors')

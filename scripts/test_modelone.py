@@ -172,6 +172,25 @@ class BrandTests(unittest.TestCase):
                 self.assertEqual(icon.get('type'), expected)
                 self.assertEqual(icon.get('sizes'), 'any' if expected == 'image/svg+xml' else None)
 
+    def test_proxy_error_pages_use_escaped_brand_config_without_backend_assets(self):
+        with patch.dict(brand.BRAND, title='modelOne <Operations>', copyright='Copyright © Validation & Co',
+                        primary_color='#123456', support_url='https://support.example.test/?a=1&b=2'):
+            pages = brand.proxy_error_pages()
+            self.assertEqual(set(pages), {'500.html', '502.html', '503.html', '504.html'})
+            for name, html in pages.items():
+                self.assertIn('<title>modelOne &lt;Operations&gt;</title>', html)
+                self.assertIn('Copyright © Validation &amp; Co', html)
+                self.assertIn('https://support.example.test/?a=1&amp;b=2', html)
+                self.assertIn('<p class="code">' + name[:3] + '</p>', html)
+                self.assertIn('--ink: #123456', html)
+                self.assertIn('"PingFang SC"', html)
+                self.assertNotIn('&#34;', html)
+                self.assertNotIn('<script', html)
+        with patch.dict(brand.BRAND, support_url='', copyright=''):
+            html = brand.proxy_error_pages()['502.html']
+            self.assertNotIn('联系技术支持', html)
+            self.assertNotIn('<footer>', html)
+
     def test_public_manifest_routes_follow_runtime_brand_and_application_scope(self):
         from flask import Flask
         app = Flask('modelone-brand-test')
@@ -438,7 +457,21 @@ class BrandTests(unittest.TestCase):
             self.assertEqual(compose['services']['mysql']['volumes'], [
                 'modelone-mysql-data:/var/lib/mysql',
             ])
-            self.assertEqual(compose['services']['frontend']['volumes'], [])
+            self.assertEqual(compose['services']['frontend']['volumes'], [
+                './frontend-errors:/data/web/static/modelone-errors:ro',
+            ])
+            manifests = list(yaml.safe_load_all((output / 'kubernetes.yaml').read_text()))
+            errors = next(doc for doc in manifests if doc['metadata']['name'] == 'modelone-error-pages')
+            self.assertEqual(errors['kind'], 'ConfigMap')
+            for filename, html in errors['data'].items():
+                self.assertEqual((output / 'frontend-errors' / filename).read_text(), html)
+                self.assertIn('Validation Company', html)
+                self.assertIn('https://support.example.test/modelone', html)
+            frontend = next(doc for doc in manifests if doc['kind'] == 'Deployment'
+                            and doc['metadata']['name'] == 'kubeflow-dashboard-frontend')['spec']['template']['spec']
+            self.assertIn({'name': 'modelone-error-pages', 'configMap': {'name': 'modelone-error-pages'}}, frontend['volumes'])
+            self.assertIn({'name': 'modelone-error-pages', 'mountPath': '/data/web/static/modelone-errors',
+                           'readOnly': True}, frontend['containers'][0]['volumeMounts'])
             self.assertEqual(compose['services']['myapp']['volumes'], [
                 'modelone-kubeflow-data:/data/k8s/kubeflow',
                 '${MODELONE_KUBECONFIG:-./kubeconfig}:/home/myapp/kubeconfig:ro',

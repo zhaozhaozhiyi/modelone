@@ -83,6 +83,11 @@ jobs:
             --image-plan dist/modelone/ci-images/images.json \
             --output dist/modelone/ci-release
           python scripts/brand_scan.py --artifact dist/modelone/ci-release
+          python scripts/test_modelone_frontend_image.py \
+            --image modelone/ci-frontend \
+            --nginx-config dist/modelone/ci-kubernetes-nginx.conf \
+            --error-pages dist/modelone/ci-release/frontend-errors \
+            --report dist/modelone/ci-runtime-error-validation.json
           python scripts/rewrite_deployment_images.py \
             --plan dist/modelone/ci-images/images.json \
             --output-dir dist/modelone/ci-manifests \
@@ -165,4 +170,5 @@ jobs:
             dist/modelone/ci-kustomize
             dist/modelone/ci-frontend-image-validation.json
             dist/modelone/ci-kubernetes-frontend-validation.json
+            dist/modelone/ci-runtime-error-validation.json
       - run: git diff --check

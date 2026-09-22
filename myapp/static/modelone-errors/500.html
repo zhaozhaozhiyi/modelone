@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ brand.title }}</title>
-  <meta name="description" content="{{ brand.description }}">
-  <link rel="icon" href="{{ brand.favicon_url }}">
+  <title>modelOne｜企业级 AI 开发与模型生产平台</title>
+  <meta name="description" content="企业级 AI 开发与模型生产平台">
+  <link rel="icon" href="/static/assets/modelone/modelone-mark.svg">
   <style>
     :root {
-      --ink: {{ brand.primary_color or '#17191d' }};
-      --accent: {{ brand.secondary_color or '#3b82f6' }};
+      --ink: #17191d;
+      --accent: #3b82f6;
       --muted:#50545c;
-      --surface: {{ brand.login_background_color or '#f5f6f7' }};
+      --surface: #f4f6f8;
     }
     * { box-sizing:border-box; }
-    body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.6 {{ (brand.font_family or 'Inter, "PingFang SC", "Microsoft YaHei", sans-serif') | safe }}; }
+    body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.6 Inter, "PingFang SC", "Microsoft YaHei", sans-serif; }
     main { max-width:640px; margin:12vh auto; padding:32px; }
     img { width:160px; max-width:100%; }
     .code { margin:64px 0 0; color:var(--muted); font-size:14px; letter-spacing:.08em; }
@@ -27,12 +27,10 @@
   </style>
 </head>
 <body><main>
-  <img src="{{ brand.logo_url }}" alt="{{ brand.name }}">
-  <p class="code">{{ error_code }}</p>
-  <h1>{{ error_title }}</h1>
-  <p>{{ error_message }}</p>
+  <img src="/static/assets/modelone/modelone-logo.svg" alt="modelOne">
+  <p class="code">500</p>
+  <h1>服务暂时异常</h1>
+  <p>请稍后重新打开页面。如问题持续，请联系管理员。</p>
   <a href="/frontend/">返回工作台</a>
-  {% if brand.support_url %}<a href="{{ brand.support_url }}">联系技术支持</a>{% endif %}
-  {% if brand.copyright %}<footer>{{ brand.copyright }}</footer>{% endif %}
 </main></body>
 </html>

@@ -16,6 +16,22 @@ data:
         access_log  /data/log/nginx/access.log  main;
         error_log   /data/log/nginx/error.log;
 
+        # Local proxy failures must remain readable when the backend is unavailable.
+        # Keep upstream API/HTML errors intact (proxy_intercept_errors stays off).
+        error_page 500 /static/modelone-errors/500.html;
+        error_page 502 /static/modelone-errors/502.html;
+        error_page 503 /static/modelone-errors/503.html;
+        error_page 504 /static/modelone-errors/504.html;
+        location ^~ /static/modelone-errors/ {
+            internal;
+            root /data/web;
+            add_header Cache-Control "no-store" always;
+        }
+        location /static/assets/modelone/ {
+            root /data/web;
+            try_files $uri =404;
+        }
+
         # Source maps are never served by a product deployment.
         location ~* \.map$ {
             return 404;

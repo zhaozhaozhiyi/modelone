@@ -8,6 +8,8 @@
 
 连接后端时，三个入口通过 `/myapp/brand.js` 读取部署配置，并将 PWA 安装信息切换到对应的 `/myapp/manifest/<app>.json`。修改品牌环境变量并重启后端后，浏览器页面与安装清单使用同一配置；未连接后端的静态页面继续使用构建时的 `brand-config.js` 和 `manifest.json`。需要同步静态回退内容时仍须重新生成并构建前端。图标类型按配置 URL 的文件扩展名确定，支持 PNG、ICO、SVG、WebP 等格式；未知扩展名交由浏览器识别，不假定为 SVG。
 
+前端代理自身产生的 500/502/503/504 页面也使用统一品牌配置，并保留原始 HTTP 状态码。`generate_brand.py` 生成随镜像提供的默认错误页；`render_deployment.py` 另生成 `frontend-errors/` 和 Kubernetes `modelone-error-pages` ConfigMap，以部署配置覆盖镜像默认值。品牌变化后需重新渲染并交付这些文件；仅重启后端不会更新代理的静态错误页。默认 Logo 和 favicon 由前端 `/static/assets/modelone/` 独立提供；自定义资产应打入前端同一路径或放在可独立访问的企业 CDN，避免依赖故障中的后端。应用自身返回的 JSON/HTML 错误保持原样。
+
 ## 代码仓库
 
 企业 Git 仓库创建完成后，在工作树中先做一次预览，再显式应用远端配置。工具不会替换已有 `origin`，也不会向 `upstream` 推送；已有 `origin` 只有在明确传入 `--replace-origin` 时才会被替换。URL 不应内嵌账号或密码。
@@ -60,6 +62,7 @@ python3 scripts/brand_scan.py \
   --artifact dist/modelone/compose.yaml \
   --artifact dist/modelone/kubernetes.yaml \
   --artifact dist/modelone/brand.json \
+  --artifact dist/modelone/frontend-errors \
   --artifact dist/modelone/platform-manifests/kubernetes
 ```
 
@@ -83,7 +86,7 @@ MNIST 示例使用 `MODELONE_MNIST_BASE_URL`（或 `MODELONE_ASSET_BASE_URL`）�
 
 ## Docker Compose
 
-开发预览渲染文件会挂载当前源码目录；`--release` 生成的 Compose 使用已发布的后端/前端镜像和命名数据卷（应用数据与 MySQL 数据），不依赖源码绝对路径，只需准备与 Compose 文件同目录的 kubeconfig，或通过 `MODELONE_KUBECONFIG` 指定受保护的 kubeconfig 文件。先构建并推送企业后端和前端镜像。后端构建参数 `MODELONE_IMAGE_PREFIX` 当前作为前缀使用，传入时需包含尾随 `/`；基础镜像必须已同步。
+开发预览渲染文件会挂载当前源码目录；`--release` 生成的 Compose 使用已发布的后端/前端镜像和命名数据卷（应用数据与 MySQL 数据），不依赖源码绝对路径。交付时须保留 Compose 同目录的 `frontend-errors/`，并准备 kubeconfig，或通过 `MODELONE_KUBECONFIG` 指定受保护的 kubeconfig 文件。先构建并推送企业后端和前端镜像。后端构建参数 `MODELONE_IMAGE_PREFIX` 当前作为前缀使用，传入时需包含尾随 `/`；基础镜像必须已同步。
 
 也可通过 `MODELONE_BACKEND_BASE_IMAGE` 指定完整的企业后端基础镜像，通过 `MODELONE_NGINX_IMAGE` 指定企业 Nginx 镜像。构建会清理基础镜像中已有的产品静态目录后复制当前产物，保留 PWA 清单，并在 `/usr/share/licenses/modelone/LICENSE` 附带原许可证。后端镜像内包含 Docker 运行配置，部署时仍可用挂载文件覆盖。
 
@@ -139,5 +142,7 @@ python3 scripts/test_modelone_app.py --backend-image <本地构建的后端镜�
 MySQL 测试额外需要 PyMySQL、mysql 和 mysqldump 客户端；测试实例使用原生密码认证以兼容旧客户端，不改变企业服务器认证配置。应用测试使用临时随机凭据和本地开发启动方式，验证空库初始化、健康/品牌页面、正确与错误密码、CSRF、禁止自动注册、令牌签名和有效期、任务用途限制、停用账号及重复管理员初始化。传入 `--frontend-image` 后，全部业务 HTTP 检查通过前端入口，额外验证三个产品入口、同源登录成功、外站及 `null` 来源不建立会话、401/404 页面使用部署品牌；可用 `--nginx-config <文件>` 挂载从 Kubernetes ConfigMap 提取的 `default.conf` 复测。它不运行 Notebook、训练或推理任务，也不验证企业 SSO、TLS 或实际浏览器。
 
 前端镜像测试检查三个入口的实际 HTTP 静态响应，并放入测试 source map 验证拒绝规则；它还用同一缓存镜像启动临时 Nginx 回显上游，验证 Origin、Host、认证、Cookie 和 WebSocket 升级头的透传。CI 会对 Docker 默认配置和 Kubernetes 配置运行此检查；回显检查仅验证代理传输行为，不能替代上述真实后端认证验证。
+
+该测试还会停止上游监听，确认 502 页面显示 modelOne、禁止缓存、Logo/favicon 仍可加载，并验证应用返回的 JSON 错误未被替换。使用 `--error-pages dist/modelone/frontend-errors` 检查部署生成的品牌页面；CI 会额外挂载带企业测试配置的页面执行同一故障检查。
 
 报告为 `dist/modelone/mysql-validation.json`、`frontend-image-validation.json` 和 `app-smoke-validation.json`。通过后仍须对正式企业镜像、目标数据库和 Kubernetes 集群复测。

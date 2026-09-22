@@ -74,13 +74,29 @@ def render(output, release=False, image_plan=None):
     rendered = subprocess.check_output(['kubectl', 'kustomize', str(ROOT / 'install/kubernetes/cube/overlays')], text=True)
     manifests = list(yaml.safe_load_all(rendered))
     manifests.append({'apiVersion':'v1', 'kind':'ConfigMap', 'metadata':{'name':'modelone-brand', 'namespace':'infra'}, 'data':env})
+    errors = brand.proxy_error_pages()
+    error_dir = output / 'frontend-errors'
+    error_dir.mkdir(parents=True, exist_ok=True)
+    for filename, html in errors.items():
+        (error_dir / filename).write_text(html, encoding='utf-8')
+    # A relative delivery mount travels with the rendered Compose file.
+    compose['services']['frontend'].setdefault('volumes', []).append(
+        './frontend-errors:/data/web/static/modelone-errors:ro')
+    manifests.append({'apiVersion': 'v1', 'kind': 'ConfigMap',
+                      'metadata': {'name': 'modelone-error-pages', 'namespace': 'infra'}, 'data': errors})
     for doc in manifests:
         spec = doc.get('spec', {}).get('template', {}).get('spec', {})
+        if doc.get('metadata', {}).get('name') == 'kubeflow-dashboard-frontend' and spec:
+            spec.setdefault('volumes', []).append({'name': 'modelone-error-pages',
+                                                  'configMap': {'name': 'modelone-error-pages'}})
         for container in spec.get('containers', []):
             image = container.get('image', '')
             if image.startswith('modelone/'):
                 container['image'] = brand.image_repository(image[len('modelone/'):])
             container.setdefault('envFrom', []).append({'configMapRef':{'name':'modelone-brand'}})
+            if doc.get('metadata', {}).get('name') == 'kubeflow-dashboard-frontend':
+                container.setdefault('volumeMounts', []).append({'name': 'modelone-error-pages',
+                    'mountPath': '/data/web/static/modelone-errors', 'readOnly': True})
             if doc.get('metadata', {}).get('name') != 'kubeflow-dashboard-frontend':
                 secret_ref = {'secretRef': {'name': 'modelone-auth'}}
                 if secret_ref not in container['envFrom']:

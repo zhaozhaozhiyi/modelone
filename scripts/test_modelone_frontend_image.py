@@ -8,6 +8,7 @@ An intentionally mounted source map proves the web server denies publication.
 import argparse
 import hashlib
 from http.client import HTTPConnection, HTTPException
+from html.parser import HTMLParser
 import json
 import re
 import secrets
@@ -21,6 +22,18 @@ from urllib.request import urlopen
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class PageAssets(HTMLParser):
+    def __init__(self, html):
+        super().__init__()
+        self.urls = []
+        self.feed(html)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == 'img' or (tag == 'link' and attrs.get('rel') == 'icon'):
+            self.urls.append(attrs.get('src') or attrs.get('href'))
 
 
 def command(args):
@@ -37,6 +50,8 @@ def run(args):
               'scope': 'Real Nginx static HTTP responses and proxy header transport; not a browser, TLS or authenticated backend test.', 'checks': []}
     if args.nginx_config:
         report['nginxConfigSha256'] = hashlib.sha256(args.nginx_config.read_bytes()).hexdigest()
+    if args.error_pages:
+        report['errorPageSha256'] = hashlib.sha256((args.error_pages / '502.html').read_bytes()).hexdigest()
     created = False
     upstream_created = False
     network_created = False
@@ -50,6 +65,10 @@ def run(args):
         default_type application/json;
         return 200 '{"origin":"$http_origin","host":"$http_host","authorization":"$http_authorization","cookie":"$http_cookie","upgrade":"$http_upgrade"}';
     }
+    location = /_modelone_api_error {
+        default_type application/json;
+        return 503 '{"status":503,"message":"upstream API error"}';
+    }
 }''')
         try:
             command(['docker', 'network', 'create', '--label', 'modelone.validation=true', network])
@@ -58,12 +77,15 @@ def run(args):
                      '--label', 'modelone.validation=true', '--network', network,
                      '--network-alias', 'myapp', '--network-alias', 'kubeflow-dashboard.infra',
                      '--mount', 'type=bind,source=%s,target=/etc/nginx/conf.d/default.conf,readonly' % echo_config,
-                     args.image])
+                     args.image, 'sh', '-c', 'nginx && exec sleep 3600'])
             upstream_created = True
             config_mount = []
             if args.nginx_config:
                 config_mount = ['--mount', 'type=bind,source=%s,target=/etc/nginx/conf.d/default.conf,readonly'
                                 % args.nginx_config.resolve()]
+            if args.error_pages:
+                config_mount += ['--mount', 'type=bind,source=%s,target=/data/web/static/modelone-errors,readonly'
+                                 % args.error_pages.resolve()]
             command(['docker', 'run', '--detach', '--pull', 'never', '--name', container,
                      '--label', 'modelone.validation=true', '--network', network,
                      '--publish', '127.0.0.1::80', '--mount',
@@ -162,6 +184,41 @@ def run(args):
             if license_text != (ROOT / 'LICENSE').read_bytes():
                 raise AssertionError('Image must include the original LICENSE verbatim')
             report['checks'].append('image contains the unmodified original LICENSE')
+            try:
+                fetch('/_modelone_api_error')
+            except HTTPError as error:
+                if (error.code != 503 or error.headers.get_content_type() != 'application/json'
+                        or json.load(error) != {'status': 503, 'message': 'upstream API error'}):
+                    raise AssertionError('Proxy must preserve application error status and JSON body')
+            else:
+                raise AssertionError('Application error unexpectedly succeeded')
+            report['checks'].append('upstream API errors keep their original status and JSON response')
+            # Keep the network endpoint alive so the production proxy sees a
+            # refused connection, not a dropped packet with an hour-long timeout.
+            command(['docker', 'exec', upstream, 'nginx', '-s', 'stop'])
+            try:
+                fetch('/_modelone_proxy_probe')
+            except HTTPError as error:
+                html = error.read().decode('utf-8')
+                if (error.code != 502 or error.headers.get_content_type() != 'text/html'
+                        or error.headers.get('Cache-Control') != 'no-store'
+                        or '<title>modelOne' not in html or '返回工作台' not in html
+                        or 'nginx' in html.lower()):
+                    raise AssertionError('Backend outage must keep status 502 and render an uncached modelOne error page')
+            else:
+                raise AssertionError('Stopped backend unexpectedly remained available')
+            if args.error_pages and html != (args.error_pages / '502.html').read_text():
+                raise AssertionError('Proxy did not use the error page rendered from deployment branding')
+            assets = PageAssets(html).urls
+            if len(assets) < 2:
+                raise AssertionError('Error page must provide a favicon and product logo')
+            for url in assets:
+                if urlsplit(url).scheme:
+                    continue
+                content_type, content = fetch(url)
+                if not content or not content_type.startswith('image/'):
+                    raise AssertionError('Error page asset depends on the unavailable backend: ' + url)
+            report['checks'].append('stopped backend returns branded status 502 with locally available logo/favicon and no-store caching')
             report['status'] = 'passed'
         except Exception as error:
             report['status'] = 'failed'
@@ -186,5 +243,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', required=True, help='locally built frontend image; never pulled automatically')
     parser.add_argument('--nginx-config', type=Path, help='also validate a mounted deployment Nginx configuration')
+    parser.add_argument('--error-pages', type=Path, help='also validate deployment-rendered error pages mounted over image defaults')
     parser.add_argument('--report', type=Path, default=ROOT / 'dist/modelone/frontend-image-validation.json')
     run(parser.parse_args())
