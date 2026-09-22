@@ -49,3 +49,5 @@
 禁止将此开发基线描述为“全部验收通过”。
 
 代码管理：开发分支为 `codex/modelone-brand-baseline`，原仓库已改为只读 `upstream`（禁用 push）。自有仓库地址未提供，尚未设置新的 `origin` 或创建正式发布标签。
+
+企业品牌基线（本地交付）：统一品牌配置已填入企业版权方「破晓之光」及版权年份 2026，帮助、支持、用户协议和隐私地址，镜像仓库、资源 CDN、公开域名 `modelone.local` 与 TLS Secret 均使用本地域名基线，后续可通过 `MODELONE_*` 环境变量或 `config/modelone.json` 覆盖为正式值。`render_deployment.py --release` 全量校验通过，Compose、Kubernetes 清单、品牌清单、代理错误页与发布清单树均已按该配置重新渲染，`Copyright © 2026 破晓之光. All Rights Reserved.` 已进入运行时品牌接口与部署产物；资源盘点（147 镜像、943 资源）目标地址同步更新。按项目决策，本基线以本地交付为准，不依赖远程仓库；原仓库保持只读 `upstream`，不设置远程 `origin`。发布标签在本地以 `modelone-v*` 规范创建。
