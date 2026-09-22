@@ -2,11 +2,11 @@
 
 日期：2026-09-22。发布标签建议 `modelone-v<主版本>.<次版本>.<修订号>`；不兼容接口或数据变化升级主版本，功能迭代升级次版本，修复升级修订号。正式标签仅在验收通过后创建。
 
-本次改动：统一品牌配置及运行时公开配置（含辅助色、登录背景/面板色和字体）；三个前端品牌入口和独立登录页；服务端导航、错误页和展示文案；初始化及示例数据；资源清单和企业仓库解析；保留兼容标识的数据迁移；部署渲染和发布扫描；企业镜像计划统一接入 Compose/Kubernetes/Argo 产物；支持整棵 Kubernetes 清单树的镜像重写（含 Kustomize `images`）；正式 Compose 使用镜像内代码、命名数据卷和显式 kubeconfig；集群启动入口强制使用已扫描的发布清单，并通过 `MODELONE_SERVICE_EXTERNAL_IP` 注入节点地址；交付文档、CycloneDX 前端 SBOM 与许可证收集工具。
+本次改动：统一品牌配置及运行时公开配置（含辅助色、登录背景/面板色和字体）；三个前端品牌入口和独立登录页；服务端导航、错误页和展示文案；初始化及示例数据；资源清单和企业仓库解析；保留兼容标识的数据迁移；部署渲染和发布扫描；企业镜像计划统一接入 Compose/Kubernetes/Argo 产物；支持整棵 Kubernetes 清单树的镜像重写（含 Kustomize `images`）；正式 Compose 使用镜像内代码、命名数据卷和显式 kubeconfig；集群启动入口强制使用已扫描的发布清单，并通过 `MODELONE_SERVICE_EXTERNAL_IP` 注入节点地址；Ingress 升级到 `networking.k8s.io/v1` 并支持企业域名/TLS；移除已废弃的 HPA/RBAC API；交付文档、CycloneDX 前端 SBOM 与许可证收集工具。
 
 部署脚本补充节点地址必填校验，并统一规范化和引用企业资源下载地址，避免空参数或尾随斜杠导致启动过程延迟失败。
 
-发布渲染现在强制传入由完整 Kubernetes 清单生成的镜像计划，避免遗漏第三方镜像重写而生成仍依赖旧仓库的交付产物。
+发布渲染现在强制传入由完整 Kubernetes 清单生成的镜像计划，避免遗漏第三方镜像重写而生成仍依赖旧仓库的交付产物。Ingress、Gateway 和 VirtualService 会使用统一企业域名，配置 TLS Secret 后生成 HTTPS 入口；Ingress 使用 Kubernetes `networking.k8s.io/v1` API。
 
 镜像计划还必须与当前 `MODELONE_IMAGE_REGISTRY` 一致，防止切换企业仓库后误用旧计划。
 
