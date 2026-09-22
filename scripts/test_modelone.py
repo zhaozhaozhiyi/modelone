@@ -361,6 +361,11 @@ class BrandTests(unittest.TestCase):
         script = ROOT / 'install/kubernetes/all_image.py'
         with tempfile.TemporaryDirectory() as folder:
             env = {key: value for key, value in os.environ.items() if not key.startswith('MODELONE_')}
+            blank_config = json.loads((ROOT / 'config/modelone.json').read_text())
+            blank_config['imageRegistry'] = ''
+            blank_file = Path(folder) / 'blank-modelone.json'
+            blank_file.write_text(json.dumps(blank_config))
+            env['MODELONE_CONFIG'] = str(blank_file)
             missing = subprocess.run(['python3', str(script)], cwd=folder, env=env,
                                      capture_output=True, text=True)
             self.assertNotEqual(missing.returncode, 0)
