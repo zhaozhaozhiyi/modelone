@@ -4,7 +4,7 @@
   "description": "企业级 AI 开发与模型生产平台",
   "icons": [
     {
-      "src": "/static/assets/modelone/modelone-mark.svg",
+      "src": "modelone-mark.svg",
       "type": "image/svg+xml",
       "sizes": "64x64 32x32 24x24 16x16"
     }

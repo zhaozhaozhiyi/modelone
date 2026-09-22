@@ -107,12 +107,18 @@ def public_brand():
 
 def public_manifest():
     """Build the installable web-app manifest from the shared brand tokens."""
+    icon = BRAND['favicon_url'] or brand_asset('modelone-mark.svg')
+    # The default mark is copied into each frontend's public root. Keeping it
+    # relative lets standalone Nginx mounts resolve the icon without the
+    # backend's /static route; custom enterprise/CDN icons stay absolute.
+    if icon == '/static/assets/modelone/modelone-mark.svg':
+        icon = 'modelone-mark.svg'
     return {
         'short_name': BRAND['name'],
         'name': BRAND['title'],
         'description': BRAND['description'],
         'icons': [{
-            'src': BRAND['favicon_url'] or brand_asset('modelone-mark.svg'),
+            'src': icon,
             'type': 'image/svg+xml',
             'sizes': '64x64 32x32 24x24 16x16',
         }],

@@ -150,7 +150,7 @@ class BrandTests(unittest.TestCase):
             self.assertEqual(manifest['name'], brand.BRAND['title'], app)
             self.assertEqual(manifest['theme_color'], brand.BRAND['primary_color'], app)
             self.assertEqual(manifest['background_color'], brand.BRAND['login_background_color'], app)
-            self.assertEqual(manifest['icons'][0]['src'], brand.BRAND['favicon_url'], app)
+            self.assertEqual(manifest['icons'][0]['src'], 'modelone-mark.svg', app)
 
     def test_login_and_error_templates_use_configured_visual_tokens(self):
         login = (ROOT / 'myapp/templates/appbuilder/general/security/login_db.html').read_text(encoding='utf-8')
