@@ -510,6 +510,8 @@ class BrandTests(unittest.TestCase):
             self.assertFalse(scan.scan_artifacts([artifact]))
             artifact.write_text('image: ccr.ccs.tencentyun.com/cube-argoproj/workflow:v3.4.3\n')
             self.assertTrue(scan.scan_artifacts([artifact]))
+            artifact.write_text('resolver: ccr.ccs.tencentyun.com\n')
+            self.assertTrue(scan.scan_artifacts([artifact]))
             artifact.write_text('label: Cube Studio\n')
             self.assertTrue(scan.scan_artifacts([artifact]))
             artifact.with_suffix('.map').write_text('{}')
