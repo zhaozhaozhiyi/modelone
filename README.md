@@ -19,4 +19,4 @@ python3 scripts/brand_scan.py
 
 生产发布须先构建三个前端，再运行 `python3 scripts/brand_scan.py --built`。CI 已包含此检查。缺少企业镜像和资源时，不能仅凭页面构建成功认定平台可部署。
 
-原项目和第三方许可证随源码及交付包保留：[LICENSE](LICENSE)、[版权说明](docs/modelone/licenses.md)、[内部上游资料](docs/upstream/README.md)。这些资料不作为产品页面展示内容。
+第三方许可证随源码及交付包保留：[LICENSE](LICENSE)、[版权说明](docs/modelone/licenses.md)。内部迁移和兼容资料保留在源码中，不作为产品页面或帮助入口展示。

@@ -20,6 +20,7 @@ SURFACES = (
 )
 BUILDS = ('myapp/static/appbuilder/frontend', 'myapp/static/appbuilder/vison', 'myapp/static/appbuilder/visonPlus')
 DOCUMENTATION = (
+    'README.md',
     'job-template/**/*.md',
     'images/**/*.md',
     'install/**/*.md',
