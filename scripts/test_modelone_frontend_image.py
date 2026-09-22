@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Check real frontend HTTP responses from a locally built image on loopback.
 
-Tests static delivery only; no backend, registry, browser or cluster is used.
+Tests static delivery and proxy headers with a disposable Nginx echo upstream.
+No application backend, registry, browser or cluster is used.
 An intentionally mounted source map proves the web server denies publication.
 """
 import argparse
@@ -29,23 +30,42 @@ def command(args):
 def run(args):
     token = secrets.token_hex(6)
     container = 'modelone-web-test-' + token
+    upstream = container + '-upstream'
+    network = container + '-network'
     report = {'startedAt': datetime.now(timezone.utc).isoformat(), 'image': args.image,
               'imageId': command(['docker', 'image', 'inspect', args.image, '--format', '{{.Id}}']),
-              'scope': 'Real Nginx static HTTP responses; not a browser or authenticated backend test.', 'checks': []}
+              'scope': 'Real Nginx static HTTP responses and proxy header transport; not a browser, TLS or authenticated backend test.', 'checks': []}
     if args.nginx_config:
         report['nginxConfigSha256'] = hashlib.sha256(args.nginx_config.read_bytes()).hexdigest()
     created = False
+    upstream_created = False
+    network_created = False
     with tempfile.TemporaryDirectory(prefix='modelone-web-test-') as folder:
         fixture = Path(folder) / 'blocked.js.map'
         fixture.write_text('{"sourcesContent":["must not be public"]}')
+        echo_config = Path(folder) / 'upstream.conf'
+        echo_config.write_text('''server {
+    listen 80;
+    location = /_modelone_proxy_probe {
+        default_type application/json;
+        return 200 '{"origin":"$http_origin","host":"$http_host","authorization":"$http_authorization","cookie":"$http_cookie","upgrade":"$http_upgrade"}';
+    }
+}''')
         try:
+            command(['docker', 'network', 'create', '--label', 'modelone.validation=true', network])
+            network_created = True
+            command(['docker', 'run', '--detach', '--pull', 'never', '--name', upstream,
+                     '--label', 'modelone.validation=true', '--network', network,
+                     '--network-alias', 'myapp', '--network-alias', 'kubeflow-dashboard.infra',
+                     '--mount', 'type=bind,source=%s,target=/etc/nginx/conf.d/default.conf,readonly' % echo_config,
+                     args.image])
+            upstream_created = True
             config_mount = []
             if args.nginx_config:
                 config_mount = ['--mount', 'type=bind,source=%s,target=/etc/nginx/conf.d/default.conf,readonly'
                                 % args.nginx_config.resolve()]
             command(['docker', 'run', '--detach', '--pull', 'never', '--name', container,
-                     '--label', 'modelone.validation=true', '--add-host', 'myapp:127.0.0.1',
-                     '--add-host', 'kubeflow-dashboard.infra:127.0.0.1',
+                     '--label', 'modelone.validation=true', '--network', network,
                      '--publish', '127.0.0.1::80', '--mount',
                      'type=bind,source=%s,target=/data/web/frontend/blocked.js.map,readonly' % fixture,
                      *config_mount, args.image])
@@ -80,6 +100,30 @@ def run(args):
                 finally:
                     connection.close()
             report['checks'].append('root redirect is relative for both HTTP and HTTPS gateway requests')
+            # Browser Origin must survive the proxy, including during upgrade.
+            # Suppressing it would bypass the backend's cross-origin login guard.
+            for supplied_origin, upgrade in ((None, ''), ('null', ''), ('https://foreign.invalid', ''),
+                                             ('http://modelone.example.test', ''), ('https://foreign.invalid', 'websocket')):
+                headers = {'Host': 'modelone.example.test', 'Authorization': 'Bearer proxy-fixture',
+                           'Cookie': 'session=proxy-fixture'}
+                if supplied_origin is not None:
+                    headers['Origin'] = supplied_origin
+                if upgrade:
+                    headers.update(Upgrade=upgrade, Connection='upgrade')
+                connection = HTTPConnection('127.0.0.1', int(port), timeout=5)
+                try:
+                    connection.request('GET', '/_modelone_proxy_probe', headers=headers)
+                    response = connection.getresponse()
+                    if response.status != 200:
+                        raise AssertionError('Proxy probe did not reach the upstream')
+                    observed = json.loads(response.read())
+                    expected = {'origin': supplied_origin or '', 'host': headers['Host'],
+                                'authorization': headers['Authorization'], 'cookie': headers['Cookie'], 'upgrade': upgrade}
+                    if observed != expected:
+                        raise AssertionError('Proxy must preserve Origin, Host, credentials and upgrade headers: ' + str(observed))
+                finally:
+                    connection.close()
+            report['checks'].append('proxy preserves absent, null, same-origin, foreign and WebSocket Origin headers plus Host, authorization and cookies')
             for base in ('/frontend', '/static/appbuilder/vison', '/static/appbuilder/visonPlus'):
                 _, html = fetch(base + '/index.html')
                 if '<title>modelOne' not in html or re.search(r'cube[-_ ]?studio|开源版|商业版', html, re.I):
@@ -126,6 +170,10 @@ def run(args):
         finally:
             if created:
                 command(['docker', 'rm', '--force', '--volumes', container])
+            if upstream_created:
+                command(['docker', 'rm', '--force', '--volumes', upstream])
+            if network_created:
+                command(['docker', 'network', 'rm', network])
             report['finishedAt'] = datetime.now(timezone.utc).isoformat()
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Smoke-test a built backend with disposable MySQL and Redis on Docker.
+"""Smoke-test a built backend, optionally through a frontend proxy, on Docker.
 
 Uses only cached images; publishes a random loopback port and cleans up its
 containers, temporary data and network. Does not run Kubernetes workloads.
 """
 import argparse
+import hashlib
 import importlib.util
 import json
 import secrets
@@ -58,7 +59,13 @@ def run_smoke(args):
         if check and r.returncode:
             raise RuntimeError(redact(r.stderr)[-3000:])
         return r
-    report['images'] = {image: run(['docker', 'image', 'inspect', image, '--format', '{{.Id}}']).stdout.strip() for image in (args.backend_image, args.mysql_image, args.redis_image)}
+    images = [args.backend_image, args.mysql_image, args.redis_image]
+    if args.frontend_image:
+        images.append(args.frontend_image)
+        report['scope'] = 'Local Docker fresh-install and HTTP smoke test through the frontend Nginx proxy; no browser, TLS gateway or cluster business jobs.'
+    if args.nginx_config:
+        report['nginxConfigSha256'] = hashlib.sha256(args.nginx_config.read_bytes()).hexdigest()
+    report['images'] = {image: run(['docker', 'image', 'inspect', image, '--format', '{{.Id}}']).stdout.strip() for image in images}
     with tempfile.TemporaryDirectory(prefix='modelone-app-') as td:
         folder = Path(td)
         mysqlenv = folder / 'mysql.env'
@@ -89,7 +96,7 @@ def run_smoke(args):
                 raise RuntimeError('redis did not become ready')
             print('Isolated MySQL and Redis ready', flush=True)
             app = prefix + '-myapp'
-            run(['docker', 'run', '-d', '--pull', 'never', '--platform', 'linux/amd64', '--name', app, '--network', prefix, '--network-alias', 'myapp', '--label', 'modelone.validation=true', '--env-file', str(appenv), '--tmpfs', '/data/k8s/kubeflow:rw,size=512m', '--publish', '127.0.0.1::80', args.backend_image, 'bash', '/entrypoint.sh'])
+            run(['docker', 'run', '-d', '--pull', 'never', '--platform', 'linux/amd64', '--name', app, '--network', prefix, '--network-alias', 'myapp', '--network-alias', 'kubeflow-dashboard.infra', '--label', 'modelone.validation=true', '--env-file', str(appenv), '--tmpfs', '/data/k8s/kubeflow:rw,size=512m', '--publish', '127.0.0.1::80', args.backend_image, 'bash', '/entrypoint.sh'])
             containers.append(app)
             port = run(['docker', 'inspect', app, '--format', '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostPort}}']).stdout.strip()
             origin = 'http://127.0.0.1:' + port
@@ -105,6 +112,29 @@ def run_smoke(args):
                     time.sleep(2)
             else:
                 raise RuntimeError('Backend health timeout')
+            if args.frontend_image:
+                frontend = prefix + '-frontend'
+                config_mount = []
+                if args.nginx_config:
+                    config_mount = ['--mount', 'type=bind,source=%s,target=/etc/nginx/conf.d/default.conf,readonly'
+                                    % args.nginx_config.resolve()]
+                run(['docker', 'run', '-d', '--pull', 'never', '--name', frontend, '--network', prefix,
+                     '--label', 'modelone.validation=true', '--publish', '127.0.0.1::80',
+                     *config_mount, args.frontend_image])
+                containers.append(frontend)
+                port = run(['docker', 'inspect', frontend, '--format', '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostPort}}']).stdout.strip()
+                origin = 'http://127.0.0.1:' + port
+                deadline = time.monotonic() + 30
+                while time.monotonic() < deadline:
+                    try:
+                        with urlopen(origin + '/health', timeout=3) as response:
+                            if response.status == 200:
+                                break
+                    except (OSError, HTTPError):
+                        time.sleep(0.5)
+                else:
+                    raise RuntimeError('Frontend proxy health timeout')
+                print('Frontend proxy ready; all HTTP checks use the shared entrypoint', flush=True)
             revision = run(['docker', 'exec', prefix + '-db', 'sh', '-c', 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --host=127.0.0.1 --user=root --batch --skip-column-names --execute="SELECT version_num FROM kubeflow.alembic_version"']).stdout.strip()
             if revision != 'modelone_brand_links_20260921':
                 raise AssertionError('Unexpected migration revision: ' + revision)
@@ -147,16 +177,31 @@ def run_smoke(args):
                     raise AssertionError('%s: expected %d, got %d' % (path, status, result[0]))
                 return result
 
+            def expect_error_page(status, browser=None):
+                page = expect('/modelone-validation-missing', status, browser=browser)[2]
+                if ('modelOne Runtime Validation' not in page or 'modelone-logo.svg' not in page
+                        or 'cube-studio' in page.lower()):
+                    raise AssertionError('Missing runtime brand on error page: ' + str(status))
+
             def sql(statement):
                 return run(['docker', 'exec', prefix + '-db', 'sh', '-c',
                             'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --host=127.0.0.1 --user=root --batch --skip-column-names kubeflow --execute="$1"', 'sql', statement]).stdout.strip()
 
             expect('/myapp/manifest/unknown.json', 404)
+            if args.frontend_image:
+                if expect('/', 301)[1].get('Location') != '/frontend/':
+                    raise AssertionError('Unexpected shared entrypoint redirect')
+                for base in ('/frontend/', '/static/appbuilder/vison/', '/static/appbuilder/visonPlus/'):
+                    page = expect(base, 200)[2]
+                    if '<title>modelOne' not in page or 'data-modelone-app=' not in page:
+                        raise AssertionError('Missing branded frontend: ' + base)
+                report['checks'].append('shared entrypoint serves three product apps and proxies health, login and runtime branding')
 
             protected = '/project_modelview/api/'
             browser = client()
             expect('/login/?username=admin', 200, browser=browser)
             expect(protected, 401, browser=browser)
+            expect_error_page(401, browser)
             expect('/login/api/?token=admin', 401)
             for headers in ({'Authorization': 'admin'}, {'Authorization': 'admin', 'Host': 'kubeflow-dashboard.infra'}):
                 expect(protected, 401, headers=headers)
@@ -189,6 +234,8 @@ def run_smoke(args):
             if result[0] != 302 or not result[1].get('Location', '').startswith('/'):
                 raise AssertionError('Password login failed or accepted an external redirect')
             expect(protected, 200, browser=browser)
+            expect_error_page(404, browser)
+            report['checks'].append('unauthenticated and missing-page HTML responses use the deployed modelOne brand')
             cookie = next((value for value in result[1].get_all('Set-Cookie', []) if value.startswith('session=')), '')
             if 'HttpOnly' not in cookie or 'SameSite=Lax' not in cookie:
                 raise AssertionError('Session cookie flags missing')
@@ -215,10 +262,18 @@ def run_smoke(args):
                 expect('/login/api/', 401, headers={'Content-Type': 'application/json'}, data=json.dumps({'token': value}).encode())
             browser = client()
             body = json.dumps({'token': token}).encode()
-            expect('/login/api/', 401, headers={'Content-Type': 'application/json', 'Origin': 'https://example.invalid'}, data=body)
+            for supplied_origin in ('https://example.invalid', 'null'):
+                foreign_browser = client()
+                expect('/login/api/', 401, browser=foreign_browser,
+                       headers={'Content-Type': 'application/json', 'Origin': supplied_origin}, data=body)
+                expect(protected, 401, browser=foreign_browser)
+            same_origin_browser = client()
+            expect('/login/api/', 200, browser=same_origin_browser,
+                   headers={'Content-Type': 'application/json', 'Origin': origin}, data=body)
+            expect(protected, 200, browser=same_origin_browser)
             expect('/login/api/', 200, browser=browser, headers={'Content-Type': 'application/json'}, data=body)
             expect(protected, 200, browser=browser)
-            report['checks'].append('short/full/Bearer API tokens accepted; expired/incorrect signatures and foreign login origin denied')
+            report['checks'].append('short/full/Bearer API tokens and same-origin login accepted; expired/incorrect signatures, foreign and null login origins denied without a session')
 
             task_token = tokens.issue_token('admin', credentials['MODELONE_JWT_KEY'], scope='task')
             private_values.append(task_token)
@@ -248,8 +303,8 @@ def run_smoke(args):
         finally:
             logs = []
             cleanup_errors = []
-            for name in containers:
-                if name.endswith('-myapp'):
+            for name in reversed(containers):
+                if name.endswith(('-myapp', '-frontend')):
                     logs.append(run(['docker', 'logs', name], False).stdout + run(['docker', 'logs', name], False).stderr)
                 if run(['docker', 'rm', '-f', '-v', name], False).returncode:
                     cleanup_errors.append(name)
@@ -276,5 +331,10 @@ if __name__ == '__main__':
     parser.add_argument('--backend-image', required=True)
     parser.add_argument('--mysql-image', default='mysql:8.0.32')
     parser.add_argument('--redis-image', required=True, help='Cached Bitnami-compatible Redis image')
+    parser.add_argument('--frontend-image', help='Run all HTTP checks through this cached frontend image')
+    parser.add_argument('--nginx-config', type=Path, help='Mount a deployment Nginx configuration; requires --frontend-image')
     parser.add_argument('--output', type=Path, default=ROOT / 'dist/modelone')
-    run_smoke(parser.parse_args())
+    args = parser.parse_args()
+    if args.nginx_config and not args.frontend_image:
+        parser.error('--nginx-config requires --frontend-image')
+    run_smoke(args)
