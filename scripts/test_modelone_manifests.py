@@ -7,6 +7,7 @@ tree without touching a real cluster.
 from pathlib import Path
 import importlib.util
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -160,8 +161,45 @@ class ManifestEntrypointTests(unittest.TestCase):
             for rule in document["spec"]["rules"]:
                 self.assertEqual(rule["host"], "modelone.example.test")
                 for path in rule["http"]["paths"]:
-                    self.assertEqual(path["pathType"], "Prefix")
+                    self.assertIn(path["pathType"], ("Prefix", "ImplementationSpecific"))
                     self.assertIn("service", path["backend"])
+
+    def test_ingress_routes_have_distinct_paths_and_existing_service_ports(self):
+        sources = (
+            'cube/base/deploy-frontend.yaml', 'argo/minio.yaml',
+            'dashboard/v2.6.1-cluster.yaml', 'prometheus/grafana/grafana-svc.yml',
+        )
+        services = {}
+        for relative in sources:
+            for doc in yaml.safe_load_all((ROOT / 'install/kubernetes' / relative).read_text()):
+                if doc and doc['kind'] == 'Service':
+                    services[(doc['metadata']['namespace'], doc['metadata']['name'])] = {
+                        port['port'] for port in doc['spec']['ports']
+                    }
+        routes = {}
+        for doc in yaml.safe_load_all((ROOT / 'install/kubernetes/ingress.yaml').read_text()):
+            for rule in doc['spec']['rules']:
+                for path in rule['http']['paths']:
+                    route = path['path']
+                    self.assertNotIn(route, routes, 'Ingress routes must share the host without collisions')
+                    service = path['backend']['service']
+                    target = (doc['metadata']['namespace'], service['name'])
+                    self.assertIn(target, services)
+                    self.assertIn(service['port']['number'], services[target])
+                    routes[route] = target
+                    if path['pathType'] == 'ImplementationSpecific':
+                        annotations = doc['metadata']['annotations']
+                        self.assertEqual(annotations['nginx.ingress.kubernetes.io/use-regex'], 'true')
+                        self.assertEqual(annotations['nginx.ingress.kubernetes.io/rewrite-target'], '/$2')
+                        prefix = route.split('(', 1)[0]
+                        match = re.fullmatch(route, prefix + '/nested/asset.js')
+                        self.assertEqual(match.group(2), 'nested/asset.js')
+        self.assertEqual(routes, {
+            '/': ('infra', 'kubeflow-dashboard-frontend'),
+            '/minio(/|$)(.*)': ('kubeflow', 'minio'),
+            '/k8s/dashboard/cluster(/|$)(.*)': ('kube-system', 'kubernetes-dashboard-cluster'),
+            '/grafana/': ('monitoring', 'grafana'),
+        })
 
     def test_kubernetes_sources_do_not_use_removed_api_versions(self):
         forbidden = {

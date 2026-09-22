@@ -45,6 +45,19 @@ jobs:
           python scripts/test_modelone_frontend_image.py \
             --image modelone/ci-frontend \
             --report dist/modelone/ci-frontend-image-validation.json
+      - name: Exercise the Kubernetes frontend proxy configuration
+        run: |
+          python - <<'PY'
+          import yaml
+          from pathlib import Path
+          documents = yaml.safe_load_all(Path('install/kubernetes/cube/base/deploy-frontend.yaml').read_text())
+          config = next(doc['data']['default.conf'] for doc in documents if doc and doc.get('kind') == 'ConfigMap')
+          Path('dist/modelone/ci-kubernetes-nginx.conf').write_text(config)
+          PY
+          python scripts/test_modelone_frontend_image.py \
+            --image modelone/ci-frontend \
+            --nginx-config dist/modelone/ci-kubernetes-nginx.conf \
+            --report dist/modelone/ci-kubernetes-frontend-validation.json
       - name: Exercise real offline image save and load
         env:
           MODELONE_BUNDLE_TEST_IMAGE: modelone/ci-frontend
@@ -149,4 +162,6 @@ jobs:
             dist/modelone/ci-evidence/resource-inventory.json
             dist/modelone/compliance
             dist/modelone/ci-kustomize
+            dist/modelone/ci-frontend-image-validation.json
+            dist/modelone/ci-kubernetes-frontend-validation.json
       - run: git diff --check

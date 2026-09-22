@@ -4,6 +4,8 @@
 
 本次改动：统一品牌配置及运行时公开配置（含辅助色、登录背景/面板色和字体）；三个前端品牌入口和独立登录页；服务端导航、错误页和展示文案；初始化及示例数据；资源清单和企业仓库解析；保留兼容标识的数据迁移；部署渲染和发布扫描；企业镜像计划统一接入 Compose/Kubernetes/Argo 产物；支持整棵 Kubernetes 清单树的镜像重写（含 Kustomize `images`）；正式 Compose 使用镜像内代码、命名数据卷和显式 kubeconfig；集群启动入口强制使用已扫描的发布清单，并通过 `MODELONE_SERVICE_EXTERNAL_IP` 注入节点地址；Ingress 升级到 `networking.k8s.io/v1` 并支持企业域名/TLS；移除已废弃的 HPA/RBAC API；交付文档、CycloneDX 前端 SBOM 与许可证收集工具。
 
+修复共享企业域名下的 Ingress 路由冲突：主入口指向前端，监控与管理入口使用独立路径，后端 Service 名称和端口与部署清单一致，并删除无后端服务的旧路由。前端首页改用相对重定向，避免网关终止 TLS 后降级到 HTTP；CI 在真实 Nginx 容器中分别验证镜像默认配置与 Kubernetes ConfigMap 配置。
+
 部署脚本补充节点地址必填校验，并统一规范化和引用企业资源下载地址，避免空参数或尾随斜杠导致启动过程延迟失败。
 
 发布渲染现在强制传入由完整 Kubernetes 清单生成的镜像计划，避免遗漏第三方镜像重写而生成仍依赖旧仓库的交付产物。Ingress、Gateway 和 VirtualService 会使用统一企业域名，配置 TLS Secret 后生成 HTTPS 入口；Ingress 使用 Kubernetes `networking.k8s.io/v1` API。

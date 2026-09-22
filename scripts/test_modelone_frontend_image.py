@@ -5,7 +5,8 @@ Tests static delivery only; no backend, registry, browser or cluster is used.
 An intentionally mounted source map proves the web server denies publication.
 """
 import argparse
-from http.client import HTTPException
+import hashlib
+from http.client import HTTPConnection, HTTPException
 import json
 import re
 import secrets
@@ -31,16 +32,23 @@ def run(args):
     report = {'startedAt': datetime.now(timezone.utc).isoformat(), 'image': args.image,
               'imageId': command(['docker', 'image', 'inspect', args.image, '--format', '{{.Id}}']),
               'scope': 'Real Nginx static HTTP responses; not a browser or authenticated backend test.', 'checks': []}
+    if args.nginx_config:
+        report['nginxConfigSha256'] = hashlib.sha256(args.nginx_config.read_bytes()).hexdigest()
     created = False
     with tempfile.TemporaryDirectory(prefix='modelone-web-test-') as folder:
         fixture = Path(folder) / 'blocked.js.map'
         fixture.write_text('{"sourcesContent":["must not be public"]}')
         try:
+            config_mount = []
+            if args.nginx_config:
+                config_mount = ['--mount', 'type=bind,source=%s,target=/etc/nginx/conf.d/default.conf,readonly'
+                                % args.nginx_config.resolve()]
             command(['docker', 'run', '--detach', '--pull', 'never', '--name', container,
                      '--label', 'modelone.validation=true', '--add-host', 'myapp:127.0.0.1',
+                     '--add-host', 'kubeflow-dashboard.infra:127.0.0.1',
                      '--publish', '127.0.0.1::80', '--mount',
                      'type=bind,source=%s,target=/data/web/frontend/blocked.js.map,readonly' % fixture,
-                     args.image])
+                     *config_mount, args.image])
             created = True
             port = command(['docker', 'inspect', container, '--format', '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostPort}}'])
             origin = 'http://127.0.0.1:' + port
@@ -60,6 +68,18 @@ def run(args):
                     if command(['docker', 'inspect', container, '--format', '{{.State.Running}}']) != 'true':
                         raise RuntimeError('Validation container stopped: ' + command(['docker', 'logs', container])) from None
                     time.sleep(0.5)
+            for forwarded_proto in ('http', 'https'):
+                connection = HTTPConnection('127.0.0.1', int(port), timeout=5)
+                try:
+                    connection.request('GET', '/', headers={'Host': 'modelone.example.test',
+                                                           'X-Forwarded-Proto': forwarded_proto})
+                    response = connection.getresponse()
+                    if response.status != 301 or response.getheader('Location') != '/frontend/':
+                        raise AssertionError('Root redirect must retain the browser scheme and host')
+                    response.read()
+                finally:
+                    connection.close()
+            report['checks'].append('root redirect is relative for both HTTP and HTTPS gateway requests')
             for base in ('/frontend', '/static/appbuilder/vison', '/static/appbuilder/visonPlus'):
                 _, html = fetch(base + '/index.html')
                 if '<title>modelOne' not in html or re.search(r'cube[-_ ]?studio|开源版|商业版', html, re.I):
@@ -117,5 +137,6 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', required=True, help='locally built frontend image; never pulled automatically')
+    parser.add_argument('--nginx-config', type=Path, help='also validate a mounted deployment Nginx configuration')
     parser.add_argument('--report', type=Path, default=ROOT / 'dist/modelone/frontend-image-validation.json')
     run(parser.parse_args())

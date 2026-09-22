@@ -11,6 +11,8 @@ data:
     server {
         listen       80;
         server_name  localhost;
+        # Preserve the public scheme when TLS terminates at an upstream gateway.
+        absolute_redirect off;
         access_log  /data/log/nginx/access.log  main;
         error_log   /data/log/nginx/error.log;
 
@@ -20,7 +22,7 @@ data:
         }
 
         location = / {
-            rewrite ^(.*) $scheme://$http_host/frontend/ permanent;
+            return 301 /frontend/;
         }
 
         # 静态资源

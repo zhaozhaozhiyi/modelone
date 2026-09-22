@@ -1,5 +1,6 @@
 # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
-# 所有的注释都在上面的网址上
+# Optional ingress-nginx entrypoints. Domain and TLS are supplied by the
+# release renderer; paths share one host and must not overlap at the root.
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -26,10 +27,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kubeflow-dashboard
+                name: kubeflow-dashboard-frontend
                 port:
                   number: 80
-#      host: kubeflow.local.com
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -38,6 +38,8 @@ metadata:
   name: kubeflow-kubeflow-dashboard
   namespace: kubeflow
   annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "3000"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3000"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3000"
@@ -54,21 +56,13 @@ spec:
   rules:
     - http:
         paths:
-          - path: /minio/
-            pathType: Prefix
+          - path: /minio(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
-                name: minio-service
+                name: minio
                 port:
                   number: 9000
-          - path: /pipeline/
-            pathType: Prefix
-            backend:
-              service:
-                name: ml-pipeline-ui
-                port:
-                  number: 80
-#      host: kubeflow.local.com
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -77,6 +71,8 @@ metadata:
   name: kube-system-kubeflow-dashboard
   namespace: kube-system
   annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
@@ -92,14 +88,13 @@ spec:
   rules:
     - http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: /k8s/dashboard/cluster(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: kubernetes-dashboard-cluster
                 port:
                   number: 9090
-#      host: k8s.local.com      # 这里需要修改为自己的k8s dashboard的域名
 
 
 
@@ -125,12 +120,10 @@ spec:
   rules:
     - http:
         paths:
-          - path: /
+          - path: /grafana/
             pathType: Prefix
             backend:
               service:
                 name: grafana
                 port:
-                  number: 3000
-#      host: kubeflow.local.com       # 这里需要修改为自己的k8s dashboard的域名
-
+                  number: 8080
