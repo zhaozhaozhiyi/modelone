@@ -107,9 +107,12 @@ jobs:
 
           resources = json.loads(Path('dist/modelone/ci-evidence/resource-inventory.json').read_text())
           dependencies = json.loads(Path('dist/modelone/compliance/dependencies.json').read_text())
+          sbom = json.loads(Path('dist/modelone/compliance/frontend-sbom.cdx.json').read_text())
           assert len(resources) >= 1 and {row['kind'] for row in resources} == {'asset', 'image'}
           assert len(dependencies) >= 1
           assert all('reviewRequired' in row for row in dependencies)
+          assert sbom['bomFormat'] == 'CycloneDX' and sbom['specVersion'] == '1.5'
+          assert len(sbom['components']) >= 1
           PY
       - name: Upload migration and compliance evidence
         uses: actions/upload-artifact@v4
