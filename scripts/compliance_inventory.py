@@ -72,6 +72,7 @@ sbom = {
     '`frontend-sbom.cdx.json` is a CycloneDX 1.5 inventory for the three frontend lock files. '
     'UNKNOWN and reviewRequired entries must be resolved before production delivery. '
     'Backend Python packages, OS packages, base images, GPU libraries and runtime images require a separate '
-    'SBOM from the final container images; this report is not a completed legal audit.\n'
+    'SBOM from the final container images (scripts/image_compliance.py collects evidence for modelOne images); '
+    'this report is not a completed legal audit.\n'
 )
 print('%s dependency entries; %s require review' % (len(records),sum(bool(r['reviewRequired']) for r in records)))

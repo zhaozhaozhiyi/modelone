@@ -40,6 +40,7 @@ python3 scripts/test_modelone_nodes.py
 python3 scripts/test_modelone_resources.py
 python3 scripts/test_modelone_image_bundle.py
 python3 scripts/test_modelone_manifests.py
+python3 scripts/test_modelone_compliance.py
 for app in frontend vision visionPlus; do
   npm ci --prefix "myapp/$app" --legacy-peer-deps --no-audit --no-fund
   npm run build --prefix "myapp/$app"

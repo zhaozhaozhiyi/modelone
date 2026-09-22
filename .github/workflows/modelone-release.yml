@@ -24,6 +24,7 @@ jobs:
       - run: python scripts/test_modelone_resources.py
       - run: python scripts/test_modelone_image_bundle.py
       - run: python scripts/test_modelone_manifests.py
+      - run: python scripts/test_modelone_compliance.py
       - run: python scripts/brand_scan.py
       - name: Build all product frontends
         # Upstream lint warnings remain visible; brand and source-map gates
@@ -59,6 +60,19 @@ jobs:
             --image modelone/ci-frontend \
             --nginx-config dist/modelone/ci-kubernetes-nginx.conf \
             --report dist/modelone/ci-kubernetes-frontend-validation.json
+      - name: Install pinned Syft for runtime image evidence
+        id: syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
+        with:
+          syft-version: v1.51.1
+      - name: Collect frontend image SBOM and original license files
+        env:
+          MODELONE_SYFT_COMMAND: ${{ steps.syft.outputs.cmd }}
+        run: |
+          python scripts/image_compliance.py \
+            --syft-command "$MODELONE_SYFT_COMMAND" \
+            --image modelone/ci-frontend \
+            --output dist/modelone/ci-frontend-compliance
       - name: Exercise real offline image save and load
         env:
           MODELONE_BUNDLE_TEST_IMAGE: modelone/ci-frontend
@@ -171,4 +185,5 @@ jobs:
             dist/modelone/ci-frontend-image-validation.json
             dist/modelone/ci-kubernetes-frontend-validation.json
             dist/modelone/ci-runtime-error-validation.json
+            dist/modelone/ci-frontend-compliance
       - run: git diff --check

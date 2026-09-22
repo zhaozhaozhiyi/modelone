@@ -1,0 +1,32 @@
+# Scan local image contents without registry or package-metadata enrichment.
+check-for-app-update: false
+scope: squashed
+enrich: []
+license:
+  content: all
+file:
+  content:
+    skip-files-above-size: 2097152
+    globs:
+      - '**/LICENSE*'
+      - '**/license*'
+      - '**/NOTICE*'
+      - '**/notice*'
+      - '**/COPYING*'
+      - '/usr/share/doc/*/copyright'
+      - '/usr/share/common-licenses/*'
+golang:
+  search-local-mod-cache-licenses: false
+  search-local-vendor-licenses: false
+  search-remote-licenses: false
+  use-packages-lib: false
+java:
+  use-network: false
+  use-maven-local-repository: false
+javascript:
+  search-remote-licenses: false
+python:
+  search-remote-licenses: false
+  guess-unpinned-requirements: false
+cpp:
+  vcpkg-allow-git-clone: false
