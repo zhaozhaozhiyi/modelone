@@ -42,6 +42,7 @@ import {
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getParam, getTableScroll, isDomString, isJsonString } from "../util";
+import { getCurrentProject, subscribeProjectChange } from "../projectSwitcher";
 import ModalForm from "../components/ModalForm/ModalForm";
 import cookies from "js-cookie";
 import {
@@ -1261,6 +1262,22 @@ export default function TaskListManager(props?: IAppMenuItem) {
     // 获取父视图的 model_name：优先从 location.state 获取，其次从 props.model_name（routerConfig 传递），最后从 currentModelName 获取
     const parentViewName =
       (location.state as any)?.parent_view_name || props?.model_name || currentModelName;
+    // 顶栏全局项目切换器：页面元数据支持 project 过滤且用户未显式过滤项目时，请求默认限定当前项目
+    const scopedProject = getCurrentProject();
+    const scopedProjectFilter =
+      scopedProject &&
+      paramsMap["project"] &&
+      !params.some((param: any) => param.key === "project")
+        ? {
+            col: "project",
+            opr: (paramsMap["project"].filter || []).some(
+              (item: any) => item.operator === "rel_o_m",
+            )
+              ? "rel_o_m"
+              : "eq",
+            value: scopedProject.id,
+          }
+        : undefined;
     formatData = {
       filters: [
         temlateId && parentViewName
@@ -1270,6 +1287,7 @@ export default function TaskListManager(props?: IAppMenuItem) {
               value: +temlateId,
             }
           : undefined,
+        scopedProjectFilter,
         ...params
           .filter((param) => param.value !== undefined)
           .map((param: any) => {
@@ -1333,6 +1351,19 @@ export default function TaskListManager(props?: IAppMenuItem) {
       })
       .finally(() => setLoading(false));
   };
+
+  // 顶栏项目切换后，当前列表页按新的项目范围重新查询
+  useEffect(() => {
+    return subscribeProjectChange(() => {
+      fetchData({
+        ...fetchDataParams,
+        pageConf: pageInfoInit,
+        params: filterValuesRef.current,
+        paramsMap: filterParamsMap,
+        sorter: sorterParam,
+      });
+    });
+  }, [filterParamsMap]);
 
   const fetchDataDetail = (id: string) => {
     setLoadingDetail(true);

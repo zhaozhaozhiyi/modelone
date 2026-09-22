@@ -19,6 +19,7 @@ import Cookies from 'js-cookie'
 import { handleTips } from './api';
 import globalConfig from './global.config'
 import AiChatBot from './components/AiChatBot/AiChatBot'
+import { ProjectSwitcher } from './projectSwitcher'
 const userName = Cookies.get('myapp_username')
 
 const RouterConfig = (config: RouteObject[]) => {
@@ -350,6 +351,7 @@ const AppWrapper = (props: IProps) => {
                 renderSingleModule()
               }
             </div>
+            <ProjectSwitcher />
             <div className="star-topmenu">
               <Menu mode="horizontal" selectedKeys={navSelected}>
                 {renderNavTopMenu()}

@@ -224,3 +224,31 @@ pre,
     min-width: var(--mo-sider-collapsed);
   }
 }
+
+// 顶栏全局项目切换器
+.mo-project-switcher {
+  display: flex;
+  align-items: center;
+  margin: 0 16px 0 8px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.mo-project-switcher-select.ant-select {
+  min-width: 150px;
+}
+
+.mo-project-switcher-select .ant-select-selector {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  color: #fff !important;
+}
+
+.mo-project-switcher-select .ant-select-selection-item,
+.mo-project-switcher-select .ant-select-arrow,
+.mo-project-switcher-select .ant-select-selection-search-input {
+  color: #fff;
+}
+
+.mo-project-switcher-select .ant-select-selection-placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
