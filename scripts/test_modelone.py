@@ -198,6 +198,23 @@ class BrandTests(unittest.TestCase):
                 path.write_text(json.dumps(config), encoding='utf-8')
                 with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
                     brand.load_brand()
+                config['primaryColor'] = '#17191d'
+                config['publicDomain'] = 'modelone.example.test'
+                config['tlsSecretName'] = 'modelone-tls'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                with patch.dict(os.environ, {}, clear=True):
+                    loaded = brand.load_brand()
+                    self.assertEqual(loaded['public_domain'], 'modelone.example.test')
+                    self.assertEqual(loaded['tls_secret_name'], 'modelone-tls')
+                config['publicDomain'] = 'https://modelone.example.test'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
+                    brand.load_brand()
+                config['publicDomain'] = ''
+                config['tlsSecretName'] = 'modelone-tls'
+                path.write_text(json.dumps(config), encoding='utf-8')
+                with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
+                    brand.load_brand()
         finally:
             brand.CONFIG_PATH = original_path
 
@@ -512,6 +529,8 @@ class BrandTests(unittest.TestCase):
             self.assertTrue(scan.scan_artifacts([artifact]))
             artifact.write_text('resolver: ccr.ccs.tencentyun.com\n')
             self.assertTrue(scan.scan_artifacts([artifact]))
+            artifact.write_text('image: registry.example.test/team/modelone/third-party/ccr.ccs.tencentyun.com/argoproj/workflow:v3.4.3\n')
+            self.assertFalse(scan.scan_artifacts([artifact]))
             artifact.write_text('label: Cube Studio\n')
             self.assertTrue(scan.scan_artifacts([artifact]))
             artifact.with_suffix('.map').write_text('{}')

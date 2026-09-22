@@ -5,15 +5,22 @@ verifies that source-tree paths are mapped into the image-rewritten release
 tree without touching a real cluster.
 """
 from pathlib import Path
+import importlib.util
 import os
 import shlex
 import subprocess
 import tempfile
 import unittest
+import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / "install/kubernetes/modelone-manifests.sh"
+rewrite_spec = importlib.util.spec_from_file_location(
+    "modelone_manifest_rewriter", ROOT / "scripts/rewrite_deployment_images.py"
+)
+rewrite = importlib.util.module_from_spec(rewrite_spec)
+rewrite_spec.loader.exec_module(rewrite)
 
 
 class ManifestEntrypointTests(unittest.TestCase):
@@ -100,6 +107,36 @@ class ManifestEntrypointTests(unittest.TestCase):
         rejected = self.run_helper("modelone_manifest ../outside.yaml")
         self.assertNotEqual(rejected.returncode, 0)
         self.assertIn("非法", rejected.stderr)
+
+    def test_configured_domain_replaces_wildcards_and_adds_https_gateway(self):
+        gateway = self.root / "gateway.yaml"
+        gateway.write_text(
+            "apiVersion: networking.istio.io/v1alpha3\n"
+            "kind: Gateway\n"
+            "metadata:\n  name: kubeflow-gateway\n"
+            "spec:\n  servers:\n  - hosts: ['*']\n"
+            "    port:\n      number: 80\n      protocol: HTTP\n"
+        )
+        virtual = self.root / "virtual.yaml"
+        virtual.write_text(
+            "apiVersion: networking.istio.io/v1alpha3\n"
+            "kind: VirtualService\n"
+            "spec:\n  hosts: ['*']\n"
+        )
+        before = dict(rewrite.brand.BRAND)
+        try:
+            rewrite.brand.BRAND.update(public_domain="modelone.example.test", tls_secret_name="modelone-tls")
+            rewrite.render_network_manifest(gateway)
+            rewrite.render_network_manifest(virtual)
+        finally:
+            rewrite.brand.BRAND.clear()
+            rewrite.brand.BRAND.update(before)
+        gateway_doc = next(yaml.safe_load_all(gateway.read_text()))
+        self.assertEqual(gateway_doc["spec"]["servers"][0]["hosts"], ["modelone.example.test"])
+        https = next(server for server in gateway_doc["spec"]["servers"] if server["port"]["number"] == 443)
+        self.assertEqual(https["tls"], {"credentialName": "modelone-tls", "mode": "SIMPLE"})
+        virtual_doc = next(yaml.safe_load_all(virtual.read_text()))
+        self.assertEqual(virtual_doc["spec"]["hosts"], ["modelone.example.test"])
 
 
 if __name__ == "__main__":

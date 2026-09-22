@@ -34,7 +34,10 @@ DOCUMENTATION = (
     'docs/modelone/release-notes.md',
 )
 OLD = re.compile(r'cube[-_ ]?studio|开源版|商业版|开源社区|data-master\.net|/vison(?:Plus)?/logo\.png|cubeStudioLogo|logoCB', re.I)
-HOSTS = re.compile(r'docker-76009\.sz\.gfp\.tencent-cloud\.com|cube-studio\.oss-cn-hangzhou\.aliyuncs\.com|ccr\.ccs\.tencentyun\.com(?:/(?:cube-studio|cube-argoproj))?|(?:github\.com|githubfast\.com)/data-infra/(?:cube-studio|modelone)', re.I)
+# ``third-party/ccr.ccs...`` is an enterprise target namespace emitted by the
+# image transfer plan; it is not a network endpoint. Bare/source registry
+# references remain blocked everywhere else.
+HOSTS = re.compile(r'docker-76009\.sz\.gfp\.tencent-cloud\.com|cube-studio\.oss-cn-hangzhou\.aliyuncs\.com|(?<!third-party/)ccr\.ccs\.tencentyun\.com(?:/(?:cube-studio|cube-argoproj))?|(?:github\.com|githubfast\.com)/data-infra/(?:cube-studio|modelone)', re.I)
 # Compatibility exceptions are syntactic tokens, not blanket file exclusions.
 TECHNICAL = (
     re.compile(r'\bcubestudio(?:\.[A-Za-z_][\w]*)+'),  # existing Python SDK imports

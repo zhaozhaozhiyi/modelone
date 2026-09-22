@@ -11,13 +11,16 @@ CONFIG_PATH = Path(os.environ.get('MODELONE_CONFIG', Path(__file__).resolve().pa
 # such as ``#12345`` that browsers interpret inconsistently.
 COLOR = re.compile(r'^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$')
 FONT_FAMILY = re.compile(r'^[\w ,._\-\"\']{1,200}$', re.UNICODE)
+DOMAIN = re.compile(r'^(?:\*\.)?(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$')
+KUBERNETES_NAME = re.compile(r'^[a-z0-9](?:[-a-z0-9]{0,251}[a-z0-9])?$')
 FIELDS = {
     'name': 'name', 'internal_name': 'internalName', 'title': 'title',
     'description': 'description', 'copyright_holder': 'copyrightHolder',
     'copyright_year': 'copyrightYear', 'support_url': 'supportUrl',
     'help_url': 'helpUrl', 'terms_url': 'termsUrl', 'privacy_url': 'privacyUrl',
     'image_registry': 'imageRegistry', 'asset_base_url': 'assetBaseUrl',
-    'deployment_name': 'deploymentName', 'logo_url': 'logoUrl',
+    'deployment_name': 'deploymentName', 'public_domain': 'publicDomain',
+    'tls_secret_name': 'tlsSecretName', 'logo_url': 'logoUrl',
     'logo_reverse_url': 'logoReverseUrl', 'favicon_url': 'faviconUrl',
     'primary_color': 'primaryColor', 'secondary_color': 'secondaryColor',
     'login_background_color': 'loginBackgroundColor', 'login_surface_color': 'loginSurfaceColor',
@@ -37,6 +40,12 @@ def load_brand():
             raise ValueError(key + ' must be a hexadecimal CSS color')
     if brand['font_family'] and not FONT_FAMILY.fullmatch(brand['font_family']):
         raise ValueError('font_family contains unsupported CSS characters')
+    if brand['public_domain'] and not DOMAIN.fullmatch(brand['public_domain']):
+        raise ValueError('public_domain must be a DNS name or wildcard DNS name')
+    if brand['tls_secret_name'] and not KUBERNETES_NAME.fullmatch(brand['tls_secret_name']):
+        raise ValueError('tls_secret_name must be a Kubernetes DNS name')
+    if brand['tls_secret_name'] and not brand['public_domain']:
+        raise ValueError('tls_secret_name requires public_domain')
     brand['copyright_year'] = brand['copyright_year'] or str(date.today().year)
     brand['copyright'] = ('Copyright © %s %s. All Rights Reserved.' % (brand['copyright_year'], brand['copyright_holder'])) if brand['copyright_holder'] else ''
     return brand
@@ -102,7 +111,9 @@ def asset_path(path):
 
 def public_brand():
     # Explicit allowlist: infrastructure settings never reach the browser.
-    return {field: BRAND[key] for key, field in FIELDS.items() if key not in ('image_registry', 'asset_base_url', 'deployment_name')} | {'assetBaseUrl': BRAND['asset_base_url'], 'copyright': BRAND['copyright']}
+    return {field: BRAND[key] for key, field in FIELDS.items() if key not in (
+        'image_registry', 'asset_base_url', 'deployment_name', 'public_domain', 'tls_secret_name'
+    )} | {'assetBaseUrl': BRAND['asset_base_url'], 'copyright': BRAND['copyright']}
 
 
 def public_manifest():

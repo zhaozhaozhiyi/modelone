@@ -12,6 +12,8 @@
   "imageRegistry": "",
   "assetBaseUrl": "",
   "deploymentName": "modelone",
+  "publicDomain": "",
+  "tlsSecretName": "",
   "logoUrl": "/static/assets/modelone/modelone-logo.svg",
   "logoReverseUrl": "/static/assets/modelone/modelone-logo-reverse.svg",
   "faviconUrl": "/static/assets/modelone/modelone-mark.svg",

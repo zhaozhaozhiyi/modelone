@@ -60,7 +60,7 @@ python3 scripts/brand_scan.py \
   --artifact dist/modelone/platform-manifests/kubernetes
 ```
 
-`--release` 要求企业仓库、完整 HTTP(S) 资源 CDN、版权方、帮助、支持、用户协议和隐私地址配置，并且必须传入由完整部署清单生成、仓库地址与当前品牌配置一致且所有目标镜像都位于该仓库命名空间下的 `--image-plan`；相对资源路径、含凭据的 URL 和错误仓库格式会被拒绝，不等于完整发布验收。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。产物扫描只针对 Compose、Kubernetes 和品牌清单，资源迁移报告保留原始来源作为审计证据，不应作为运行时交付目录直接发布。
+`--release` 要求企业仓库、完整 HTTP(S) 资源 CDN、版权方、帮助、支持、用户协议和隐私地址配置，并且必须传入由完整部署清单生成、仓库地址与当前品牌配置一致且所有目标镜像都位于该仓库命名空间下的 `--image-plan`；相对资源路径、含凭据的 URL 和错误仓库格式会被拒绝，不等于完整发布验收。正式环境可通过 `MODELONE_PUBLIC_DOMAIN` 和 `MODELONE_TLS_SECRET_NAME`（或 `config/modelone.json` 的 `publicDomain`、`tlsSecretName`）配置入口域名和 Istio TLS Secret；重写发布清单时，Gateway/VirtualService 会使用该域名，并为主 Gateway 追加 HTTPS 443 服务。只配置域名会保留 HTTP 端口，TLS Secret 必须和域名同时配置。清单输出在 `dist/modelone`；未提供企业配置时可省略此参数生成开发预览。产物扫描只针对 Compose、Kubernetes 和品牌清单，资源迁移报告保留原始来源作为审计证据，不应作为运行时交付目录直接发布。
 
 镜像仓库配置格式为 `registry.example.com/team`，不要附加 `/modelone`。渲染器将工作负载镜像写为 `<仓库>/modelone/<镜像>:<标签>`。发布前先生成镜像计划并把它传给渲染器，Compose、Kubernetes 和离线 Argo 产物才会统一使用企业目标镜像。`install/kubernetes/all_image.py` 和 Rancher 计划生成器优先读取 `MODELONE_IMAGE_REGISTRY`，未设置时读取 `config/modelone.json`。Compose 直接使用源文件时，`MODELONE_IMAGE_PREFIX` 必须包含尾随 `/`；后端的 `MODELONE_IMAGE_REGISTRY` 不包含尾随命名空间。环境变量覆盖通过渲染器写入容器；直接使用源 Compose 时以挂载的 JSON 配置为准。
 

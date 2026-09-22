@@ -58,6 +58,8 @@ jobs:
           MODELONE_SUPPORT_URL: https://support.example.test/modelone
           MODELONE_TERMS_URL: https://www.example.test/modelone/terms
           MODELONE_PRIVACY_URL: https://www.example.test/modelone/privacy
+          MODELONE_PUBLIC_DOMAIN: modelone.example.test
+          MODELONE_TLS_SECRET_NAME: modelone-tls
         run: |
           python install/kubernetes/all_image.py \
             --manifest-root install/kubernetes \
@@ -72,6 +74,27 @@ jobs:
             --output-dir dist/modelone/ci-manifests \
             --source-root install/kubernetes
           python scripts/brand_scan.py --artifact dist/modelone/ci-manifests
+          python - <<'PY'
+          import yaml
+          from pathlib import Path
+
+          gateway = [doc for doc in yaml.safe_load_all(Path('dist/modelone/ci-manifests/gateway.yaml').read_text()) if doc]
+          virtual = [doc for doc in yaml.safe_load_all(Path('dist/modelone/ci-manifests/virtual.yaml').read_text()) if doc]
+          assert any(
+              server.get('port', {}).get('number') == 443
+              and server.get('tls', {}).get('credentialName') == 'modelone-tls'
+              for doc in gateway for server in doc.get('spec', {}).get('servers', [])
+          )
+          assert all(
+              host == 'modelone.example.test'
+              for doc in gateway for server in doc.get('spec', {}).get('servers', [])
+              for host in server.get('hosts', [])
+          )
+          assert all(
+              host == 'modelone.example.test'
+              for doc in virtual for host in doc.get('spec', {}).get('hosts', [])
+          )
+          PY
       - name: Generate migration and compliance evidence
         run: |
           mkdir -p dist/modelone/ci-evidence
