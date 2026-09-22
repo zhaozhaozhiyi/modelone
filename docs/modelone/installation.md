@@ -11,12 +11,14 @@
 企业 Git 仓库创建完成后，在工作树中先做一次预览，再显式应用远端配置。工具不会替换已有 `origin`，也不会向 `upstream` 推送；已有 `origin` 只有在明确传入 `--replace-origin` 时才会被替换。URL 不应内嵌账号或密码。
 
 ```sh
+MODELONE_ORIGIN_URL='<企业 Git 仓库地址>'
+MODELONE_UPSTREAM_URL='<原项目只读仓库地址>'
 python3 scripts/configure_modelone_remotes.py \
-  --origin https://git.example.com/ai/modelone.git \
-  --upstream https://github.com/data-infra/cube-studio.git
+  --origin "$MODELONE_ORIGIN_URL" \
+  --upstream "$MODELONE_UPSTREAM_URL"
 python3 scripts/configure_modelone_remotes.py \
-  --origin https://git.example.com/ai/modelone.git \
-  --upstream https://github.com/data-infra/cube-studio.git \
+  --origin "$MODELONE_ORIGIN_URL" \
+  --upstream "$MODELONE_UPSTREAM_URL" \
   --apply
 git remote -v
 ```
@@ -69,7 +71,7 @@ python3 scripts/brand_scan.py \
 
 初始化任务模板中的帮助和镜像说明入口使用配置的帮助中心；尚未配置时隐藏入口，避免跳转到不存在的本地仓库路径。第三方工具的帮助链接仍指向其原文档。
 
-`assetBaseUrl` 应是浏览器和任务容器均可访问的完整 HTTP(S) 地址。默认 `/static/assets/modelone/` 只用于静态品牌和本地页面，不能直接当作容器中 wget/curl 的完整 URL。发布门禁会拒绝原 OSS 主机 `cube-studio.oss-cn-hangzhou.aliyuncs.com` 和旧 Tencent Cloud 数据主机 `docker-76009.sz.gfp.tencent-cloud.com`，包括验证请求发生的重定向；外部模型、教程和数据未打入本次代码改造，安装前必须准备好。
+`assetBaseUrl` 应是浏览器和任务容器均可访问的完整 HTTP(S) 地址。默认 `/static/assets/modelone/` 只用于静态品牌和本地页面，不能直接当作容器中 wget/curl 的完整 URL。发布门禁会拒绝原项目托管主机、旧第三方数据主机及其重定向目标；外部模型、教程和数据未打入本次代码改造，安装前必须准备好企业资源地址。
 
 MNIST 示例使用 `MODELONE_MNIST_BASE_URL`（或 `MODELONE_ASSET_BASE_URL`）拼接 `/datasets/mnist/`，不会回退到旧公共主机；资源同步清单中的四个压缩文件必须先上传到该路径，再启用对应任务模板。
 

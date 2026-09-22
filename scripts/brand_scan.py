@@ -19,7 +19,19 @@ SURFACES = (
     'scripts/image_bundle.py',
 )
 BUILDS = ('myapp/static/appbuilder/frontend', 'myapp/static/appbuilder/vison', 'myapp/static/appbuilder/visonPlus')
-DOCUMENTATION = ('job-template/**/*.md', 'images/**/*.md', 'install/**/*.md')
+DOCUMENTATION = (
+    'job-template/**/*.md',
+    'images/**/*.md',
+    'install/**/*.md',
+    'docs/modelone/README.md',
+    'docs/modelone/product.md',
+    'docs/modelone/installation.md',
+    'docs/modelone/administration.md',
+    'docs/modelone/user-guide.md',
+    'docs/modelone/api.md',
+    'docs/modelone/backup-restore.md',
+    'docs/modelone/release-notes.md',
+)
 OLD = re.compile(r'cube[-_ ]?studio|开源版|商业版|开源社区|data-master\.net|/vison(?:Plus)?/logo\.png|cubeStudioLogo|logoCB', re.I)
 HOSTS = re.compile(r'docker-76009\.sz\.gfp\.tencent-cloud\.com|cube-studio\.oss-cn-hangzhou\.aliyuncs\.com|ccr\.ccs\.tencentyun\.com/(?:cube-studio|cube-argoproj)|(?:github\.com|githubfast\.com)/data-infra/(?:cube-studio|modelone)', re.I)
 # Compatibility exceptions are syntactic tokens, not blanket file exclusions.
