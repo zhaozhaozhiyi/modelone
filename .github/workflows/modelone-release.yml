@@ -23,6 +23,7 @@ jobs:
       - run: python scripts/test_modelone_nodes.py
       - run: python scripts/test_modelone_resources.py
       - run: python scripts/test_modelone_image_bundle.py
+      - run: python scripts/test_modelone_manifests.py
       - run: python scripts/brand_scan.py
       - name: Build all product frontends
         # Upstream lint warnings remain visible; brand and source-map gates
@@ -67,4 +68,27 @@ jobs:
             --output-dir dist/modelone/ci-manifests \
             --source-root install/kubernetes
           python scripts/brand_scan.py --artifact dist/modelone/ci-manifests
+      - name: Generate migration and compliance evidence
+        run: |
+          mkdir -p dist/modelone/ci-evidence
+          python scripts/resource_inventory.py \
+            --output dist/modelone/ci-evidence/resource-inventory.json
+          python scripts/compliance_inventory.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          resources = json.loads(Path('dist/modelone/ci-evidence/resource-inventory.json').read_text())
+          dependencies = json.loads(Path('dist/modelone/compliance/dependencies.json').read_text())
+          assert len(resources) >= 1 and {row['kind'] for row in resources} == {'asset', 'image'}
+          assert len(dependencies) >= 1
+          assert all('reviewRequired' in row for row in dependencies)
+          PY
+      - name: Upload migration and compliance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: modelone-migration-compliance-evidence
+          path: |
+            dist/modelone/ci-evidence/resource-inventory.json
+            dist/modelone/compliance
       - run: git diff --check
