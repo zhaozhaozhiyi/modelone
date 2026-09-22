@@ -123,6 +123,20 @@ class BundleTests(unittest.TestCase):
         self.assertIn(mapping['busybox:1.36'], rewritten)
         self.assertIn(mapping['redis:7'], rewritten)
 
+    def test_controller_image_arguments_are_whole_tokens_and_idempotent(self):
+        plan = self.plan(['redis:7', 'redis:7.4', 'modelone/tool:v1'])
+        mapping = bundle.image_mapping(plan)
+        value = ['--executor-image=redis:7', '--sidecar-image="redis:7.4"',
+                 '--existing=' + mapping['redis:7'], 'run modelone/tool:v1',
+                 '--other=redis:7.5', '/cache/redis:7', 'https://example.test/redis:7']
+        expected = ['--executor-image=' + mapping['redis:7'],
+                    '--sidecar-image="' + mapping['redis:7.4'] + '"',
+                    '--existing=' + mapping['redis:7'], 'run ' + mapping['modelone/tool:v1'],
+                    *value[-3:]]
+        rewritten = bundle.rewrite_image_tokens(value, mapping)
+        self.assertEqual(rewritten, expected)
+        self.assertEqual(bundle.rewrite_image_tokens(rewritten, mapping), expected)
+
     def test_kustomization_images_and_manifest_tree_are_rewritten(self):
         plan = self.plan(['redis:7'])
         source_root = self.folder / 'source'

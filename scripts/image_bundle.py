@@ -175,9 +175,13 @@ def rewrite_image_tokens(value, mapping):
         return [rewrite_image_tokens(item, mapping) for item in value]
     if not isinstance(value, str):
         return value
-    for source in sorted(mapping, key=len, reverse=True):
-        value = value.replace(source, mapping[source])
-    return value
+    if not mapping:
+        return value
+    # Match whole references once. Targets can contain their source reference
+    # as a suffix; sequential replacement corrupts already migrated arguments.
+    tokens = '|'.join(re.escape(source) for source in sorted(mapping, key=len, reverse=True))
+    return re.sub(r'(?<![A-Za-z0-9_./:@-])(?:' + tokens + r')(?![A-Za-z0-9_./:@-])',
+                  lambda match: mapping[match.group(0)], value)
 
 
 def rewrite_manifest(plan_path, source_path, output_path):

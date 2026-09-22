@@ -8,6 +8,7 @@ from pathlib import Path
 import importlib.util
 import os
 import shlex
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -182,6 +183,60 @@ class ManifestEntrypointTests(unittest.TestCase):
                 if document and document.get("apiVersion") in forbidden:
                     violations.append(f"{path.relative_to(ROOT)} document {number}: {document['apiVersion']}")
         self.assertEqual(violations, [])
+
+    def test_tree_carries_generator_inputs_for_a_real_kustomize_build(self):
+        overlay = self.source / 'overlay'
+        overlay.mkdir()
+        (overlay / 'config.py').write_text('PRODUCT = "modelOne"\n')
+        (overlay / 'settings.env').write_text('STAGE=prod\n')
+        (overlay / 'unreferenced.txt').write_text('must not be copied')
+        (overlay / 'kustomization.yaml').write_text(
+            'apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\n'
+            'configMapGenerator:\n- name: modelone-config\n'
+            '  files: [app.py=config.py]\n  envs: [settings.env]\n'
+            'resources: [pod.yaml]\n'
+        )
+        (overlay / 'pod.yaml').write_text(
+            'apiVersion: v1\nkind: Pod\nmetadata:\n  name: worker\n'
+            'spec:\n  containers:\n  - name: worker\n    image: redis:7\n'
+        )
+        plan = rewrite.image_bundle.generate(['redis:7'], 'registry.example.test/team', self.root / 'images')
+        output = self.root / 'rendered'
+        rewrite.rewrite_tree(plan, self.source, output)
+        self.assertFalse((output / 'overlay/unreferenced.txt').exists())
+        # Building after the source directory is removed proves that the
+        # release tree does not depend on the original working copy.
+        shutil.rmtree(self.source)
+        result = subprocess.run(['kubectl', 'kustomize', str(output / 'overlay')],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        documents = list(yaml.safe_load_all(result.stdout))
+        config = next(doc for doc in documents if doc['kind'] == 'ConfigMap')
+        self.assertEqual(config['data'], {'app.py': 'PRODUCT = "modelOne"\n', 'STAGE': 'prod'})
+        pod = next(doc for doc in documents if doc['kind'] == 'Pod')
+        self.assertEqual(pod['spec']['containers'][0]['image'],
+                         rewrite.image_bundle.image_mapping(plan)['redis:7'])
+
+    def test_tree_rejects_missing_or_external_generator_inputs_before_writing(self):
+        outside = self.root / 'outside.env'
+        outside.write_text('VALUE=private\n')
+        (self.source / 'link.env').symlink_to(outside)
+        manifest = self.source / 'kustomization.yaml'
+        output = self.root / 'rendered'
+        for reference in ('missing.env', '../outside.env', 'link.env', str(outside)):
+            with self.subTest(reference=reference):
+                manifest.write_text(yaml.safe_dump({
+                    'kind': 'Kustomization',
+                    'configMapGenerator': [{'name': 'config', 'envs': [reference]}],
+                }))
+                with self.assertRaises(ValueError):
+                    rewrite.rewrite_tree(self.root / 'unused-plan.json', self.source, output)
+                self.assertFalse(output.exists())
+
+    def test_tree_rejects_overlapping_source_and_destination(self):
+        for output in (self.source, self.source / 'release', self.root):
+            with self.subTest(output=output), self.assertRaisesRegex(ValueError, 'must not overlap'):
+                rewrite.rewrite_tree(self.root / 'unused-plan.json', self.source, output)
 
 
 if __name__ == "__main__":

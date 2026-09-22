@@ -74,9 +74,24 @@ jobs:
             --output-dir dist/modelone/ci-manifests \
             --source-root install/kubernetes
           python scripts/brand_scan.py --artifact dist/modelone/ci-manifests
+          mkdir -p dist/modelone/ci-kustomize
+          kubectl kustomize dist/modelone/ci-manifests/cube/overlays \
+            > dist/modelone/ci-kustomize/platform.yaml
+          kubectl kustomize dist/modelone/ci-manifests/kubeflow/train-operator/manifests/overlays/standalone \
+            > dist/modelone/ci-kustomize/training.yaml
+          python scripts/brand_scan.py --artifact dist/modelone/ci-kustomize
           python - <<'PY'
+          import json
+          import sys
           import yaml
           from pathlib import Path
+          sys.path.insert(0, 'scripts')
+          from image_bundle import manifest_images
+
+          planned = {row['target'] for row in json.loads(Path('dist/modelone/ci-images/images.json').read_text())['images']}
+          for path in Path('dist/modelone/ci-kustomize').glob('*.yaml'):
+              images = set(manifest_images([path]))
+              assert images and images <= planned, (str(path), images - planned)
 
           gateway = [doc for doc in yaml.safe_load_all(Path('dist/modelone/ci-manifests/gateway.yaml').read_text()) if doc]
           virtual = [doc for doc in yaml.safe_load_all(Path('dist/modelone/ci-manifests/virtual.yaml').read_text()) if doc]
@@ -133,4 +148,5 @@ jobs:
           path: |
             dist/modelone/ci-evidence/resource-inventory.json
             dist/modelone/compliance
+            dist/modelone/ci-kustomize
       - run: git diff --check

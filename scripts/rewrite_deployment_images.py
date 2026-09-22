@@ -2,9 +2,11 @@
 """Rewrite all image fields in deployment manifests from a verified image plan."""
 import argparse
 import json
+import os
 from pathlib import Path
 import importlib.util
 import re
+import shutil
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -112,14 +114,44 @@ def rewrite(plan, manifests, output_dir):
         print('Rewrote deployment images: ' + str(destination))
 
 
+def generator_files(manifests, source_root):
+    """Collect only local files explicitly referenced by Kustomize generators."""
+    files = set()
+    for manifest in manifests:
+        manifest.resolve().relative_to(source_root)
+        for document in yaml.safe_load_all(manifest.read_text()):
+            if not isinstance(document, dict) or document.get('kind') != 'Kustomization':
+                continue
+            for field in ('configMapGenerator', 'secretGenerator'):
+                for generator in document.get(field, []):
+                    references = [value.split('=', 1)[-1] for value in generator.get('files', [])]
+                    references += generator.get('envs', [])
+                    if generator.get('env'):
+                        references.append(generator['env'])
+                    for reference in references:
+                        if Path(reference).is_absolute():
+                            raise ValueError('Kustomize generator file must be relative: ' + reference)
+                        source = Path(os.path.abspath(manifest.parent / reference))
+                        source.relative_to(source_root)
+                        source.resolve().relative_to(source_root)
+                        if not source.is_file():
+                            raise ValueError('Kustomize generator file does not exist: ' + str(source))
+                        files.add(source)
+    return files
+
+
 def rewrite_tree(plan, source_root, output_dir):
-    """Rewrite every YAML in a source tree while preserving its relative paths."""
+    """Rewrite manifests and include the local files their generators consume."""
     source_root = source_root.resolve()
+    output_dir = output_dir.resolve()
+    if source_root == output_dir or source_root in output_dir.parents or output_dir in source_root.parents:
+        raise ValueError('Manifest source and output directories must not overlap')
     if not source_root.is_dir():
         raise ValueError('Manifest source root does not exist: ' + str(source_root))
     manifests = sorted(set(source_root.rglob('*.yaml')) | set(source_root.rglob('*.yml')))
     if not manifests:
         raise ValueError('Manifest source root contains no YAML files: ' + str(source_root))
+    dependencies = generator_files(manifests, source_root)
     output_dir.mkdir(parents=True, exist_ok=True)
     plan_data = json.loads(plan.read_text())
     targets = {row['target'] for row in plan_data.get('images', [])}
@@ -135,6 +167,11 @@ def rewrite_tree(plan, source_root, output_dir):
         if stale:
             destination.unlink(missing_ok=True)
             raise ValueError('Unrewritten image references remain in ' + str(source) + ': ' + ', '.join(stale[:5]))
+    for source in sorted(dependencies - set(manifests)):
+        destination = output_dir / source.relative_to(source_root)
+        destination.resolve().relative_to(output_dir)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
     print('Rewrote deployment manifest tree: ' + str(output_dir))
 
 

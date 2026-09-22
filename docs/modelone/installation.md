@@ -64,6 +64,8 @@ python3 scripts/brand_scan.py \
 
 镜像仓库配置格式为 `registry.example.com/team`，不要附加 `/modelone`。渲染器将工作负载镜像写为 `<仓库>/modelone/<镜像>:<标签>`。发布前先生成镜像计划并把它传给渲染器，Compose、Kubernetes 和离线 Argo 产物才会统一使用企业目标镜像。`install/kubernetes/all_image.py` 和 Rancher 计划生成器优先读取 `MODELONE_IMAGE_REGISTRY`，未设置时读取 `config/modelone.json`。Compose 直接使用源文件时，`MODELONE_IMAGE_PREFIX` 必须包含尾随 `/`；后端的 `MODELONE_IMAGE_REGISTRY` 不包含尾随命名空间。环境变量覆盖通过渲染器写入容器；直接使用源 Compose 时以挂载的 JSON 配置为准。
 
+发布清单树包含 Kustomize generator 明确引用的本地文件（`files`、`envs`），包括主平台的 Python 配置和启动脚本；源目录和输出目录必须互不包含，引用的文件必须位于源目录内。可用 `kubectl kustomize dist/modelone/platform-manifests/kubernetes/cube/overlays` 和训练控制器的 `kubeflow/train-operator/manifests/overlays/standalone` 路径检查构建。主平台实际部署仍使用 `render_deployment.py` 生成的 `kubernetes.yaml`，其中包含企业品牌 ConfigMap 和运行环境。
+
 ## 镜像与资源
 
 清单中的 `pending` 项尚未同步，不能用不存在的 `modelone/` 默认镜像启动生产。审核清单并登录仓库后，可运行 `python3 scripts/resource_inventory.py --copy-images`；需要安装 skopeo，它保留多架构镜像并比对摘要。资源可用 `--download-assets <暂存目录>` 下载，工具记录 SHA-256；上传企业存储或打入离线包后需逐项验证访问与校验和。本地下载状态 `downloaded` 不满足发布条件。工具每项保存进度，可用 `--resume <报告>` 继续操作；更换来源、目标或路径后不会复用旧校验记录。上传后运行 `python3 scripts/resource_inventory.py --resume dist/modelone/resource-inventory.json --verify-targets --require-complete`，重新读取企业镜像摘要和 CDN 文件并比对；不存在、内容不同、跳转回原存储或仍待迁移的资源都会使门禁失败。已有报告中的 `verified` 不能跳过当次目标验证。盘点包含历史文档和示例引用，需要按企业保留清单筛选。
