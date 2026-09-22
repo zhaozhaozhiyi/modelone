@@ -1,6 +1,6 @@
 # cat sample-app-hpa.yaml
 kind: HorizontalPodAutoscaler
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2
 metadata:
   name: tfserving-live-deepfm-low-202112230946
   namespace: kfservice
@@ -20,8 +20,10 @@ spec:
   - type: Pods
     pods:
       # use the metric that you used above: pods/http_requests
-      metricName: container_gpu_usage
-      targetAverageValue: 0.5 # 就是所有pod 该指标的平均值大于这个就扩一个出来
-
+      metric:
+        name: container_gpu_usage
+      target:
+        type: AverageValue
+        averageValue: "0.5" # 就是所有pod 该指标的平均值大于这个就扩一个出来
 
 

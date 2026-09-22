@@ -162,6 +162,27 @@ class ManifestEntrypointTests(unittest.TestCase):
                     self.assertEqual(path["pathType"], "Prefix")
                     self.assertIn("service", path["backend"])
 
+    def test_kubernetes_sources_do_not_use_removed_api_versions(self):
+        forbidden = {
+            "extensions/v1beta1",
+            "apps/v1beta1",
+            "apps/v1beta2",
+            "autoscaling/v2beta1",
+            "autoscaling/v2beta2",
+            "batch/v1beta1",
+            "networking.k8s.io/v1beta1",
+            "policy/v1beta1",
+            "rbac.authorization.k8s.io/v1beta1",
+        }
+        violations = []
+        paths = list((ROOT / "install/kubernetes").rglob("*.yaml"))
+        paths.extend((ROOT / "install/kubernetes").rglob("*.yml"))
+        for path in paths:
+            for number, document in enumerate(yaml.safe_load_all(path.read_text()), 1):
+                if document and document.get("apiVersion") in forbidden:
+                    violations.append(f"{path.relative_to(ROOT)} document {number}: {document['apiVersion']}")
+        self.assertEqual(violations, [])
+
 
 if __name__ == "__main__":
     unittest.main()
