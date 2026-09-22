@@ -123,6 +123,35 @@ class BrandTests(unittest.TestCase):
         self.assertIn('themeColor.content = b.primaryColor', source)
         self.assertIn("--mo-brand-secondary", source)
 
+    def test_pwa_manifest_uses_shared_brand_tokens(self):
+        before = dict(brand.BRAND)
+        try:
+            brand.BRAND.update(
+                name='Acme modelOne',
+                title='Acme modelOne｜AI 平台',
+                description='Acme 企业级 AI 平台',
+                favicon_url='https://cdn.example.test/modelone/icon.svg',
+                primary_color='#102030',
+                login_background_color='#f0f2f4',
+            )
+            manifest = brand.public_manifest()
+            self.assertEqual(manifest['short_name'], 'Acme modelOne')
+            self.assertEqual(manifest['name'], 'Acme modelOne｜AI 平台')
+            self.assertEqual(manifest['description'], 'Acme 企业级 AI 平台')
+            self.assertEqual(manifest['icons'][0]['src'], 'https://cdn.example.test/modelone/icon.svg')
+            self.assertEqual(manifest['theme_color'], '#102030')
+            self.assertEqual(manifest['background_color'], '#f0f2f4')
+        finally:
+            brand.BRAND.clear()
+            brand.BRAND.update(before)
+
+        for app in ('frontend', 'vision', 'visionPlus'):
+            manifest = json.loads((ROOT / 'myapp' / app / 'public/manifest.json').read_text(encoding='utf-8'))
+            self.assertEqual(manifest['name'], brand.BRAND['title'], app)
+            self.assertEqual(manifest['theme_color'], brand.BRAND['primary_color'], app)
+            self.assertEqual(manifest['background_color'], brand.BRAND['login_background_color'], app)
+            self.assertEqual(manifest['icons'][0]['src'], brand.BRAND['favicon_url'], app)
+
     def test_login_and_error_templates_use_configured_visual_tokens(self):
         login = (ROOT / 'myapp/templates/appbuilder/general/security/login_db.html').read_text(encoding='utf-8')
         error = (ROOT / 'myapp/templates/modelone-error.html').read_text(encoding='utf-8')

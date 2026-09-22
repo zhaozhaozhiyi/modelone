@@ -1,15 +1,16 @@
 {
   "short_name": "modelOne",
-  "name": "modelOne 企业级 AI 开发与模型生产平台",
+  "name": "modelOne｜企业级 AI 开发与模型生产平台",
+  "description": "企业级 AI 开发与模型生产平台",
   "icons": [
     {
-      "src": "modelone-mark.svg",
+      "src": "/static/assets/modelone/modelone-mark.svg",
       "type": "image/svg+xml",
-      "sizes": "64x64"
+      "sizes": "64x64 32x32 24x24 16x16"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#17191D",
-  "background_color": "#ffffff"
+  "theme_color": "#17191d",
+  "background_color": "#f4f6f8"
 }

@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -67,7 +68,14 @@ def run(args):
                 if 'json' not in content_type or json.loads(manifest)['short_name'] != 'modelOne':
                     raise AssertionError('Manifest must be JSON with modelOne metadata: ' + base)
                 for icon in json.loads(manifest)['icons']:
-                    _, asset = fetch(base + '/' + icon['src'])
+                    icon_url = urlsplit(icon['src'])
+                    if icon_url.scheme or icon_url.netloc:
+                        # External enterprise CDN icons are validated by the
+                        # release resource gate; this local image test cannot
+                        # depend on that network.
+                        continue
+                    icon_path = icon_url.path if icon_url.path.startswith('/') else base + '/' + icon_url.path
+                    _, asset = fetch(icon_path)
                     if '<svg' not in asset:
                         raise AssertionError('Missing PWA icon: ' + base)
                 _, assets = fetch(base + '/asset-manifest.json')

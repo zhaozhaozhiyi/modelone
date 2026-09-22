@@ -104,6 +104,25 @@ def public_brand():
     # Explicit allowlist: infrastructure settings never reach the browser.
     return {field: BRAND[key] for key, field in FIELDS.items() if key not in ('image_registry', 'asset_base_url', 'deployment_name')} | {'assetBaseUrl': BRAND['asset_base_url'], 'copyright': BRAND['copyright']}
 
+
+def public_manifest():
+    """Build the installable web-app manifest from the shared brand tokens."""
+    return {
+        'short_name': BRAND['name'],
+        'name': BRAND['title'],
+        'description': BRAND['description'],
+        'icons': [{
+            'src': BRAND['favicon_url'] or brand_asset('modelone-mark.svg'),
+            'type': 'image/svg+xml',
+            'sizes': '64x64 32x32 24x24 16x16',
+        }],
+        'start_url': '.',
+        'display': 'standalone',
+        'theme_color': BRAND['primary_color'],
+        'background_color': BRAND['login_background_color'],
+    }
+
+
 def brand_asset(path):
     base = BRAND['asset_base_url'].rstrip('/') or '/static/assets/modelone'
     return base + '/' + asset_path(path)

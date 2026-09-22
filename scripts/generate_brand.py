@@ -35,4 +35,8 @@ window.applyModeloneBrand();
     for app in ('frontend', 'vision', 'visionPlus'):
         public = ROOT / 'myapp' / app / 'public'
         (public / 'brand-config.js').write_text(script, encoding='utf-8')
+        (public / 'manifest.json').write_text(
+            json.dumps(brand.public_manifest(), ensure_ascii=False, indent=2) + '\n',
+            encoding='utf-8',
+        )
     print('Generated brand defaults for all three frontends')
