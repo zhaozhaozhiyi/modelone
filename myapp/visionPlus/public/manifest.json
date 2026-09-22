@@ -6,7 +6,7 @@
     {
       "src": "modelone-mark.svg",
       "type": "image/svg+xml",
-      "sizes": "64x64 32x32 24x24 16x16"
+      "sizes": "any"
     }
   ],
   "start_url": ".",

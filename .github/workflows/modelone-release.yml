@@ -16,7 +16,7 @@ jobs:
       - uses: azure/setup-kubectl@v4
         with:
           version: 'v1.28.15'
-      - run: python -m pip install 'SQLAlchemy>=1.4,<3' PyYAML alembic 'PyJWT>=2.8,<3'
+      - run: python -m pip install 'SQLAlchemy>=1.4,<3' PyYAML alembic 'PyJWT>=2.8,<3' 'Flask>=2.3,<4'
       - run: python scripts/test_modelone.py
       - run: python scripts/test_modelone_auth.py
       - run: python scripts/test_modelone_notebook.py
@@ -36,6 +36,7 @@ jobs:
             npm run build --prefix "myapp/$app"
           done
       - run: python scripts/brand_scan.py --built
+      - run: node scripts/test_modelone_browser_brand.cjs
       - name: Build and exercise the frontend delivery image
         run: |
           docker build --pull=false \

@@ -160,6 +160,46 @@ class BrandTests(unittest.TestCase):
         for value in ('brand.secondary_color', 'brand.login_background_color', 'brand.font_family'):
             self.assertIn(value, error)
 
+    def test_manifest_icon_type_matches_configured_asset(self):
+        for url, expected in (
+            ('https://cdn.example.test/icon.PNG?version=2', 'image/png'),
+            ('/static/icon.ico', 'image/x-icon'),
+            ('/static/icon.svg', 'image/svg+xml'),
+            ('https://cdn.example.test/icon', None),
+        ):
+            with self.subTest(url=url), patch.dict(brand.BRAND, favicon_url=url):
+                icon = brand.public_manifest()['icons'][0]
+                self.assertEqual(icon.get('type'), expected)
+                self.assertEqual(icon.get('sizes'), 'any' if expected == 'image/svg+xml' else None)
+
+    def test_public_manifest_routes_follow_runtime_brand_and_application_scope(self):
+        from flask import Flask
+        app = Flask('modelone-brand-test')
+        load('brand_web').register_brand_routes(app, brand)
+        client = app.test_client()
+        with patch.dict(brand.BRAND, title='modelOne｜Runtime', primary_color='#123456',
+                        login_background_color='#e1e2e3', image_registry='private-registry.test/team',
+                        tls_secret_name='private-tls-name'):
+            for app_name, scope in brand.BROWSER_APPS.items():
+                response = client.get('/myapp/manifest/' + app_name + '.json')
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.mimetype, 'application/manifest+json')
+                self.assertEqual(response.headers['Cache-Control'], 'no-store')
+                manifest = response.get_json()
+                self.assertEqual(manifest['name'], 'modelOne｜Runtime')
+                self.assertEqual(manifest['theme_color'], '#123456')
+                self.assertEqual(manifest['background_color'], '#e1e2e3')
+                self.assertEqual(manifest['start_url'], scope)
+                self.assertEqual(manifest['id'], scope)
+                self.assertEqual(manifest['scope'], scope)
+                self.assertEqual(manifest['icons'][0]['src'], '/static/assets/modelone/modelone-mark.svg')
+            script = client.get('/myapp/brand.js')
+            self.assertEqual(script.status_code, 200)
+            self.assertEqual(script.headers['Cache-Control'], 'no-store')
+            self.assertNotIn('private-registry', script.text)
+            self.assertNotIn('private-tls-name', script.text)
+        self.assertEqual(client.get('/myapp/manifest/unknown.json').status_code, 404)
+
     def test_brand_css_values_are_validated(self):
         original_path = brand.CONFIG_PATH
         try:

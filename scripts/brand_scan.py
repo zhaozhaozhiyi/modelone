@@ -13,7 +13,7 @@ SURFACES = (
     'myapp/visionPlus/public', 'myapp/visionPlus/src',
     'myapp/static/assets/modelone', 'myapp/static/appbuilder',
     'myapp/templates', 'myapp/init', 'myapp/example', 'job-template',
-    'myapp/views', 'myapp/models', 'myapp/cli.py',
+    'myapp/views', 'myapp/models', 'myapp/cli.py', 'myapp/brand_web.py',
     'install/kubernetes/ingress.yaml', 'install/kubernetes/rancher/coredns.yaml',
     'install/kubernetes/all_image.py', 'install/kubernetes/rancher/all_image.py',
     'scripts/image_bundle.py',

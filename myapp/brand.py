@@ -116,28 +116,56 @@ def public_brand():
     )} | {'assetBaseUrl': BRAND['asset_base_url'], 'copyright': BRAND['copyright']}
 
 
-def public_manifest():
-    """Build the installable web-app manifest from the shared brand tokens."""
-    icon = BRAND['favicon_url'] or brand_asset('modelone-mark.svg')
+BROWSER_APPS = {
+    'frontend': '/frontend/',
+    'vision': '/static/appbuilder/vison/',
+    'visionPlus': '/static/appbuilder/visonPlus/',
+}
+
+
+def public_manifest(app_name=None):
+    """Build static defaults or a runtime manifest with an explicit app scope."""
+    if app_name is not None and app_name not in BROWSER_APPS:
+        raise ValueError('Unknown browser application')
+    icon = BRAND['favicon_url'] or '/static/assets/modelone/modelone-mark.svg'
     # The default mark is copied into each frontend's public root. Keeping it
     # relative lets standalone Nginx mounts resolve the icon without the
     # backend's /static route; custom enterprise/CDN icons stay absolute.
-    if icon == '/static/assets/modelone/modelone-mark.svg':
+    if app_name is None and icon == '/static/assets/modelone/modelone-mark.svg':
         icon = 'modelone-mark.svg'
-    return {
+    icon_data = {'src': icon}
+    extension = Path(urlsplit(icon).path).suffix.lower()
+    mime_types = {'.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',
+                  '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+                  '.avif': 'image/avif'}
+    if extension in mime_types:
+        icon_data['type'] = mime_types[extension]
+    if extension == '.svg':
+        icon_data['sizes'] = 'any'
+    manifest = {
         'short_name': BRAND['name'],
         'name': BRAND['title'],
         'description': BRAND['description'],
-        'icons': [{
-            'src': icon,
-            'type': 'image/svg+xml',
-            'sizes': '64x64 32x32 24x24 16x16',
-        }],
+        'icons': [icon_data],
         'start_url': '.',
         'display': 'standalone',
         'theme_color': BRAND['primary_color'],
         'background_color': BRAND['login_background_color'],
     }
+    if app_name is not None:
+        manifest.update(start_url=BROWSER_APPS[app_name], scope=BROWSER_APPS[app_name],
+                        id=BROWSER_APPS[app_name])
+    return manifest
+
+
+def browser_config_script():
+    """Override browser defaults only when the configured backend is reachable."""
+    return ('window.MODELONE_BRAND = ' + json.dumps(public_brand(), ensure_ascii=True) + ';\n'
+            'document.title = window.MODELONE_BRAND.title;\n'
+            'if(window.applyModeloneBrand)window.applyModeloneBrand();\n'
+            'var manifestLink = document.querySelector(\'link[rel="manifest"][data-modelone-app]\');\n'
+            'if(manifestLink)manifestLink.href = "/myapp/manifest/" + '
+            'encodeURIComponent(manifestLink.getAttribute("data-modelone-app")) + ".json";\n')
 
 
 def brand_asset(path):

@@ -2,9 +2,11 @@
 
 ## 准备与构建
 
-准备 Python 3.11（构建和检查工具）、Node.js 22、Docker Compose、kubectl、SQLAlchemy、PyYAML 和 PyJWT 2.8–2.x。基础镜像和 CI 使用 Node.js 22；运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
+准备 Python 3.11（构建和检查工具）、Node.js 22、Docker Compose、kubectl、SQLAlchemy、PyYAML、PyJWT 2.8–2.x 和 Flask 2.3–3.x（品牌接口检查）。基础镜像和 CI 使用 Node.js 22；运行容器仍使用其 Dockerfile 指定的 Python 版本。先填写 `config/modelone.json`；企业差异也可使用 `MODELONE_*` 环境变量覆盖。
 
 品牌配置中的 `primaryColor`、`secondaryColor`、`loginBackgroundColor`、`loginSurfaceColor` 和 `fontFamily` 同时供后端登录/错误页面、主控制台及两个独立编排器使用。正式 Logo 替换 `logoUrl`、`logoReverseUrl` 和 `faviconUrl` 后，重新运行 `python3 scripts/generate_brand.py`；该命令会同步三个前端的运行时品牌脚本和 PWA `manifest.json`，随后重建三个前端。不要只替换某一个入口的静态文件。
+
+连接后端时，三个入口通过 `/myapp/brand.js` 读取部署配置，并将 PWA 安装信息切换到对应的 `/myapp/manifest/<app>.json`。修改品牌环境变量并重启后端后，浏览器页面与安装清单使用同一配置；未连接后端的静态页面继续使用构建时的 `brand-config.js` 和 `manifest.json`。需要同步静态回退内容时仍须重新生成并构建前端。图标类型按配置 URL 的文件扩展名确定，支持 PNG、ICO、SVG、WebP 等格式；未知扩展名交由浏览器识别，不假定为 SVG。
 
 ## 代码仓库
 
@@ -41,6 +43,7 @@ for app in frontend vision visionPlus; do
   npm run build --prefix "myapp/$app"
 done
 python3 scripts/brand_scan.py --built
+node scripts/test_modelone_browser_brand.cjs
 python3 scripts/resource_inventory.py
 python3 scripts/compliance_inventory.py
 python3 install/kubernetes/all_image.py \

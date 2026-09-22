@@ -65,7 +65,7 @@ def run_smoke(args):
         mysqlenv.write_text('MYSQL_ROOT_PASSWORD=' + password + '\nMYSQL_ROOT_HOST=%\n')
         mysqlenv.chmod(384)
         appenv = folder / 'app.env'
-        appenv.write_text('STAGE=dev\nENVIRONMENT=DEV\nMYSQL_SERVICE=mysql+pymysql://root:' + password + '@db:3306/kubeflow?charset=utf8mb4\nREDIS_HOST=redis\nREDIS_PORT=6379\nREDIS_PASSWORD=' + redis_password + '\nMODELONE_COPYRIGHT_HOLDER=Validation Company\n' + ''.join(k + '=' + v + '\n' for k, v in credentials.items()))
+        appenv.write_text('STAGE=dev\nENVIRONMENT=DEV\nMYSQL_SERVICE=mysql+pymysql://root:' + password + '@db:3306/kubeflow?charset=utf8mb4\nREDIS_HOST=redis\nREDIS_PORT=6379\nREDIS_PASSWORD=' + redis_password + '\nMODELONE_COPYRIGHT_HOLDER=Validation Company\nMODELONE_TITLE=modelOne Runtime Validation\nMODELONE_PRIMARY_COLOR=#123456\n' + ''.join(k + '=' + v + '\n' for k, v in credentials.items()))
         appenv.chmod(384)
         run(['docker', 'network', 'create', '--label', 'modelone.validation=true', prefix])
         try:
@@ -117,6 +117,16 @@ def run_smoke(args):
                     if path == '/login/' and ('login-card' not in text or 'modelone-logo.svg' not in text):
                         raise AssertionError('Login response did not use the modelOne branded template')
                     report['checks'].append(path + (' uses the branded login template' if path == '/login/' else ' has modelOne brand'))
+            for app_name, scope in (('frontend', '/frontend/'), ('vision', '/static/appbuilder/vison/'),
+                                    ('visionPlus', '/static/appbuilder/visonPlus/')):
+                with urlopen(origin + '/myapp/manifest/' + app_name + '.json', timeout=15) as r:
+                    manifest = json.load(r)
+                    if r.headers.get_content_type() != 'application/manifest+json' or r.headers.get('Cache-Control') != 'no-store':
+                        raise AssertionError('Runtime manifest response headers are incorrect')
+                    if (manifest['name'] != 'modelOne Runtime Validation' or manifest['theme_color'] != '#123456'
+                            or manifest['scope'] != scope or manifest['start_url'] != scope):
+                        raise AssertionError('Runtime manifest did not use deployment overrides: ' + app_name)
+            report['checks'].append('three public PWA manifests use runtime branding, app scopes and no-store caching')
             print('Fresh database initialized; checking authentication', flush=True)
 
             def client():
@@ -140,6 +150,8 @@ def run_smoke(args):
             def sql(statement):
                 return run(['docker', 'exec', prefix + '-db', 'sh', '-c',
                             'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --host=127.0.0.1 --user=root --batch --skip-column-names kubeflow --execute="$1"', 'sql', statement]).stdout.strip()
+
+            expect('/myapp/manifest/unknown.json', 404)
 
             protected = '/project_modelview/api/'
             browser = client()

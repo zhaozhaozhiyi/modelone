@@ -36,18 +36,14 @@ from myapp.auth_config import security_config
 app.config.update(security_config())
 conf = app.config
 
-from myapp.brand import BRAND, public_brand
+from myapp import brand as modelone_brand
+from myapp.brand_web import register_brand_routes
+BRAND = modelone_brand.BRAND
+register_brand_routes(app, modelone_brand)
 
 @app.context_processor
 def modelone_context():
     return {'brand': BRAND}
-
-@app.route('/myapp/brand.js')
-def modelone_brand_config():
-    payload = json.dumps(public_brand(), ensure_ascii=True)
-    script = 'window.MODELONE_BRAND = ' + payload + ';document.title = window.MODELONE_BRAND.title;if(window.applyModeloneBrand)window.applyModeloneBrand();'
-    return app.response_class(script, mimetype='application/javascript', headers={'Cache-Control': 'no-store'})
-
 
 if conf.get('DATA_DIR', ''):
     if not os.path.exists(conf['DATA_DIR']):
@@ -273,8 +269,10 @@ import jwt
 @app.before_request
 # @pysnooper.snoop()
 def check_login():
+    if request.endpoint in ('modelone_brand_config', 'modelone_web_manifest'):
+        return
     # /static下面不少地方静态文件直接访问。所以不能加权限限制
-    static_urls = ['/myapp/brand.js', '/static/', '/logout', '/login','/register', '/health', '/wechat','/wework', '/dingtalk','/proxy','/message_modelview/api/']
+    static_urls = ['/static/', '/logout', '/login','/register', '/health', '/wechat','/wework', '/dingtalk','/proxy','/message_modelview/api/']
     for url in static_urls:
         if url in request.path:
             return
