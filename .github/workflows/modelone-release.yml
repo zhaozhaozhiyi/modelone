@@ -45,6 +45,10 @@ jobs:
           python scripts/test_modelone_frontend_image.py \
             --image modelone/ci-frontend \
             --report dist/modelone/ci-frontend-image-validation.json
+      - name: Exercise real offline image save and load
+        env:
+          MODELONE_BUNDLE_TEST_IMAGE: modelone/ci-frontend
+        run: python scripts/test_modelone_image_bundle.py
       - name: Render and scan enterprise deployment artifacts
         env:
           MODELONE_IMAGE_REGISTRY: registry.example.test/team
