@@ -4,6 +4,7 @@
 
 | 资料 | 内容 |
 | --- | --- |
+| [modelOne Wiki](wiki/Home.md) | 上游知识页面的本地化整理与按主题导航 |
 | [产品说明](product.md) | 定位、模块和能力边界 |
 | [安装部署](installation.md) | 配置、构建、Docker 和 Kubernetes |
 | [系统管理](administration.md) | 账号、资源、镜像和配置管理 |

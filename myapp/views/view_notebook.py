@@ -63,7 +63,7 @@ class Notebook_ModelView_Base():
     search_columns = ['created_by', 'name', 'project']
 
     add_columns = ['project', 'name', 'describe', 'images', 'working_dir', 'volume_mount', 'resource_memory','resource_cpu', 'resource_gpu']
-    list_columns = ['project', 'ide_type_html', 'name_url', 'status', 'describe','reset', 'resource', 'renew', 'save']
+    list_columns = ['name_url', 'ide_type_html', 'project', 'status', 'describe','reset', 'resource', 'renew', 'save']
     show_columns = ['project', 'name', 'namespace', 'describe', 'images', 'working_dir', 'env', 'volume_mount','resource_memory', 'resource_cpu', 'resource_gpu', 'expand']
     cols_width = {
         "project": {"type": "ellip2", "width": 120},
@@ -888,6 +888,6 @@ class Notebook_ModelView_SDK_Api(Notebook_ModelView_Base, MyappModelRestApi):
     route_base = '/notebook_modelview/sdk'
     add_columns = ['project', 'name', 'describe', 'images', 'working_dir', 'volume_mount', 'resource_memory','resource_cpu', 'resource_gpu','volume_mount','image_pull_policy','expand']
     edit_columns = add_columns
-    list_columns = ['project', 'ide_type_html', 'name_url', 'status', 'describe', 'reset', 'resource', 'renew']
+    list_columns = ['name_url', 'ide_type_html', 'project', 'status', 'describe', 'reset', 'resource', 'renew']
     show_columns = ['project', 'name', 'namespace', 'describe', 'images', 'working_dir', 'env', 'volume_mount','resource_memory', 'resource_cpu', 'resource_gpu', 'status', 'ide_type', 'image_pull_policy', 'expand']
 appbuilder.add_api(Notebook_ModelView_SDK_Api)

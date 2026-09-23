@@ -34,6 +34,11 @@ def replace_git(content):
     from myapp.brand import resolve_resources
     return resolve_resources(content)
 
+
+def workspace_by_name(name):
+    """Find a business workspace. New installs use type space; older rows may still be org."""
+    return db.session.query(Project).filter_by(name=name).filter(Project.type.in_(('org', 'space'))).first()
+
 # https://dormousehole.readthedocs.io/en/latest/cli.html
 @app.cli.command('init')
 # @pysnooper.snoop()
@@ -247,7 +252,7 @@ def init():
     # @pysnooper.snoop()
     def create_pipeline(tasks, pipeline):
         # 如果项目组或者task的模板不存在就丢失
-        org_project = db.session.query(Project).filter_by(name=pipeline['project']).filter_by(type='org').first()
+        org_project = workspace_by_name(pipeline['project'])
         if not org_project:
             return
         for task in tasks:
@@ -276,6 +281,18 @@ def init():
                 print(e)
                 db.session.rollback()
         else:
+            seed_parameter = pipeline.get('parameter') or {}
+            if seed_parameter.get('demo') == 'true':
+                try:
+                    current = json.loads(pipeline_model.parameter or '{}')
+                except (TypeError, ValueError):
+                    current = {}
+                if isinstance(current, dict) and 'demo' not in current:
+                    current['demo'] = 'true'
+                    if seed_parameter.get('img') and 'img' not in current:
+                        current['img'] = seed_parameter['img']
+                    pipeline_model.parameter = json.dumps(current, indent=4, ensure_ascii=False)
+                    db.session.commit()
             return
 
 
@@ -450,7 +467,7 @@ def init():
     # @pysnooper.snoop()
     def create_train_model(name, describe, path, project_name, version, framework, api_type):
         train_model = db.session.query(Training_Model).filter_by(name=name).filter_by(version=version).filter_by(framework=framework).first()
-        project = db.session.query(Project).filter_by(name=project_name).filter_by(type='org').first()
+        project = workspace_by_name(project_name)
         if not train_model and project:
             try:
                 train_model = Training_Model()
@@ -495,7 +512,7 @@ def init():
                        resource_cpu='2', resource_gpu='0', ports='80', volume_mount='kubeflow-user-workspace(pvc):/mnt',
                        expand={},host=''):
         service = db.session.query(Service).filter_by(name=service_name).first()
-        project = db.session.query(Project).filter_by(name=project_name).filter_by(type='org').first()
+        project = workspace_by_name(project_name)
         if service is None and project:
             try:
                 service = Service()
@@ -550,7 +567,7 @@ def init():
         model_version = model_version.replace('v', '').replace('.', '').replace(':', '')
         service_name = model_name.replace('/', '-').replace(':', '-').replace('.', '-').strip('-') + "-" + model_version
         service = db.session.query(InferenceService).filter_by(name=service_name).first()
-        project = db.session.query(Project).filter_by(name=project_name).filter_by(type='org').first()
+        project = workspace_by_name(project_name)
         if service is None and project:
             try:
                 service = InferenceService()
@@ -900,7 +917,7 @@ def init():
     # 初始化notebook
     try:
         print('begin add notebook')
-        project = db.session.query(Project).filter_by(name='public').filter_by(type='org').first()
+        project = workspace_by_name('public')
         notebooks = db.session.query(Notebook).all()
         if project and not notebooks:
             pass

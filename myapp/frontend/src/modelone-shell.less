@@ -35,6 +35,8 @@ a:hover {
 }
 
 .mo-side-nav.is-collapsed {
+  position: relative;
+  z-index: 30;
   flex-basis: var(--mo-sider-collapsed);
   width: var(--mo-sider-collapsed);
 }
@@ -162,10 +164,12 @@ a:hover {
 
 .mo-side-menu.ant-menu-inline-collapsed {
   width: 100%;
+  overflow: visible;
 }
 
 .mo-side-menu.ant-menu-inline-collapsed > .ant-menu-item,
 .mo-side-menu.ant-menu-inline-collapsed > .ant-menu-submenu > .ant-menu-submenu-title {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,25 +178,22 @@ a:hover {
   height: var(--mo-nav-item-height);
   margin: 4px 8px;
   padding: 0 !important;
-  overflow: hidden;
+  overflow: visible;
   border-radius: var(--mo-radius-pill);
 }
 
 .mo-side-menu.ant-menu-inline-collapsed .ant-menu-title-content,
 .mo-side-menu.ant-menu-inline-collapsed .icon-wrapper {
+  position: static;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 18px;
   min-width: 18px;
   margin: 0;
-  overflow: hidden;
-  font-size: 0;
-  line-height: 0;
-}
-
-.mo-side-menu.ant-menu-inline-collapsed .icon-wrapper > span:not(.anticon):not(.icon-custom) {
-  display: none;
+  overflow: visible;
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .mo-side-menu.ant-menu-inline-collapsed .icon-custom,
@@ -269,9 +270,42 @@ a:hover {
 }
 
 .mo-side-nav.is-collapsed .mo-side-doc {
+  position: relative;
   justify-content: center;
   width: calc(100% - 16px);
   padding: 0;
+}
+
+.mo-side-nav.is-collapsed .mo-rail-label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 12px);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  margin: 0;
+  padding: 0 12px;
+  color: var(--mo-ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--mo-surface);
+  border: 1px solid var(--mo-border);
+  border-radius: var(--mo-radius-control);
+  box-shadow: var(--mo-shadow-nav);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.12s ease;
+}
+
+.mo-side-nav.is-collapsed .ant-menu-item:hover .mo-rail-label,
+.mo-side-nav.is-collapsed .ant-menu-item:focus-visible .mo-rail-label,
+.mo-side-nav.is-collapsed .mo-side-doc:hover .mo-rail-label,
+.mo-side-nav.is-collapsed .mo-side-doc:focus-visible .mo-rail-label {
+  opacity: 1;
 }
 
 .mo-side-nav-bottom {
@@ -417,10 +451,31 @@ a:hover {
 .side-menu {
   position: relative;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
   flex: 0 0 var(--mo-sider-inner);
   width: var(--mo-sider-inner);
   background: var(--mo-surface);
   border-right: 1px solid var(--mo-border);
+}
+
+.mo-inner-parent {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 56px;
+  padding: 0 16px;
+  color: var(--mo-ink);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  border-bottom: 1px solid var(--mo-border);
+}
+
+.mo-inner-menu {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .side-menu .ant-menu {

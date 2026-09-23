@@ -568,7 +568,10 @@
             "name": "electric-bicycle",
             "describe": "示例：电瓶车全流程(自动化标注-微调-部署)",
             "project": "public",
-            "parameter": {},
+            "parameter": {
+                "demo": "true",
+                "img": "/static/assets/images/pipeline/yolo.jpg"
+            },
             "dag_json": {
                 "download-model": {},
                 "labelstudio-train": {

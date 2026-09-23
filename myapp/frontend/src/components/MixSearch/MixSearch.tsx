@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, useEffect, ReactText } from 'react';
 import { Form, Row, Col, Input, Select, Button } from 'antd';
-import { DeleteOutlined, PlusOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import './MixSearch.less';
 import { LabeledValue } from 'antd/lib/select';
 
@@ -27,7 +27,6 @@ interface IProps {
 
 const MixSearch = (props: IProps) => {
 	const [form] = Form.useForm();
-	const [collapsed, setCollapsed]: [boolean, any] = useState(false);
 	const [typeArr, setTypeArr]: [(string | undefined)[], any] = useState([]);
 
 	// 序列化数据
@@ -81,11 +80,6 @@ const MixSearch = (props: IProps) => {
 		const preVal = values['group'].filter(((item: any) => !!item.key))
 		const tarVal = preVal.map((item: any) => ({ key: item.key, value: item.value }))
 		props.onChange(tarVal);
-	};
-
-	/**展开收起 */
-	const handleCollapsed = (): void => {
-		setCollapsed(!collapsed);
 	};
 
 	/**选择筛选类型 */
@@ -159,7 +153,7 @@ const MixSearch = (props: IProps) => {
 				],
 			}}
 		>
-			<Row className="cmdb-mixsearch-content" gutter={16} style={{ marginLeft: 0, marginRight: 0, ...collapsed ? { height: 70 } : { height: 'auto' } }}>
+			<Row className="cmdb-mixsearch-content" gutter={16} style={{ marginLeft: 0, marginRight: 0, height: 'auto' }}>
 				<Form.List name={`group`}>
 					{(fields, { add, remove }) => {
 						return <>
@@ -265,25 +259,6 @@ const MixSearch = (props: IProps) => {
 						</Button>
 					</Row>
 				</Col>
-			</Row>
-			<Row className="cmdb-mixsearch-collapsed">
-				<Row onClick={() => handleCollapsed()} justify="center" align="middle">
-					{collapsed ? (
-						<>
-							<Col>{'展开'}</Col>
-							<Col>
-								<DownOutlined />
-							</Col>
-						</>
-					) : (
-							<>
-								<Col>{'收起'}</Col>
-								<Col>
-									<UpOutlined />
-								</Col>
-							</>
-						)}
-				</Row>
 			</Row>
 		</Form>
 	);

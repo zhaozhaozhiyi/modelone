@@ -14,7 +14,7 @@ import SubMenu from 'antd/lib/menu/SubMenu';
 import { clearWaterNow, drawWater, drawWaterNow, getParam, obj2UrlParam, parseParam2Obj } from './util'
 import { getAppHeaderConfig, getAppMenu, getCustomDialog, userLogout } from './api/kubeflowApi';
 import { IAppHeaderItem, IAppMenuItem, ICustomDialog } from './api/interface/kubeflowInterface';
-import { LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
+import { MenuOutlined } from '@ant-design/icons';
 import { User } from 'lucide-react';
 import { MenuGlyph, renderMenuIcon } from './menuIcon';
 import Cookies from 'js-cookie'
@@ -58,7 +58,6 @@ const AppWrapper = (props: IProps) => {
   const [sourceAppList, setSourceAppList] = useState<IRouterConfigPlusItem[]>([])
   const [sourceAppMap, setSourceAppMap] = useState<Record<string, IRouterConfigPlusItem>>({})
   const [CurrentRouteComponent, setCurrentRouteComponent] = useState<any>()
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
   const [isShowSlideMenu, setIsShowSlideMenu] = useState(true)
   const [customDialogInfo, setCustomDialogInfo] = useState<ICustomDialog>()
   const [headerConfig, setHeaderConfig] = useState<IAppHeaderItem[]>([])
@@ -192,7 +191,7 @@ const AppWrapper = (props: IProps) => {
     }}>
       <span className="icon-wrapper">
         {renderMenuIcon(app.icon)}
-        <span>{app.title}</span>
+        <span className="mo-rail-label">{app.title}</span>
       </span>
     </Menu.Item>
   ));
@@ -232,9 +231,6 @@ const AppWrapper = (props: IProps) => {
                       {
                         sub.children?.map(thr => {
                           return <Menu.Item disabled={!!thr.disable} hidden={!!thr.hidden} key={thr.path} onClick={() => {
-                            if (!menu.isCollapsed) {
-                              setIsMenuCollapsed(false)
-                            }
                             if (thr.menu_type === 'out_link' || thr.menu_type === 'in_link') {
                               window.open(thr.url, 'blank')
                             } else {
@@ -251,9 +247,6 @@ const AppWrapper = (props: IProps) => {
                     </Menu.ItemGroup>
                   }
                   return <Menu.Item disabled={!!sub.disable} hidden={!!sub.hidden} key={sub.path} onClick={() => {
-                    if (!menu.isCollapsed) {
-                      setIsMenuCollapsed(false)
-                    }
                     if (sub.menu_type === 'out_link' || sub.menu_type === 'in_link') {
                       window.open(sub.url, 'blank')
                     } else {
@@ -270,9 +263,6 @@ const AppWrapper = (props: IProps) => {
             </SubMenu>
           }
           return <Menu.Item disabled={!!menu.disable} hidden={!!menu.hidden} key={menu.path} onClick={() => {
-            if (!menu.isCollapsed) {
-              setIsMenuCollapsed(false)
-            }
             if (menu.menu_type === 'out_link' || menu.menu_type === 'in_link') {
               window.open(menu.url, 'blank')
             } else {
@@ -286,8 +276,16 @@ const AppWrapper = (props: IProps) => {
           </Menu.Item>
         })
 
+        const parentMenu = currentNavMap[currentSelected]
+
         return <div className="side-menu">
-          <div className="h100 ov-h d-f fd-c" style={{ width: isMenuCollapsed ? 0 : 'auto' }}>
+          <div className="mo-inner-parent">
+            <span className="icon-wrapper">
+              {renderMenuIcon(parentMenu.icon)}
+              <span>{parentMenu.title}</span>
+            </span>
+          </div>
+          <div className="mo-inner-menu">
             <Menu
               selectedKeys={[pathname]}
               openKeys={openKeys}
@@ -301,17 +299,6 @@ const AppWrapper = (props: IProps) => {
             >
               {menuContent}
             </Menu>
-            <div className="p16 ta-r bor-t" style={{ borderColor: '#e5e6eb' }}>
-              <div className="d-il bor-l pl16" style={isMenuCollapsed ? { position: 'absolute', bottom: 16, left: 0, borderColor: '#e5e6eb' } : { borderColor: '#e5e6eb' }}>
-                {
-                  isMenuCollapsed ? <RightOutlined className="cp" onClick={() => {
-                    setIsMenuCollapsed(!isMenuCollapsed)
-                  }} /> : <LeftOutlined className="cp" onClick={() => {
-                    setIsMenuCollapsed(!isMenuCollapsed)
-                  }} />
-                }
-              </div>
-            </div>
           </div>
         </div>
       }
@@ -343,14 +330,14 @@ const AppWrapper = (props: IProps) => {
               setMobileNavOpen(false);
               navigate('/', { replace: true });
             }}>
-              <span className="icon-wrapper"><MenuGlyph name="home" />{"主页"}</span>
+              <span className="icon-wrapper"><MenuGlyph name="home" /><span className="mo-rail-label">主页</span></span>
             </Menu.Item>
             {renderRailItems(residentApps)}
           </Menu>
           {!!globalConfig.brand.helpUrl && (
             <a className="mo-side-doc" href={globalConfig.brand.helpUrl} target="_blank" rel="noreferrer" aria-label="文档" title={railCollapsed ? '文档' : undefined}>
               <MenuGlyph name="file-text" />
-              {!railCollapsed && <span>文档</span>}
+              <span className="mo-rail-label">文档</span>
             </a>
           )}
           <div className="mo-side-nav-bottom">
