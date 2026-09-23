@@ -7,19 +7,20 @@ import {
   RouteObject
 } from "react-router-dom";
 
-import { Drawer, Dropdown, Menu, Spin, Tag } from 'antd';
+import { Dropdown, Menu, Spin, Tag } from 'antd';
 import { IRouterConfigPlusItem } from './api/interface/baseInterface';
 import { formatRoute, getDefaultOpenKeys, routerConfigPlus } from './routerConfig';
 import SubMenu from 'antd/lib/menu/SubMenu';
 import { clearWaterNow, drawWater, drawWaterNow, getParam, obj2UrlParam, parseParam2Obj } from './util'
 import { getAppHeaderConfig, getAppMenu, getCustomDialog, userLogout } from './api/kubeflowApi';
 import { IAppHeaderItem, IAppMenuItem, ICustomDialog } from './api/interface/kubeflowInterface';
-import { AppstoreOutlined, FileTextOutlined, HomeOutlined, LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
+import { FileTextOutlined, HomeOutlined, LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
 import Cookies from 'js-cookie'
 import { handleTips } from './api';
 import globalConfig from './global.config'
 import AiChatBot from './components/AiChatBot/AiChatBot'
 import { ProjectSwitcher } from './projectSwitcher'
+import { PageExtraContext } from './pageExtra'
 const userName = Cookies.get('myapp_username')
 
 // 左侧一级菜单常驻项。安全设置、链接等仍留在所属模块的内栏，不在导轨再做「更多」分组。
@@ -58,7 +59,6 @@ const AppWrapper = (props: IProps) => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
   const [isShowSlideMenu, setIsShowSlideMenu] = useState(true)
   const [imgUrlProtraits, setImgUrlProtraits] = useState('')
-  const [customDialogVisable, setCustomDialogVisable] = useState(false)
   const [customDialogInfo, setCustomDialogInfo] = useState<ICustomDialog>()
   const [headerConfig, setHeaderConfig] = useState<IAppHeaderItem[]>([])
   const [navSelected, setNavSelected] = useState<string[]>([])
@@ -116,10 +116,12 @@ const AppWrapper = (props: IProps) => {
   useEffect(() => {
     const controller = new AbortController()
     const url = encodeURIComponent(location.pathname)
+    setCustomDialogInfo(undefined)
     getCustomDialog(url, controller.signal).then(res => {
-      if(res.status!==502) {
+      if (res.status !== 502 && res.data?.content && res.data.hit) {
           setCustomDialogInfo(res.data)
-          setCustomDialogVisable(res.data.hit)
+      } else {
+          setCustomDialogInfo(undefined)
       }
     }).catch(err => {
       console.error(err);
@@ -326,12 +328,13 @@ const AppWrapper = (props: IProps) => {
   }
 
   return (
+    <PageExtraContext.Provider value={customDialogInfo}>
     <div className="content-container fade-in mo-shell">
       {/* 左侧主导航：浅色导轨（UI 规范 3.0），顶部 Logo/折叠、中部一级菜单、底部空间与用户 */}
       {
         isShowNav === 'false' ? null : <aside className={`mo-side-nav${railCollapsed ? ' is-collapsed' : ''}${mobileNavOpen ? ' is-open' : ''}`}>
           <div className="mo-side-nav-top">
-            <img className="cp mo-side-logo" style={{ height: 28 }} src={railCollapsed ? globalConfig.loadingLogo.default : (globalConfig.brand.logoUrl || globalConfig.appLogo.default)} alt={globalConfig.brand.name} onClick={() => {
+            <img className="cp mo-side-logo" src={railCollapsed ? globalConfig.loadingLogo.default : (globalConfig.brand.logoUrl || globalConfig.appLogo.default)} alt={globalConfig.brand.name} onClick={() => {
               setMobileNavOpen(false);
               navigate('/', { replace: true });
             }} />
@@ -378,36 +381,16 @@ const AppWrapper = (props: IProps) => {
         {isShowSlideMenu ? renderMenu() : null}
 
         <div className="ov-a w100 p-r mo-content" id="componentContainer">
-          {/* 自定义弹窗 */}
-          {
-            customDialogVisable ? <Drawer
-              getContainer={false}
-              style={{ position: 'absolute', height: 'calc(100vh - 100px)', top: '10%', ...customDialogInfo?.style }}
-              bodyStyle={{ padding: 0 }}
-              mask={false}
-              contentWrapperStyle={{ width: 'auto' }}
-              title={customDialogInfo?.title} placement="right" onClose={() => { setCustomDialogVisable(false) }}
-              visible={customDialogVisable}>
-              <div className="h100" dangerouslySetInnerHTML={{ __html: customDialogInfo?.content || '' }}></div>
-            </Drawer> : null
-          }
           {
             CurrentRouteComponent && <CurrentRouteComponent />
           }
         </div>
 
-        {
-          customDialogInfo?.content ? <div className="c-text-w fs12 p-f" style={{ backgroundColor: 'transparent', zIndex: 10, right: 16, bottom: 32 }}>
-            <div className="bg-theme d-f jc ac cp" style={{ borderRadius: 6, width: 36, height: 36 }} onClick={() => {
-              setCustomDialogVisable(true)
-            }}><AppstoreOutlined style={{ color: '#fff', fontSize: 22 }} /></div>
-          </div> : null
-        }
-
       </div >
       {/* AI 机器人悬浮按钮与聊天面板，固定在页面右下角，全局可用 */}
       <AiChatBot />
     </div>
+    </PageExtraContext.Provider>
   );
 };
 

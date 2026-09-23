@@ -74,6 +74,7 @@ import DynamicForm, {
   ILinkageConfig,
 } from "../components/DynamicForm/DynamicForm";
 import ChartOptionTempalte from "./ChartOptionTempalte";
+import { PageExtraSection } from "../pageExtra";
 import "./ADUGTemplate.less";
 import TabsModal from "../components/TabsModal/TabsModal";
 
@@ -1863,6 +1864,7 @@ export default function TaskListManager(props?: IAppMenuItem) {
           )}
 
           {isEchartShow ? <ChartOptionTempalte url={baseUrl} /> : null}
+          <PageExtraSection />
 
           {list_ui_type !== "card" ? (
             <TableBox

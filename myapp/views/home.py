@@ -110,6 +110,7 @@ class Myapp(BaseMyappView):
                         {
                             "name": 'space_members',
                             "title": __('成员与配额'),
+                            "icon": '<svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="128" height="128"><path d="M352 192a96 96 0 1 1 0 192 96 96 0 0 1 0-192z"/><path d="M160 736c0-112 86-192 192-192s192 80 192 192v96H160v-96z"/><path d="M608 416h320v72H608zM608 552h240v72H608zM608 688h160v72H608z"/></svg>',
                             "menu_type": "api",
                             "url": "/project_user_modelview/api/",
                         }
