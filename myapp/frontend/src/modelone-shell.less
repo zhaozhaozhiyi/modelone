@@ -183,8 +183,8 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  min-width: 16px;
+  width: 18px;
+  min-width: 18px;
   margin: 0;
   overflow: hidden;
   font-size: 0;
@@ -196,15 +196,16 @@ a:hover {
 }
 
 .mo-side-menu.ant-menu-inline-collapsed .icon-custom,
-.mo-side-menu.ant-menu-inline-collapsed .anticon {
+.mo-side-menu.ant-menu-inline-collapsed .anticon,
+.mo-side-menu.ant-menu-inline-collapsed .mo-menu-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   margin: 0 !important;
-  font-size: 16px;
-  line-height: 16px;
+  font-size: 18px;
+  line-height: 18px;
 }
 
 .mo-side-menu.ant-menu:not(.ant-menu-horizontal) .ant-menu-item::after {
@@ -323,6 +324,24 @@ a:hover {
   gap: 8px;
   padding: 4px;
   border-radius: var(--mo-radius-pill);
+}
+
+.mo-side-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  color: #fff;
+  background: var(--mo-ink);
+  border-radius: 50%;
+}
+
+.mo-side-avatar svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
 }
 
 .mo-side-user:hover {

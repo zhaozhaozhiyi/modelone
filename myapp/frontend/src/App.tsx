@@ -14,7 +14,9 @@ import SubMenu from 'antd/lib/menu/SubMenu';
 import { clearWaterNow, drawWater, drawWaterNow, getParam, obj2UrlParam, parseParam2Obj } from './util'
 import { getAppHeaderConfig, getAppMenu, getCustomDialog, userLogout } from './api/kubeflowApi';
 import { IAppHeaderItem, IAppMenuItem, ICustomDialog } from './api/interface/kubeflowInterface';
-import { FileTextOutlined, HomeOutlined, LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
+import { LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
+import { User } from 'lucide-react';
+import { MenuGlyph, renderMenuIcon } from './menuIcon';
 import Cookies from 'js-cookie'
 import { handleTips } from './api';
 import globalConfig from './global.config'
@@ -58,7 +60,6 @@ const AppWrapper = (props: IProps) => {
   const [CurrentRouteComponent, setCurrentRouteComponent] = useState<any>()
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
   const [isShowSlideMenu, setIsShowSlideMenu] = useState(true)
-  const [imgUrlProtraits, setImgUrlProtraits] = useState('')
   const [customDialogInfo, setCustomDialogInfo] = useState<ICustomDialog>()
   const [headerConfig, setHeaderConfig] = useState<IAppHeaderItem[]>([])
   const [navSelected, setNavSelected] = useState<string[]>([])
@@ -190,9 +191,7 @@ const AppWrapper = (props: IProps) => {
       handleClickNav(app);
     }}>
       <span className="icon-wrapper">
-        {
-          Object.prototype.toString.call(app.icon) === '[object String]' ? <span className="icon-custom svg16 mr8" dangerouslySetInnerHTML={{ __html: app.icon as string }}></span> : app.icon
-        }
+        {renderMenuIcon(app.icon)}
         <span>{app.title}</span>
       </span>
     </Menu.Item>
@@ -225,11 +224,11 @@ const AppWrapper = (props: IProps) => {
 
         const menuContent = currentAppMenu.map(menu => {
           if (menu.isMenu) {
-            return <SubMenu key={menu.path} title={menu.title}>
+            return <SubMenu key={menu.path} title={<span className="icon-wrapper">{renderMenuIcon(menu.icon)}<span>{menu.title}</span></span>}>
               {
                 menu.children?.map(sub => {
                   if (sub.isMenu) {
-                    return <Menu.ItemGroup key={sub.path} title={sub.title}>
+                    return <Menu.ItemGroup key={sub.path} title={<span className="icon-wrapper">{renderMenuIcon(sub.icon)}<span>{sub.title}</span></span>}>
                       {
                         sub.children?.map(thr => {
                           return <Menu.Item disabled={!!thr.disable} hidden={!!thr.hidden} key={thr.path} onClick={() => {
@@ -243,9 +242,7 @@ const AppWrapper = (props: IProps) => {
                             }
                           }}>
                             <div className="icon-wrapper">
-                              {
-                                Object.prototype.toString.call(thr.icon) === '[object String]' ? <div className="icon-custom svg16 mr8" dangerouslySetInnerHTML={{ __html: thr.icon }}></div> : sub.icon
-                              }
+                              {renderMenuIcon(thr.icon)}
                               {thr.title}
                             </div>
                           </Menu.Item>
@@ -264,9 +261,7 @@ const AppWrapper = (props: IProps) => {
                     }
                   }}>
                     <div className="icon-wrapper">
-                      {
-                        Object.prototype.toString.call(sub.icon) === '[object String]' ? <div className="icon-custom svg16 mr8" dangerouslySetInnerHTML={{ __html: sub.icon }}></div> : sub.icon
-                      }
+                      {renderMenuIcon(sub.icon)}
                       {sub.title}
                     </div>
                   </Menu.Item>
@@ -285,9 +280,7 @@ const AppWrapper = (props: IProps) => {
             }
           }}>
             <div className="icon-wrapper">
-              {
-                Object.prototype.toString.call(menu.icon) === '[object String]' ? <div className="icon-custom svg16 mr8" dangerouslySetInnerHTML={{ __html: menu.icon }}></div> : menu.icon
-              }
+              {renderMenuIcon(menu.icon)}
               {menu.title}
             </div>
           </Menu.Item>
@@ -339,9 +332,9 @@ const AppWrapper = (props: IProps) => {
               navigate('/', { replace: true });
             }} />
             <button type="button" className="mo-side-nav-collapse" aria-label={railCollapsed ? '展开导航' : '折叠导航'} title={railCollapsed ? '展开导航' : '折叠导航'} onClick={() => setRailCollapsed(!railCollapsed)}>
-              <svg className="mo-side-nav-collapse-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <rect x="1.5" y="2" width="13" height="12" rx="2.25" stroke="currentColor" strokeWidth="1.25" />
-                <path d="M5.75 2v12" stroke="currentColor" strokeWidth="1.25" />
+              <svg className="mo-side-nav-collapse-icon" width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="1.75" y="2.25" width="12.5" height="11.5" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M6 2.25v11.5" stroke="currentColor" strokeWidth="1.6" />
               </svg>
             </button>
           </div>
@@ -350,13 +343,13 @@ const AppWrapper = (props: IProps) => {
               setMobileNavOpen(false);
               navigate('/', { replace: true });
             }}>
-              <span className="icon-wrapper"><HomeOutlined className="mr8" />{"主页"}</span>
+              <span className="icon-wrapper"><MenuGlyph name="home" />{"主页"}</span>
             </Menu.Item>
             {renderRailItems(residentApps)}
           </Menu>
           {!!globalConfig.brand.helpUrl && (
             <a className="mo-side-doc" href={globalConfig.brand.helpUrl} target="_blank" rel="noreferrer" aria-label="文档" title={railCollapsed ? '文档' : undefined}>
-              <FileTextOutlined />
+              <MenuGlyph name="file-text" />
               {!railCollapsed && <span>文档</span>}
             </a>
           )}
@@ -364,9 +357,9 @@ const AppWrapper = (props: IProps) => {
             <ProjectSwitcher />
             <Dropdown overlay={userMenu}>
               <div className="mo-side-user cp">
-                <img style={{ borderRadius: 200, height: 28, width: 28 }} src={imgUrlProtraits} onError={() => {
-                  setImgUrlProtraits(require('./images/male.png'))
-                }} alt="user" />
+                <span className="mo-side-avatar" aria-hidden="true">
+                  <User size={16} strokeWidth={2} absoluteStrokeWidth />
+                </span>
                 {!railCollapsed && <span className="mo-side-user-name">{userName || '用户'}</span>}
               </div>
             </Dropdown>

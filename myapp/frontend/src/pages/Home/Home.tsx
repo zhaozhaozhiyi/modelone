@@ -1,9 +1,6 @@
 import React from "react";
 import { Typography } from "antd";
-import {
-  FileTextOutlined,
-  DeploymentUnitOutlined,
-} from "@ant-design/icons";
+import { MenuGlyph } from "../../menuIcon";
 import FeatureCard from "./components/FeatureCard";
 import PipelineList from "./components/PipelineList";
 import globalConfig from "../../global.config";
@@ -37,7 +34,7 @@ const Home: React.FC = () => {
         <section className="home-section">
           <div className="section-header">
             <Title level={5}>
-              <DeploymentUnitOutlined /> {'快速开始'}
+              <MenuGlyph name="workflow" /> {'快速开始'}
             </Title>
           </div>
           <FeatureCard />
@@ -46,7 +43,7 @@ const Home: React.FC = () => {
         <section className="home-section">
           <div className="section-header">
             <Title level={5}>
-              <FileTextOutlined /> {'流水线'}
+              <MenuGlyph name="git-branch" /> {'流水线'}
             </Title>
           </div>
           <PipelineList />
