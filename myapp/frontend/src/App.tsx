@@ -14,7 +14,7 @@ import SubMenu from 'antd/lib/menu/SubMenu';
 import { clearWaterNow, drawWater, drawWaterNow, getParam, obj2UrlParam, parseParam2Obj } from './util'
 import { getAppHeaderConfig, getAppMenu, getCustomDialog, userLogout } from './api/kubeflowApi';
 import { IAppHeaderItem, IAppMenuItem, ICustomDialog } from './api/interface/kubeflowInterface';
-import { AppstoreOutlined, CommentOutlined, LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, FileTextOutlined, HomeOutlined, LeftOutlined, MenuOutlined, RightOutlined } from '@ant-design/icons';
 import Cookies from 'js-cookie'
 import { handleTips } from './api';
 import globalConfig from './global.config'
@@ -22,9 +22,8 @@ import AiChatBot from './components/AiChatBot/AiChatBot'
 import { ProjectSwitcher } from './projectSwitcher'
 const userName = Cookies.get('myapp_username')
 
-// UI 规范 3.0：左侧一级菜单常驻项与「更多」溢出项（仅展示层映射，不改后端菜单语义）
+// 左侧一级菜单常驻项。安全设置、链接等仍留在所属模块的内栏，不在导轨再做「更多」分组。
 const RESIDENT_NAV_NAMES = ['group', 'data', 'dev', 'train', 'service'];
-const HOIST_NAV_NAMES = ['security', 'link', 'resource_rental', 'cost', 'resource'];
 
 const RouterConfig = (config: RouteObject[]) => {
   let element = useRoutes(config);
@@ -64,7 +63,6 @@ const AppWrapper = (props: IProps) => {
   const [headerConfig, setHeaderConfig] = useState<IAppHeaderItem[]>([])
   const [navSelected, setNavSelected] = useState<string[]>([])
   const [railCollapsed, setRailCollapsed] = useState(false)
-  const [railOpenKeys, setRailOpenKeys] = useState<string[]>([])
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const isShowNav = getParam('isShowNav')
 
@@ -148,8 +146,8 @@ const AppWrapper = (props: IProps) => {
     }
 
     setCurrentNavList(topNavAppList)
-    setNavSelected([currentNavKey])
-    setIsShowSlideMenu(stLevelApp && !stLevelApp.isCollapsed)
+    setNavSelected([pathname === '/' ? '/' : currentNavKey])
+    setIsShowSlideMenu(pathname !== '/' && !!stLevelApp && !stLevelApp.isCollapsed)
   }
 
   const handleClickNav = (app: IRouterConfigPlusItem, subPath?: string) => {
@@ -183,23 +181,9 @@ const AppWrapper = (props: IProps) => {
   const residentApps = RESIDENT_NAV_NAMES
     .map(name => navApps.find(item => item.name === name))
     .filter(Boolean) as IRouterConfigPlusItem[];
-  const hoistedApps = navApps.reduce((pre: IRouterConfigPlusItem[], item) => {
-    if (item.name === 'group' || item.name === 'ai_hub') {
-      (item.children || []).forEach(child => {
-        if (HOIST_NAV_NAMES.includes(child.name || '')) pre.push(child);
-      });
-    }
-    return pre;
-  }, []);
-  const overflowApps = [
-    ...navApps.filter(item => !RESIDENT_NAV_NAMES.includes(item.name || '')),
-    ...hoistedApps,
-    ...(globalConfig.brand.helpUrl ? [{ name: 'docs', title: '文档', path: '__docs', menu_type: 'out_link', url: globalConfig.brand.helpUrl } as unknown as IRouterConfigPlusItem] : []),
-    ...(globalConfig.brand.supportUrl ? [{ name: 'support', title: '技术支持', path: '__support', menu_type: 'out_link', url: globalConfig.brand.supportUrl } as unknown as IRouterConfigPlusItem] : []),
-  ];
 
   const renderRailItems = (apps: IRouterConfigPlusItem[]) => apps.map(app => (
-    <Menu.Item key={app.path} disabled={!!app.disable} onClick={() => {
+    <Menu.Item key={app.path} disabled={!!app.disable} title={false} onClick={() => {
       setMobileNavOpen(false);
       handleClickNav(app);
     }}>
@@ -234,7 +218,7 @@ const AppWrapper = (props: IProps) => {
 
     if (currentNavMap && currentSelected && currentNavMap[currentSelected]?.children?.length) {
 
-      const currentAppMenu = (currentNavMap[currentSelected].children || []).filter((menu: IRouterConfigPlusItem) => !HOIST_NAV_NAMES.includes(menu.name || ''))
+      const currentAppMenu = currentNavMap[currentSelected].children || []
       if (currentAppMenu && currentAppMenu.length) {
 
         const menuContent = currentAppMenu.map(menu => {
@@ -351,22 +335,28 @@ const AppWrapper = (props: IProps) => {
               setMobileNavOpen(false);
               navigate('/', { replace: true });
             }} />
-            <button type="button" className="mo-side-nav-collapse" aria-label={railCollapsed ? '展开导航' : '折叠导航'} onClick={() => setRailCollapsed(!railCollapsed)}>
-              {railCollapsed ? <RightOutlined /> : <LeftOutlined />}
+            <button type="button" className="mo-side-nav-collapse" aria-label={railCollapsed ? '展开导航' : '折叠导航'} title={railCollapsed ? '展开导航' : '折叠导航'} onClick={() => setRailCollapsed(!railCollapsed)}>
+              <svg className="mo-side-nav-collapse-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="1.5" y="2" width="13" height="12" rx="2.25" stroke="currentColor" strokeWidth="1.25" />
+                <path d="M5.75 2v12" stroke="currentColor" strokeWidth="1.25" />
+              </svg>
             </button>
           </div>
-          <Menu mode="inline" className="mo-side-menu" inlineCollapsed={railCollapsed} selectedKeys={navSelected} openKeys={railOpenKeys} onOpenChange={(keys) => setRailOpenKeys(keys as string[])}>
-            <Menu.Item key="__assistant" className="mo-nav-assistant" onClick={() => {
+          <Menu mode="inline" className="mo-side-menu" inlineCollapsed={railCollapsed} selectedKeys={navSelected}>
+            <Menu.Item key="/" title={false} onClick={() => {
               setMobileNavOpen(false);
-              window.dispatchEvent(new Event('modelone:assistant-open'));
+              navigate('/', { replace: true });
             }}>
-              <span className="icon-wrapper"><CommentOutlined className="mr8" />{"智能助手"}</span>
+              <span className="icon-wrapper"><HomeOutlined className="mr8" />{"主页"}</span>
             </Menu.Item>
             {renderRailItems(residentApps)}
-            {!!overflowApps.length && <Menu.SubMenu key="__more" title={<span className="icon-wrapper"><AppstoreOutlined className="mr8" />{"更多"}</span>}>
-              {renderRailItems(overflowApps)}
-            </Menu.SubMenu>}
           </Menu>
+          {!!globalConfig.brand.helpUrl && (
+            <a className="mo-side-doc" href={globalConfig.brand.helpUrl} target="_blank" rel="noreferrer" aria-label="文档" title={railCollapsed ? '文档' : undefined}>
+              <FileTextOutlined />
+              {!railCollapsed && <span>文档</span>}
+            </a>
+          )}
           <div className="mo-side-nav-bottom">
             <ProjectSwitcher />
             <Dropdown overlay={userMenu}>

@@ -26,8 +26,21 @@
   <script src="%PUBLIC_URL%/brand-config.js"></script>
   <script src="/myapp/brand.js"></script>
   <style>
+    .mo-boot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+      background: #f5f6f7;
+    }
+
     .loading-star {
-      animation: aniStar 2s infinite ease-in-out;
+      display: block;
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      animation: aniStar 1.6s infinite ease-in-out;
     }
 
     .fade-in {
@@ -63,8 +76,8 @@
 <body>
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root">
-    <div style="display: flex;align-items: center;justify-content: center;height: 100vh;width: 100vw;">
-      <img src="%PUBLIC_URL%/modelone-mark.svg" alt="modelOne">
+    <div class="mo-boot">
+      <img class="loading-star" src="%PUBLIC_URL%/modelone-mark.svg" width="48" height="48" alt="modelOne">
     </div>
   </div>
   <!--

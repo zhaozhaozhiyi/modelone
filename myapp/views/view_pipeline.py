@@ -569,7 +569,7 @@ class Pipeline_ModelView_Base():
     # order_columns = ['id','changed_on']
     order_columns = ['id']
 
-    list_columns = ['id', 'project', 'pipeline_url', 'creator', 'modified']
+    list_columns = ['id', 'pipeline_url', 'project', 'creator', 'modified']
     cols_width = {
         "id": {"type": "ellip2", "width": 100},
         "project": {"type": "ellip2", "width": 200},
@@ -1306,7 +1306,7 @@ class Pipeline_ModelView_Api(Pipeline_ModelView_Base, MyappModelRestApi):
     datamodel = SQLAInterface(Pipeline)
     route_base = '/pipeline_modelview/api'
     # show_columns = ['project','name','describe','namespace','schedule_type','cron_time','node_selector','depends_on_past','max_active_runs','parallelism','global_env','dag_json','pipeline_file_html','pipeline_argo_id','run_id','created_by','changed_by','created_on','changed_on','expand']
-    list_columns = ['id', 'project', 'pipeline_url', 'creator', 'modified']
+    list_columns = ['id', 'pipeline_url', 'project', 'creator', 'modified']
     add_columns = ['project', 'name', 'describe']
     edit_columns = ['project', 'name', 'describe', 'schedule_type', 'cron_time', 'depends_on_past', 'max_active_runs',
                     'expired_limit', 'parallelism', 'dag_json', 'global_env', 'alert_status', 'alert_user', 'expand',

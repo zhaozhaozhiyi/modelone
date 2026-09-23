@@ -1,17 +1,44 @@
-.loading-cb {
-    animation: aniCB 2s infinite ease-in-out;
+.mo-loading {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: 0;
+  line-height: 0;
+}
+
+.ant-spin .mo-loading.ant-spin-dot,
+.ant-spin-nested-loading > div > .ant-spin .mo-loading.ant-spin-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  font-size: 0;
+  line-height: 0;
+}
+
+.mo-loading-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(23, 25, 29, 0.12);
+  border-top-color: #17191d;
+  border-radius: 50%;
+  animation: mo-loading-spin 0.8s linear infinite;
+}
+
+.mo-loading-mark {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+@keyframes mo-loading-spin {
+  to {
+    transform: rotate(360deg);
   }
-
-  @keyframes aniCB {
-    0% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.5;
-    }
-
-    100% {
-      opacity: 1;
-    }
-  }
+}

@@ -1,69 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { Row, Col, Typography, Spin } from "antd";
+import React from "react";
+import { Typography } from "antd";
 import {
-  PlayCircleOutlined,
   FileTextOutlined,
   DeploymentUnitOutlined,
 } from "@ant-design/icons";
 import FeatureCard from "./components/FeatureCard";
-import VideoCard from "./components/VideoCard";
 import PipelineList from "./components/PipelineList";
 import "./Home.less";
-import { brandAsset } from '../../brand';
 
 const { Title } = Typography;
 
-interface VideoItem {
-  name: string;
-  img: string;
-  video: string;
-}
-
 const Home: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [videoList, setVideoList] = useState<VideoItem[]>([]);
-
-  // 加载数据
-  useEffect(() => {
-    loadHomeData();
-  }, []);
-
-  const loadHomeData = async () => {
-    setLoading(true);
-
-    try {
-      // 设置视频列表
-      setVideoList([
-        {
-          name: '新人制作一个pipeline',
-          img: "/static/assets/images/ad/video-cover1-thumb.png",
-          video: brandAsset('tutorial-pipeline.mp4'),
-        },
-        {
-          name: '自定义任务模板',
-          img: "/static/assets/images/ad/video-cover2-thumb.png",
-          video: brandAsset('tutorial-job-template.mp4'),
-        },
-      ]);
-    } catch (error: any) {
-      console.error("加载首页数据失败:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="home-loading">
-        <Spin size="large" tip={'加载中'} />
-      </div>
-    );
-  }
-
   return (
     <div className="home-container">
       <div className="home-content">
-        {/* 平台主要功能区 */}
         <section className="home-section">
           <div className="section-header">
             <Title level={5}>
@@ -73,25 +23,6 @@ const Home: React.FC = () => {
           <FeatureCard />
         </section>
 
-        {/* 新手视频区 */}
-        {videoList.length > 0 && (
-          <section className="home-section">
-            <div className="section-header">
-              <Title level={5}>
-                <PlayCircleOutlined /> {'新手视频'}
-              </Title>
-            </div>
-            <Row gutter={[12, 12]}>
-              {videoList.map((video, index) => (
-                <Col xs={12} sm={8} md={6} lg={4} xl={3} key={index}>
-                  <VideoCard video={video} />
-                </Col>
-              ))}
-            </Row>
-          </section>
-        )}
-
-        {/* 流水线列表区 */}
         <section className="home-section">
           <div className="section-header">
             <Title level={5}>

@@ -49,13 +49,21 @@ a:hover {
 }
 
 .mo-side-nav.is-collapsed .mo-side-nav-top {
+  position: relative;
   justify-content: center;
   padding: 0 8px;
 }
 
 .mo-side-logo {
+  width: auto;
+  height: 28px;
   min-width: 0;
   object-fit: contain;
+}
+
+.mo-side-nav.is-collapsed .mo-side-logo {
+  width: 28px;
+  height: 28px;
 }
 
 .mo-side-nav-collapse {
@@ -77,8 +85,34 @@ a:hover {
   background: var(--mo-surface-hover);
 }
 
+.mo-side-nav-collapse-icon {
+  display: block;
+}
+
+.mo-side-nav.is-collapsed .mo-side-logo,
 .mo-side-nav.is-collapsed .mo-side-nav-collapse {
-  display: none;
+  transition: opacity 0.15s ease;
+}
+
+.mo-side-nav.is-collapsed .mo-side-nav-collapse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.mo-side-nav.is-collapsed .mo-side-nav-top:hover .mo-side-logo,
+.mo-side-nav.is-collapsed .mo-side-nav-top:focus-within .mo-side-logo {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mo-side-nav.is-collapsed .mo-side-nav-top:hover .mo-side-nav-collapse,
+.mo-side-nav.is-collapsed .mo-side-nav-top:focus-within .mo-side-nav-collapse {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .mo-side-menu {
@@ -93,50 +127,112 @@ a:hover {
   border-right: 0;
 }
 
-.mo-side-menu .ant-menu-item,
-.mo-side-menu .ant-menu-submenu-title {
+// 选择器需压过 Ant Design `.ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected`
+// Ant Design 默认 width: calc(100% + 1px)，再加左右 margin 后右侧会被裁切，选中胶囊贴右不居中。
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal):not(.ant-menu-inline-collapsed) .ant-menu-item,
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal):not(.ant-menu-inline-collapsed) .ant-menu-submenu-title {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: calc(100% - 16px);
   height: var(--mo-nav-item-height);
   margin: 4px 8px;
+  padding: 0 12px !important;
   color: var(--mo-text-secondary);
+  background: transparent;
   border-radius: var(--mo-radius-pill);
-  line-height: var(--mo-nav-item-height);
+  line-height: 22px;
 }
 
-.mo-side-menu .ant-menu-item::after {
+.mo-side-menu.ant-menu:not(.ant-menu-inline-collapsed) .ant-menu-title-content,
+.mo-side-menu.ant-menu:not(.ant-menu-inline-collapsed) .icon-wrapper {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  line-height: 22px;
+}
+
+.mo-side-menu.ant-menu:not(.ant-menu-inline-collapsed) .ant-menu-submenu-title {
+  padding-right: 28px !important;
+}
+
+.mo-side-menu.ant-menu:not(.ant-menu-inline-collapsed) .ant-menu-submenu-arrow {
+  right: 12px;
+}
+
+.mo-side-menu.ant-menu-inline-collapsed {
+  width: 100%;
+}
+
+.mo-side-menu.ant-menu-inline-collapsed > .ant-menu-item,
+.mo-side-menu.ant-menu-inline-collapsed > .ant-menu-submenu > .ant-menu-submenu-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: calc(100% - 16px);
+  height: var(--mo-nav-item-height);
+  margin: 4px 8px;
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: var(--mo-radius-pill);
+}
+
+.mo-side-menu.ant-menu-inline-collapsed .ant-menu-title-content,
+.mo-side-menu.ant-menu-inline-collapsed .icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  min-width: 16px;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0;
+  line-height: 0;
+}
+
+.mo-side-menu.ant-menu-inline-collapsed .icon-wrapper > span:not(.anticon):not(.icon-custom) {
+  display: none;
+}
+
+.mo-side-menu.ant-menu-inline-collapsed .icon-custom,
+.mo-side-menu.ant-menu-inline-collapsed .anticon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin: 0 !important;
+  font-size: 16px;
+  line-height: 16px;
+}
+
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal) .ant-menu-item::after {
   border: 0;
 }
 
-.mo-side-menu .ant-menu-item:hover,
-.mo-side-menu .ant-menu-submenu-title:hover {
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal):not(.ant-menu-inline-collapsed) .ant-menu-item:hover,
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal):not(.ant-menu-inline-collapsed) .ant-menu-submenu-title:hover {
   color: var(--mo-ink);
   background: transparent;
 }
 
-.mo-side-menu .ant-menu-item-selected {
+// 通用项规则同样写了 background:transparent，选择器必须不低于它，否则选中白底不生效。
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal):not(.ant-menu-inline-collapsed) .ant-menu-item-selected,
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal):not(.ant-menu-inline-collapsed) .ant-menu-item-selected:hover {
   color: var(--mo-ink);
   background: var(--mo-surface);
+  background-color: var(--mo-surface);
   box-shadow: var(--mo-shadow-nav);
 }
 
-.mo-side-menu .ant-menu-item-selected .icon-custom,
-.mo-side-menu .ant-menu-item-selected .anticon {
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected .icon-custom,
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected .anticon {
   color: var(--mo-ink);
 }
 
-// 智能助手：唯一墨黑胶囊
-.mo-side-menu .mo-nav-assistant,
-.mo-side-menu .mo-nav-assistant:hover {
-  color: var(--mo-brand-contrast);
-  background: var(--mo-ink);
-}
-
-.mo-side-menu .mo-nav-assistant .icon-custom,
-.mo-side-menu .mo-nav-assistant .anticon {
-  color: var(--mo-brand-contrast);
-}
-
-.mo-side-menu .ant-menu-item-disabled,
-.mo-side-menu .ant-menu-item-disabled:hover {
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal) .ant-menu-item-disabled,
+.mo-side-menu.ant-menu:not(.ant-menu-horizontal) .ant-menu-item-disabled:hover {
   color: var(--mo-text-tertiary);
   background: transparent;
 }
@@ -144,6 +240,37 @@ a:hover {
 .mo-side-menu .icon-custom svg {
   width: 16px;
   height: 16px;
+}
+
+.mo-side-doc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: calc(100% - 16px);
+  height: var(--mo-nav-item-height);
+  margin: auto 8px 8px;
+  padding: 0 12px;
+  color: var(--mo-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
+  text-decoration: none;
+  border-radius: var(--mo-radius-pill);
+}
+
+.mo-side-doc .anticon {
+  font-size: 16px;
+}
+
+.mo-side-doc:hover {
+  color: var(--mo-ink);
+  background: transparent;
+}
+
+.mo-side-nav.is-collapsed .mo-side-doc {
+  justify-content: center;
+  width: calc(100% - 16px);
+  padding: 0;
 }
 
 .mo-side-nav-bottom {

@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/frontend/static/css/main.7e52770c.css",
-    "main.js": "/frontend/static/js/main.a83e68aa.js",
+    "main.css": "/frontend/static/css/main.669f3865.css",
+    "main.js": "/frontend/static/js/main.a94ef786.js",
     "static/css/152.80e63bbf.chunk.css": "/frontend/static/css/152.80e63bbf.chunk.css",
     "static/js/152.f8a4cd10.chunk.js": "/frontend/static/js/152.f8a4cd10.chunk.js",
     "static/css/316.60f4363b.chunk.css": "/frontend/static/css/316.60f4363b.chunk.css",
     "static/js/316.2f1a40b3.chunk.js": "/frontend/static/js/316.2f1a40b3.chunk.js",
-    "static/css/464.db190ed2.chunk.css": "/frontend/static/css/464.db190ed2.chunk.css",
-    "static/js/464.a4932ab8.chunk.js": "/frontend/static/js/464.a4932ab8.chunk.js",
+    "static/css/216.a9a4f927.chunk.css": "/frontend/static/css/216.a9a4f927.chunk.css",
+    "static/js/216.bdaabd14.chunk.js": "/frontend/static/js/216.bdaabd14.chunk.js",
     "static/js/130.ff7a1751.chunk.js": "/frontend/static/js/130.ff7a1751.chunk.js",
     "static/js/655.9c6cd2e0.chunk.js": "/frontend/static/js/655.9c6cd2e0.chunk.js",
     "static/css/527.06117f8c.chunk.css": "/frontend/static/css/527.06117f8c.chunk.css",
@@ -17,8 +17,8 @@
     "static/js/285.93b34603.chunk.js": "/frontend/static/js/285.93b34603.chunk.js",
     "static/js/895.e5846645.chunk.js": "/frontend/static/js/895.e5846645.chunk.js",
     "static/js/505.aacb4771.chunk.js": "/frontend/static/js/505.aacb4771.chunk.js",
-    "static/js/644.3c9648f3.chunk.js": "/frontend/static/js/644.3c9648f3.chunk.js",
-    "static/js/572.d5870fc0.chunk.js": "/frontend/static/js/572.d5870fc0.chunk.js",
+    "static/js/598.859060ce.chunk.js": "/frontend/static/js/598.859060ce.chunk.js",
+    "static/js/858.b073267c.chunk.js": "/frontend/static/js/858.b073267c.chunk.js",
     "static/js/336.41a0f2dd.chunk.js": "/frontend/static/js/336.41a0f2dd.chunk.js",
     "static/js/220.3ad5db59.chunk.js": "/frontend/static/js/220.3ad5db59.chunk.js",
     "static/js/380.d2c60280.chunk.js": "/frontend/static/js/380.d2c60280.chunk.js",
@@ -30,12 +30,12 @@
     "static/media/findData.png": "/frontend/static/media/findData.b0a05be8356e8f3f8208.png",
     "static/media/emptyBg.png": "/frontend/static/media/emptyBg.15fdf5f39309784ac66e.png",
     "static/media/male.png": "/frontend/static/media/male.2f17f063b1a6dbb35bc6.png",
-    "index.html": "/frontend/index.html",
-    "static/media/modelone-logo.svg": "/frontend/static/media/modelone-logo.50a2581afabdd18c94871d691ca85e30.svg",
-    "static/media/modelone-mark.svg": "/frontend/static/media/modelone-mark.f2a319ae16b1ce365710ba96ff328a16.svg"
+    "static/media/modelone-logo.svg": "/frontend/static/media/modelone-logo.8a75992dd20e43be5b9cda198978daa3.svg",
+    "static/media/modelone-mark.svg": "/frontend/static/media/modelone-mark.0e3de1255978551d8789b878b73a77e7.svg",
+    "index.html": "/frontend/index.html"
   },
   "entrypoints": [
-    "static/css/main.7e52770c.css",
-    "static/js/main.a83e68aa.js"
+    "static/css/main.669f3865.css",
+    "static/js/main.a94ef786.js"
   ]
 }
