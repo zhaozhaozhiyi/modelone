@@ -10,7 +10,7 @@ DISPLAY_FIELDS = ('label', 'describe', 'description', 'hello', 'tips', 'prompt',
 RESOURCE_FIELDS = ('images', 'image', 'download_url', 'url', 'path', 'model_path', 'pic', 'icon', 'gitpath', 'pre_train_model', 'knowledge', 'service_config', 'args', 'expand', 'demo', 'parameter', 'segment', 'dataset', 'notebook', 'job_template', 'pipeline', 'inference', 'service')
 TABLES = ('project', 'dataset', 'images', 'job_template', 'pipeline', 'task', 'service', 'inferenceservice', 'notebook', 'aihub', 'chat', 'model', 'training_model', 'train_model', 'repository', 'metadata_table')
 
-def rewrite(value, resolve_resources, help_url='', display=False):
+def rewrite(value, resolve_resources, help_url='', display=False, brand_name='modelOne'):
     if value is None or not isinstance(value, str):
         return value
     # Deserialize before replacing URLs so quoted configuration stays valid.
@@ -25,11 +25,11 @@ def rewrite(value, resolve_resources, help_url='', display=False):
                     return {key: walk_display(val, key in DISPLAY_FIELDS) for key, val in item.items()}
                 if isinstance(item, list):
                     return [walk(val) for val in item]
-                return rewrite(item, resolve_resources, help_url, display)
+                return rewrite(item, resolve_resources, help_url, display, brand_name)
             def walk_display(item, visible):
                 if isinstance(item, (list, dict)):
                     return walk(item)
-                return rewrite(item, resolve_resources, help_url, visible)
+                return rewrite(item, resolve_resources, help_url, visible, brand_name)
             updated = resolve_resources(walk(parsed))
             return value if updated == parsed else json.dumps(updated, ensure_ascii=False)
     value = re.sub(r'<a\b[^>]*href=["\']https?://(?:github\.com|githubfast\.com)/data-infra/cube-studio[^>]*>.*?</a>', '帮助中心' if help_url else '', value, flags=re.I | re.S)
@@ -38,7 +38,8 @@ def rewrite(value, resolve_resources, help_url='', display=False):
     # Only the known example knowledge file moves; general mount paths stay intact.
     value = value.replace('/pipeline/example/gpt/cube-studio.csv', '/pipeline/example/gpt/modelone.csv')
     if display:
-        value = LEGACY_NAME.sub('modelOne', value)
+        value = LEGACY_NAME.sub(brand_name, value)
+        value = value.replace('modelOne', brand_name)
         value = value.replace('开源社区', '平台支持').replace('开源版本', '当前版本').replace('商业版本', '当前版本').replace('开源版', '当前版本').replace('商业版', '当前版本')
     return value
 
@@ -66,7 +67,7 @@ def migrate_connection(bind, brand, resolve_resources):
             updates = {}
             for field in names:
                 resolved = resolve_resources({field: row[field]})[field]
-                value = rewrite(resolved, resolve_resources, brand.get('help_url', ''), field in DISPLAY_FIELDS or (name == 'metadata_table' and field == 'app'))
+                value = rewrite(resolved, resolve_resources, brand.get('help_url', ''), field in DISPLAY_FIELDS or (name == 'metadata_table' and field == 'app'), brand.get('name') or 'modelOne')
                 # Preserve serialized JSON validity and untouched technical fields.
                 if isinstance(row[field], str) and row[field].lstrip().startswith(('{','[')):
                     try:

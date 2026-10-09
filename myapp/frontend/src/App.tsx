@@ -11,7 +11,7 @@ import { Dropdown, Menu, Spin, Tag } from 'antd';
 import { IRouterConfigPlusItem } from './api/interface/baseInterface';
 import { formatRoute, getDefaultOpenKeys, routerConfigPlus } from './routerConfig';
 import SubMenu from 'antd/lib/menu/SubMenu';
-import { clearWaterNow, drawWater, drawWaterNow, getParam, obj2UrlParam, parseParam2Obj } from './util'
+import { getParam, obj2UrlParam, parseParam2Obj } from './util'
 import { getAppHeaderConfig, getAppMenu, getCustomDialog, userLogout } from './api/kubeflowApi';
 import { IAppHeaderItem, IAppMenuItem, ICustomDialog } from './api/interface/kubeflowInterface';
 import { MenuOutlined } from '@ant-design/icons';
@@ -94,12 +94,6 @@ const AppWrapper = (props: IProps) => {
 
   useEffect(() => {
     if (sourceAppList.length && Object.keys(sourceAppMap).length) {
-      const { pathname } = location
-      if (pathname === '/') {
-        clearWaterNow()
-      } else {
-        drawWaterNow()
-      }
       handleCurrentRoute(sourceAppMap, getValidAppList(sourceAppList))
     }
   }, [location, sourceAppList, sourceAppMap])
@@ -200,7 +194,6 @@ const AppWrapper = (props: IProps) => {
     <Menu>
       {globalConfig.brand.termsUrl && <Menu.Item><a href={globalConfig.brand.termsUrl} target="_blank" rel="noreferrer">用户协议</a></Menu.Item>}
       {globalConfig.brand.privacyUrl && <Menu.Item><a href={globalConfig.brand.privacyUrl} target="_blank" rel="noreferrer">隐私政策</a></Menu.Item>}
-      {globalConfig.brand.copyright && <Menu.Item disabled>{globalConfig.brand.copyright}</Menu.Item>}
       <Menu.Item onClick={() => {
         navigate('/user')
       }}>{"用户中心"}</Menu.Item>
@@ -309,7 +302,7 @@ const AppWrapper = (props: IProps) => {
 
   return (
     <PageExtraContext.Provider value={customDialogInfo}>
-    <div className="content-container fade-in mo-shell">
+    <div className="content-container mo-shell">
       {/* 左侧主导航：浅色导轨（UI 规范 3.0），顶部 Logo/折叠、中部一级菜单、底部空间与用户 */}
       {
         isShowNav === 'false' ? null : <aside className={`mo-side-nav${railCollapsed ? ' is-collapsed' : ''}${mobileNavOpen ? ' is-open' : ''}`}>

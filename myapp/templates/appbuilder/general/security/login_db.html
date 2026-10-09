@@ -326,7 +326,7 @@
 <body>
   <div class="login-shell">
     <main class="login-pane">
-      <img class="brand-logo" src="{{ brand.logo_url }}?v=3x3ink" alt="{{ brand.name }}">
+      <img class="brand-logo" src="{{ brand.logo_url }}" alt="{{ brand.name }}">
       <div class="login-main">
         <h1 id="login-title">欢迎回来</h1>
         <p class="login-lead">使用账号登录，继续数据、开发、训练与推理。</p>
@@ -385,18 +385,17 @@
           <button class="login-submit" type="submit">登录</button>
         </form>
       </div>
-      {% if brand.help_url or brand.support_url or brand.copyright %}
+      {% if brand.help_url or brand.support_url %}
         <footer class="login-footer">
           {% if brand.help_url %}<a href="{{ brand.help_url }}" target="_blank" rel="noreferrer">帮助中心</a>{% endif %}
           {% if brand.help_url and brand.support_url %} · {% endif %}
           {% if brand.support_url %}<a href="{{ brand.support_url }}" target="_blank" rel="noreferrer">技术支持</a>{% endif %}
-          {% if brand.copyright %}<p>{{ brand.copyright }}</p>{% endif %}
         </footer>
       {% endif %}
     </main>
     <aside class="story" aria-labelledby="story-title">
       <div class="story-inner">
-        <p class="eyebrow"><i aria-hidden="true"></i>{{ brand.name }} · 企业级 AI 生产平台</p>
+        <p class="eyebrow"><i aria-hidden="true"></i>{{ brand.name }} · AI 开发与模型生产平台</p>
         <h2 id="story-title">让 AI 从实验进入生产</h2>
         <p class="story-lead">{{ brand.name }} 统一异构算力，贯通数据、训练、推理与智能应用交付。私有化部署下，权限、计量和审计与生产任务放在同一套系统里。</p>
         <div class="features">

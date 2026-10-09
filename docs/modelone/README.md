@@ -9,6 +9,7 @@
 | [安装部署](installation.md) | 配置、构建、Docker 和 Kubernetes |
 | [系统管理](administration.md) | 账号、资源、镜像和配置管理 |
 | [用户操作](user-guide.md) | 开发、训练、模型和智能应用 |
+| [AIHub 功能设计](aihub-functional-design.md) | 模型应用市场、在线体验、API 和分阶段实施 |
 | [升级迁移](upgrade.md) | 数据迁移与兼容标识 |
 | [备份恢复](backup-restore.md) | 一致性备份和恢复演练 |
 | [API 说明](api.md) | 已核实的接口入口 |

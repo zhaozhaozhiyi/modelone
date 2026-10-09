@@ -30,7 +30,7 @@ class Myapp(BaseMyappView):
         data = [
             {
                 "icon": '<svg t="1680839424970" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6272" width="200" height="200"><path d="M512.192 0.704C230.848 0.704 0.704 230.848 0.704 512.192s230.144 511.488 511.488 511.488c281.28 0 511.488-230.208 511.488-511.488C1023.68 230.848 793.472 0.704 512.192 0.704z m0 959.04c-249.344 0-447.552-198.208-447.552-447.552 0-249.344 198.208-447.552 447.552-447.552 249.408 0 447.552 198.208 447.552 447.552 0 249.344-198.144 447.552-447.552 447.552z" fill="" p-id="6273"></path><path d="M576.896 598.848h173.888V526.08H576.896v-51.776c0-24.064 2.24-41.792 6.72-53.184 1.728-4.544 2.624-8.896 2.624-12.992s-6.208-6.08-18.816-6.08h-79.232V716.8H401.6V545.728c0-23.552 2.24-41.088 6.72-52.352 2.304-5.44 3.392-10.112 3.392-14.016 0-3.84-5.824-5.76-17.6-5.76h-77.824v243.2h-100.16v75.008H802.88V716.8H576.896V598.848z m-14.208-382.784c2.624-2.752 6.528-5.696 11.52-8.896 5.056-3.136 7.424-6.784 7.424-10.88 0-3.2-1.728-5.696-5.376-7.488-3.648-1.856-36.608-10.688-98.88-26.624-47.36 123.584-145.728 211.456-295.04 263.744 17.6 14.528 38.72 37.44 63.552 68.8 123.648-61.376 213.632-132.416 270.08-213.312 58.688 87.232 146.176 157.888 262.656 211.968 23.36-36.8 44.48-65.856 63.488-87.232-61.376-14.976-116.224-39.168-164.992-72.512-48.896-33.472-86.976-72.64-114.432-117.568z" fill="" p-id="6274"></path></svg>',
-                "link": "%s/frontend/ai_hub/model_market/model_visual" % request.host_url.strip('/')
+                "link": "%s/aihub/" % request.host_url.strip('/')
             }
         ]
         if conf.get('DOCUMENTATION_URL',''):
@@ -191,11 +191,11 @@ class Myapp(BaseMyappView):
                             },
                             {
                                 "name": 'label_platform',
-                                "title": __('标注平台'),
+                                "title": __('标注管理'),
                                 "icon": "lucide:tags",
-                                "menu_type": "api",
-                                "disable": True,
-                                "url": "/metadata_table_modelview/api/"
+                                "menu_type": "iframe",
+                                "disable": not conf.get('LABEL_STUDIO_ENABLED', False),
+                                "url": conf.get('LABEL_STUDIO_PUBLIC_URL', '/labelstudio/').rstrip('/') + '/projects'
                             }
                         ]
                     },
@@ -444,177 +444,14 @@ class Myapp(BaseMyappView):
                     # },
                 ]
             }
-        # 应用市场
-        aihub = {
-                "name": 'ai_hub',
-                "title": 'AIHub',
-                "isMenu": True,
-                'hidden': 1,
-                "isExpand": True,
-                "icon": "lucide:store",
-                "children": [
-                    {
-                        "name": 'model_market',
-                        "title": __('模型市场'),
-                        "icon": "lucide:store",
-                        "isMenu": True,
-                        'hidden': 0,
-                        "isExpand": True,
-                        "children": [
-                            {
-                                "name": 'model_visual',
-                                "title": __('视觉'),
-                                "icon": "lucide:image",
-                                "menu_type": "api",
-                                "url": "/model_market/visual/api/"
-                            },
-                            {
-                                "name": 'model_voice',
-                                "title": __('语音'),
-                                "icon": "lucide:audio-lines",
-                                "menu_type": "api",
-                                "url": "/model_market/voice/api/"
-                            },
-                            {
-                                "name": 'model_language',
-                                "title": __('自然语言'),
-                                "icon": "lucide:languages",
-                                "menu_type": "api",
-                                "url": "/model_market/language/api/"
-                            },
-                            {
-                                "name": 'model_multimodal',
-                                "title": __('多模态'),
-                                "icon": "lucide:layers",
-                                "menu_type": "api",
-                                "url": "/model_market/multimodal/api/"
-                            },
-                            {
-                                "name": 'model_aigc',
-                                "title": __('大模型'),
-                                "icon": "lucide:sparkles",
-                                "menu_type": "api",
-                                "url": "/model_market/aigc/api/"
-                            },
-                        ]
-                    },
-                    {
-                        "name": 'other',
-                        "title": __('智能体'),
-                        "icon": "lucide:bot",
-                        "isMenu": True,
-                        "isExpand": True,
-                        "children": [
-                            {
-                                "name": 'chat',
-                                "title": __('智能对话'),
-                                "icon": "lucide:message-square",
-                                "menu_type": "api",
-                                "url": '/chat_modelview/api/',
-                                "disable": True
-                            },
-                            {
-                                "name": 'chat-plugin',
-                                "title": __('Agent配置'),
-                                "icon": "lucide:bot",
-                                "menu_type": "api",
-                                "disable": True,
-                                "url": '/chat_plugin_modelview/api/',
-                            }
-                        ]
-                    },
-                    {
-                        "name": 'resource_rental',
-                        "title": __('算力租赁'),
-                        "icon": "lucide:server-cog",
-                        "isMenu": True,
-                        "isExpand": True,
-                        "children": [
-                            {
-                                # innerRoute 根据 name 匹配前端 innerDynamicRouterConfigMap 的 key
-                                "name": 'compute_leasing',
-                                "icon": "lucide:server-cog",
-                                "title": __('算力市场'),
-                                "menu_type": "innerRoute",
-                                "disable": True
-                            },
-                            {
-                                "name": 'storage_lease',
-                                "icon": "lucide:hard-drive",
-                                "title": __('存储资源'),
-                                "menu_type": "innerRoute",
-                                "url": "/storageLease",
-                                "disable": True
-                            },
-                            {
-                                "name": 'resource_instance',
-                                "title": __('实例管理'),
-                                "icon": "lucide:monitor",
-                                "menu_type": "api",
-                                "disable": True
-                            }
-                        ]
-                    },
-                    {
-                        "name": 'cost',
-                        "title": __('费用'),
-                        "icon": "lucide:wallet",
-                        "isMenu": True,
-                        "isExpand": True,
-                        "children": [
-                            {
-                                "name": 'pod',
-                                "title": __('计量计费'),
-                                "icon": "lucide:receipt",
-                                "menu_type": "api",
-                                "url": "/pod_modelview/api/",
-                                "disable": True
-                            },
-                            {
-                                "name": 'bill',
-                                "title": __('账单支付'),
-                                "icon": "lucide:credit-card",
-                                "menu_type": "api",
-                                "url": "/bill_modelview/api/",
-                                "disable": True
-                            },
-                            {
-                                "name": 'recharge',
-                                "title": __('充值'),
-                                "icon": "lucide:wallet",
-                                "menu_type": "innerRoute",
-                                "url": "/recharge",
-                                "disable": True
-                            }
-                        ]
-                    },
-                    {
-                        "name": 'resource',
-                        "title": __('资源配置(管理员)'),
-                        "icon": "lucide:settings",
-                        "isMenu": True,
-                        "isExpand": True,
-                        "children": [
-                            {
-                                "name": 'resource-node',
-                                "title": __('机器资源'),
-                                "icon": "lucide:cpu",
-                                "menu_type": "api",
-                                "url": "/node_modelview/api/" if is_admin else '',
-                                "disable": True
-                            },
-                            {
-                                "name": 'resource-store',
-                                "title": __('存储资源'),
-                                "icon": "lucide:hard-drive",
-                                "menu_type": "api",
-                                "url": "/storage_modelview/api/" if is_admin else '',
-                                "disable": True
-                            }
-                        ]
-                    }
-                ]
-            }
+        aihub_portal = {
+            "name": "aihub_portal",
+            "title": "AIHub",
+            "icon": "lucide:store",
+            "isMenu": True,
+            "menu_type": "out_link",
+            "url": "/aihub/",
+        }
         # chat
         # 隐藏菜单
         chat= {
@@ -705,7 +542,7 @@ class Myapp(BaseMyappView):
         # if conf.get('BABEL_DEFAULT_LOCALE','zh')=='en':
         #     menu = [projetc, data, dev, ml, service]
         # else:
-        menu = [projetc, data, dev, ml, service, aihub, chat]
+        menu = [projetc, data, dev, ml, service, aihub_portal, chat]
 
         if conf.get('MENU', []):
             menu = conf.get('MENU', [])

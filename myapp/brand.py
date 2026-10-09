@@ -2,7 +2,6 @@
 import json
 import os
 import re
-from datetime import date
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -13,10 +12,11 @@ COLOR = re.compile(r'^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$')
 FONT_FAMILY = re.compile(r'^[\w ,._\-\"\']{1,200}$', re.UNICODE)
 DOMAIN = re.compile(r'^(?:\*\.)?(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$')
 KUBERNETES_NAME = re.compile(r'^[a-z0-9](?:[-a-z0-9]{0,251}[a-z0-9])?$')
+DISPLAY_NAME = re.compile(r'(?<![A-Za-z0-9_/.:-])(?:modelOne|CubeStudio|cube[-_ ]?studio)(?![A-Za-z0-9_/.:-])', re.I)
+DISPLAY_FIELDS = frozenset(('label', 'describe', 'description', 'hello', 'tips', 'prompt', 'doc', 'producer', 'source', 'title'))
 FIELDS = {
     'name': 'name', 'internal_name': 'internalName', 'title': 'title',
-    'description': 'description', 'copyright_holder': 'copyrightHolder',
-    'copyright_year': 'copyrightYear', 'support_url': 'supportUrl',
+    'description': 'description', 'support_url': 'supportUrl',
     'help_url': 'helpUrl', 'terms_url': 'termsUrl', 'privacy_url': 'privacyUrl',
     'image_registry': 'imageRegistry', 'asset_base_url': 'assetBaseUrl',
     'deployment_name': 'deploymentName', 'public_domain': 'publicDomain',
@@ -46,17 +46,43 @@ def load_brand():
         raise ValueError('tls_secret_name must be a Kubernetes DNS name')
     if brand['tls_secret_name'] and not brand['public_domain']:
         raise ValueError('tls_secret_name requires public_domain')
-    brand['copyright_year'] = brand['copyright_year'] or str(date.today().year)
-    brand['copyright'] = ('Copyright © %s %s. All Rights Reserved.' % (brand['copyright_year'], brand['copyright_holder'])) if brand['copyright_holder'] else ''
     return brand
 
 BRAND = load_brand()
 
 
+def render_brand(value, brand=None):
+    """Render user-visible product names from the active brand config."""
+    active = brand or BRAND
+
+    def render(item, field=None):
+        if isinstance(item, dict):
+            return {key: render(value, key) for key, value in item.items()}
+        if isinstance(item, list):
+            return [render(value, field) for value in item]
+        if not isinstance(item, str):
+            return item
+        if field is not None and field not in DISPLAY_FIELDS:
+            return item
+        tokens = {
+            '{{brand.name}}': active.get('name', ''),
+            '{{ brand.name }}': active.get('name', ''),
+            '{{brand.title}}': active.get('title', ''),
+            '{{ brand.title }}': active.get('title', ''),
+            '{{brand.description}}': active.get('description', ''),
+            '{{ brand.description }}': active.get('description', ''),
+        }
+        for token, replacement in tokens.items():
+            item = item.replace(token, replacement)
+        return DISPLAY_NAME.sub(active.get('name') or 'modelOne', item)
+
+    return render(value)
+
+
 def validate_release_settings(include_links=True):
     required = ['image_registry', 'asset_base_url']
     if include_links:
-        required += ['copyright_holder', 'help_url', 'support_url', 'terms_url', 'privacy_url']
+        required += ['help_url', 'support_url', 'terms_url', 'privacy_url']
     missing = [key for key in required if not BRAND[key].strip()]
     if missing:
         raise ValueError('Missing enterprise settings: ' + ', '.join(missing))
@@ -113,7 +139,7 @@ def public_brand():
     # Explicit allowlist: infrastructure settings never reach the browser.
     return {field: BRAND[key] for key, field in FIELDS.items() if key not in (
         'image_registry', 'asset_base_url', 'deployment_name', 'public_domain', 'tls_secret_name'
-    )} | {'assetBaseUrl': BRAND['asset_base_url'], 'copyright': BRAND['copyright']}
+    )} | {'assetBaseUrl': BRAND['asset_base_url']}
 
 
 BROWSER_APPS = {
@@ -127,12 +153,13 @@ def public_manifest(app_name=None):
     """Build static defaults or a runtime manifest with an explicit app scope."""
     if app_name is not None and app_name not in BROWSER_APPS:
         raise ValueError('Unknown browser application')
-    icon = BRAND['favicon_url'] or '/static/assets/modelone/modelone-mark.svg'
+    icon = BRAND['favicon_url'] or '/static/assets/modelone/modelone-mark.svg?v=20261004-3x3ink'
     # The default mark is copied into each frontend's public root. Keeping it
     # relative lets standalone Nginx mounts resolve the icon without the
     # backend's /static route; custom enterprise/CDN icons stay absolute.
-    if app_name is None and icon == '/static/assets/modelone/modelone-mark.svg':
-        icon = 'modelone-mark.svg'
+    icon_parts = urlsplit(icon)
+    if app_name is None and icon_parts.path == '/static/assets/modelone/modelone-mark.svg':
+        icon = 'modelone-mark.svg' + (('?' + icon_parts.query) if icon_parts.query else '')
     icon_data = {'src': icon}
     extension = Path(urlsplit(icon).path).suffix.lower()
     mime_types = {'.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',

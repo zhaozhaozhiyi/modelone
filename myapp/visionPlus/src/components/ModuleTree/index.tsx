@@ -67,7 +67,7 @@ const ModuleTree: React.FC = () => {
         imagesName: ele.images.name,
         createdBy: ele.created_by.username,
         lastChanged: ele.changed_on,
-        expand: JSON.parse(ele.expand),
+        expand: ele.expand ? JSON.parse(ele.expand) : {},
       };
       if (!dataSet.has(ele.project.id)) {
         dataSet.set(ele.project.id, {
@@ -106,6 +106,7 @@ const ModuleTree: React.FC = () => {
             templte_common_ui_config: common,
             args: {},
             expand: {},
+            icon: tem.icon || tem.templte_ui_config?.icon,
             template: tem.template_name,
             'template-group': key,
             color: ColorList[flag % ColorList.length]

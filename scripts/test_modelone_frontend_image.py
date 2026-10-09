@@ -148,11 +148,11 @@ def run(args):
             report['checks'].append('proxy preserves absent, null, same-origin, foreign and WebSocket Origin headers plus Host, authorization and cookies')
             for base in ('/frontend', '/static/appbuilder/vison', '/static/appbuilder/visonPlus'):
                 _, html = fetch(base + '/index.html')
-                if '<title>modelOne' not in html or re.search(r'cube[-_ ]?studio|开源版|商业版', html, re.I):
+                if '<title>AI开发运营平台' not in html or re.search(r'cube[-_ ]?studio|开源版|商业版', html, re.I):
                     raise AssertionError('Unexpected branding: ' + base)
                 content_type, manifest = fetch(base + '/manifest.json')
-                if 'json' not in content_type or json.loads(manifest)['short_name'] != 'modelOne':
-                    raise AssertionError('Manifest must be JSON with modelOne metadata: ' + base)
+                if 'json' not in content_type or json.loads(manifest)['short_name'] != 'AI开发运营平台':
+                    raise AssertionError('Manifest must use the configured product name: ' + base)
                 for icon in json.loads(manifest)['icons']:
                     icon_url = urlsplit(icon['src'])
                     if icon_url.scheme or icon_url.netloc:

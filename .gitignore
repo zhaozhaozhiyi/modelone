@@ -45,3 +45,4 @@ myapp/config.py
 **/LC_MESSAGES/*.mo
 
 /images/jupyter-notebook/*/modelone-examples/
+/external/label-studio/

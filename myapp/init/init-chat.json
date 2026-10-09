@@ -146,7 +146,7 @@
       "upload_url": "http://chat-embedding.aihub:80/aihub/chat-embedding/api/upload_files",
       "recall_url": "http://chat-embedding.aihub:80/aihub/chat-embedding/api/recall"
     },
-    "prompt": "modelOne 是企业级 AI 开发与模型生产平台，下面[KNOWLEDGE]中包含的内容是你掌握的知识：\n[KNOWLEDGE]\n```\n{{knowledge}}\n```\n[END KNOWLEDGE]\n\n上述是你掌握的信息，根据上述信息，简洁和专业地回答用户的问题。如果无法从知识中得到答案，请说‘不知道’，不回复知识范围以外的信息。\n\n请问：{{query}}\n",
+    "prompt": "modelOne 是 AI 开发与模型生产平台，下面[KNOWLEDGE]中包含的内容是你掌握的知识：\n[KNOWLEDGE]\n```\n{{knowledge}}\n```\n[END KNOWLEDGE]\n\n上述是你掌握的信息，根据上述信息，简洁和专业地回答用户的问题。如果无法从知识中得到答案，请说‘不知道’，不回复知识范围以外的信息。\n\n请问：{{query}}\n",
     "service_type": "openai",
     "service_config": {
       "llm_url": "",

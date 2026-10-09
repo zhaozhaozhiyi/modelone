@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/HumanSignal/label-studio.git",
+  "tag": "1.23.2",
+  "commit": "df96d79183156e556d91825d15fa7721f1145e1a",
+  "license": "Apache-2.0",
+  "source_directory": "external/label-studio",
+  "image": "heartexlabs/label-studio:1.23.2"
+}

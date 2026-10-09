@@ -20,6 +20,30 @@ brand = load('brand')
 migration = load('brand_migration')
 
 class BrandTests(unittest.TestCase):
+    def test_media_label_menu_uses_management_name(self):
+        source = (ROOT / 'myapp/views/home.py').read_text(encoding='utf-8')
+        self.assertIn('"name": \'label_platform\'', source)
+        self.assertIn('"title": __(\'标注管理\')', source)
+        self.assertNotIn('"title": __(\'标注平台\')', source)
+        self.assertIn(".rstrip('/') + '/projects'", source)
+
+    def test_iframe_page_has_branded_loading_state(self):
+        component = (ROOT / 'myapp/frontend/src/pages/IframeTemplate.tsx').read_text(encoding='utf-8')
+        styles = (ROOT / 'myapp/frontend/src/pages/IframeTemplate.less').read_text(encoding='utf-8')
+        app = (ROOT / 'myapp/frontend/src/App.tsx').read_text(encoding='utf-8')
+        loader = (ROOT / 'myapp/frontend/src/components/LoadingStar/LoadingStar.tsx').read_text(encoding='utf-8')
+        loader_styles = (ROOT / 'myapp/frontend/src/components/LoadingStar/LoadingStar.less').read_text(encoding='utf-8')
+        self.assertIn("import LoadingStar", component)
+        self.assertIn('onLoad={() => setLoading(false)}', component)
+        self.assertIn('aria-label="加载中"', loader)
+        self.assertNotIn('<img', loader)
+        self.assertNotIn('<span>加载中</span>', component)
+        self.assertIn('.mo-iframe-loading', styles)
+        self.assertIn('width: 24px', loader_styles)
+        self.assertIn('background: #f5f6f7', styles)
+        self.assertIn('className="content-container mo-shell"', app)
+        self.assertNotIn('className="content-container fade-in mo-shell"', app)
+
     def test_migrations_have_one_head_without_starting_application(self):
         from alembic.script import ScriptDirectory
         scripts = ScriptDirectory(str(ROOT / 'myapp/migrations'))
@@ -100,6 +124,23 @@ class BrandTests(unittest.TestCase):
             self.assertIn(value, template)
         self.assertNotIn('CubeStudio', template)
 
+    def test_product_ui_omits_copyright_and_enterprise_copy(self):
+        config = json.loads((ROOT / 'config/modelone.json').read_text(encoding='utf-8'))
+        self.assertNotIn('copyrightHolder', config)
+        self.assertNotIn('copyrightYear', config)
+        self.assertNotIn('企业', config['title'])
+        self.assertNotIn('企业', config['description'])
+        self.assertNotIn('copyright', brand.public_brand())
+        for relative in (
+            'myapp/templates/appbuilder/general/security/login_db.html',
+            'myapp/templates/modelone-error.html',
+            'myapp/templates/appbuilder/init.html',
+            'myapp/frontend/src/App.tsx',
+        ):
+            source = (ROOT / relative).read_text(encoding='utf-8')
+            self.assertNotIn('brand.copyright', source, relative)
+            self.assertNotIn('Copyright ©', source, relative)
+
     def test_frontend_theme_uses_configured_primary_color(self):
         source = (ROOT / 'myapp/frontend/src/theme.ts').read_text(encoding='utf-8')
         self.assertIn("import { brand } from './brand';", source)
@@ -122,6 +163,12 @@ class BrandTests(unittest.TestCase):
         self.assertIn("link[rel=\"apple-touch-icon\"]", source)
         self.assertIn('themeColor.content = b.primaryColor', source)
         self.assertIn("--mo-brand-secondary", source)
+        for output in ('frontend', 'vison', 'visonPlus'):
+            index = (ROOT / 'myapp/static/appbuilder' / output / 'index.html').read_text(encoding='utf-8')
+            self.assertIn('modelone-mark.svg?v=20261010-ai-platform', index, output)
+            self.assertNotRegex(index, r'modelone-mark\.svg(?=["\'])', output)
+            self.assertIn('<title>' + brand.BRAND['title'] + '</title>', index, output)
+            self.assertIn('content="' + brand.BRAND['description'] + '"', index, output)
 
     def test_pwa_manifest_uses_shared_brand_tokens(self):
         before = dict(brand.BRAND)
@@ -129,7 +176,7 @@ class BrandTests(unittest.TestCase):
             brand.BRAND.update(
                 name='Acme modelOne',
                 title='Acme modelOne｜AI 平台',
-                description='Acme 企业级 AI 平台',
+                description='Acme AI 平台',
                 favicon_url='https://cdn.example.test/modelone/icon.svg',
                 primary_color='#102030',
                 login_background_color='#f0f2f4',
@@ -137,7 +184,7 @@ class BrandTests(unittest.TestCase):
             manifest = brand.public_manifest()
             self.assertEqual(manifest['short_name'], 'Acme modelOne')
             self.assertEqual(manifest['name'], 'Acme modelOne｜AI 平台')
-            self.assertEqual(manifest['description'], 'Acme 企业级 AI 平台')
+            self.assertEqual(manifest['description'], 'Acme AI 平台')
             self.assertEqual(manifest['icons'][0]['src'], 'https://cdn.example.test/modelone/icon.svg')
             self.assertEqual(manifest['theme_color'], '#102030')
             self.assertEqual(manifest['background_color'], '#f0f2f4')
@@ -150,7 +197,33 @@ class BrandTests(unittest.TestCase):
             self.assertEqual(manifest['name'], brand.BRAND['title'], app)
             self.assertEqual(manifest['theme_color'], brand.BRAND['primary_color'], app)
             self.assertEqual(manifest['background_color'], brand.BRAND['login_background_color'], app)
-            self.assertEqual(manifest['icons'][0]['src'], 'modelone-mark.svg', app)
+            self.assertEqual(manifest['icons'][0]['src'], 'modelone-mark.svg?v=20261010-ai-platform', app)
+
+    def test_configured_name_renders_visible_runtime_defaults(self):
+        custom = dict(brand.BRAND, name='Acme AI', title='Acme AI｜生产平台',
+                      description='Acme 企业 AI 平台')
+        rendered = brand.render_brand({
+            'name': 'modelone',
+            'label': 'modelOne',
+            'hello': '这里是 modelOne 平台支持，请问有什么可以帮你的么？',
+            'prompt': 'Cube Studio 是 {{ brand.description }}',
+            'knowledge': {'file': '/mnt/admin/pipeline/example/gpt/modelone.csv'},
+        }, custom)
+        self.assertEqual(rendered['name'], 'modelone')
+        self.assertEqual(rendered['label'], 'Acme AI')
+        self.assertEqual(rendered['hello'], '这里是 Acme AI 平台支持，请问有什么可以帮你的么？')
+        self.assertEqual(rendered['prompt'], 'Acme AI 是 Acme 企业 AI 平台')
+        self.assertEqual(rendered['knowledge']['file'], '/mnt/admin/pipeline/example/gpt/modelone.csv')
+        self.assertEqual(migration.rewrite('Cube Studio 和 modelOne', brand.resolve_resources, display=True,
+                                           brand_name='Acme AI'), 'Acme AI 和 Acme AI')
+
+        cli = (ROOT / 'myapp/cli.py').read_text(encoding='utf-8')
+        self.assertIn('render_brand(resolve_resources(content))', cli)
+        app = (ROOT / 'myapp/frontend/src/App.tsx').read_text(encoding='utf-8')
+        util = (ROOT / 'myapp/frontend/src/util.tsx').read_text(encoding='utf-8')
+        self.assertNotIn('drawWater', app)
+        self.assertNotIn('drawWaterMark', util)
+        self.assertNotIn('__wm', util)
 
     def test_login_and_error_templates_use_configured_visual_tokens(self):
         login = (ROOT / 'myapp/templates/appbuilder/general/security/login_db.html').read_text(encoding='utf-8')
@@ -173,20 +246,21 @@ class BrandTests(unittest.TestCase):
                 self.assertEqual(icon.get('sizes'), 'any' if expected == 'image/svg+xml' else None)
 
     def test_proxy_error_pages_use_escaped_brand_config_without_backend_assets(self):
-        with patch.dict(brand.BRAND, title='modelOne <Operations>', copyright='Copyright © Validation & Co',
-                        primary_color='#123456', support_url='https://support.example.test/?a=1&b=2'):
+        with patch.dict(brand.BRAND, title='modelOne <Operations>', primary_color='#123456',
+                        support_url='https://support.example.test/?a=1&b=2'):
             pages = brand.proxy_error_pages()
             self.assertEqual(set(pages), {'500.html', '502.html', '503.html', '504.html'})
             for name, html in pages.items():
                 self.assertIn('<title>modelOne &lt;Operations&gt;</title>', html)
-                self.assertIn('Copyright © Validation &amp; Co', html)
+                self.assertNotIn('Copyright ©', html)
+                self.assertNotIn('<footer>', html)
                 self.assertIn('https://support.example.test/?a=1&amp;b=2', html)
                 self.assertIn('<p class="code">' + name[:3] + '</p>', html)
                 self.assertIn('--ink: #123456', html)
                 self.assertIn('"PingFang SC"', html)
                 self.assertNotIn('&#34;', html)
                 self.assertNotIn('<script', html)
-        with patch.dict(brand.BRAND, support_url='', copyright=''):
+        with patch.dict(brand.BRAND, support_url=''):
             html = brand.proxy_error_pages()['502.html']
             self.assertNotIn('联系技术支持', html)
             self.assertNotIn('<footer>', html)
@@ -211,7 +285,7 @@ class BrandTests(unittest.TestCase):
                 self.assertEqual(manifest['start_url'], scope)
                 self.assertEqual(manifest['id'], scope)
                 self.assertEqual(manifest['scope'], scope)
-                self.assertEqual(manifest['icons'][0]['src'], '/static/assets/modelone/modelone-mark.svg')
+                self.assertEqual(manifest['icons'][0]['src'], '/static/assets/modelone/modelone-mark.svg?v=20261010-ai-platform')
             script = client.get('/myapp/brand.js')
             self.assertEqual(script.status_code, 200)
             self.assertEqual(script.headers['Cache-Control'], 'no-store')
@@ -411,7 +485,7 @@ class BrandTests(unittest.TestCase):
         inventory_script = ROOT / 'scripts/resource_inventory.py'
         with tempfile.TemporaryDirectory() as folder:
             config = json.loads(config_path.read_text())
-            for key in ('imageRegistry', 'assetBaseUrl', 'copyrightHolder', 'helpUrl', 'supportUrl', 'termsUrl', 'privacyUrl'):
+            for key in ('imageRegistry', 'assetBaseUrl', 'helpUrl', 'supportUrl', 'termsUrl', 'privacyUrl'):
                 config[key] = ''
             config_file = Path(folder) / 'modelone.json'
             config_file.write_text(json.dumps(config))
@@ -438,7 +512,6 @@ class BrandTests(unittest.TestCase):
             env.update({
                 'MODELONE_IMAGE_REGISTRY': 'registry.example.test/team',
                 'MODELONE_ASSET_BASE_URL': 'https://assets.example.test/modelone',
-                'MODELONE_COPYRIGHT_HOLDER': 'Validation Company',
                 'MODELONE_HELP_URL': 'https://help.example.test/modelone',
                 'MODELONE_SUPPORT_URL': 'https://support.example.test/modelone',
                 'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',
@@ -470,7 +543,7 @@ class BrandTests(unittest.TestCase):
             self.assertEqual(errors['kind'], 'ConfigMap')
             for filename, html in errors['data'].items():
                 self.assertEqual((output / 'frontend-errors' / filename).read_text(), html)
-                self.assertIn('Validation Company', html)
+                self.assertNotIn('Copyright ©', html)
                 self.assertIn('https://support.example.test/modelone', html)
             frontend = next(doc for doc in manifests if doc['kind'] == 'Deployment'
                             and doc['metadata']['name'] == 'kubeflow-dashboard-frontend')['spec']['template']['spec']
@@ -492,7 +565,6 @@ class BrandTests(unittest.TestCase):
             env.update({
                 'MODELONE_IMAGE_REGISTRY': 'registry.example.test/team',
                 'MODELONE_ASSET_BASE_URL': 'https://assets.example.test/modelone',
-                'MODELONE_COPYRIGHT_HOLDER': 'Validation Company',
                 'MODELONE_HELP_URL': 'https://help.example.test/modelone',
                 'MODELONE_SUPPORT_URL': 'https://support.example.test/modelone',
                 'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',
@@ -513,7 +585,6 @@ class BrandTests(unittest.TestCase):
             env.update({
                 'MODELONE_IMAGE_REGISTRY': 'registry.example.test/team',
                 'MODELONE_ASSET_BASE_URL': 'https://assets.example.test/modelone',
-                'MODELONE_COPYRIGHT_HOLDER': 'Validation Company',
                 'MODELONE_HELP_URL': 'https://help.example.test/modelone',
                 'MODELONE_SUPPORT_URL': 'https://support.example.test/modelone',
                 'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',
@@ -546,7 +617,6 @@ class BrandTests(unittest.TestCase):
             env.update({
                 'MODELONE_IMAGE_REGISTRY': 'registry.example.test/team',
                 'MODELONE_ASSET_BASE_URL': 'https://assets.example.test/modelone',
-                'MODELONE_COPYRIGHT_HOLDER': 'Validation Company',
                 'MODELONE_HELP_URL': 'https://help.example.test/modelone',
                 'MODELONE_SUPPORT_URL': 'https://support.example.test/modelone',
                 'MODELONE_TERMS_URL': 'https://www.example.test/modelone/terms',

@@ -34,6 +34,8 @@ CONFIG_MODULE = os.environ.get("MYAPP_CONFIG", "myapp.config")
 app.config.from_object(CONFIG_MODULE)
 from myapp.auth_config import security_config
 app.config.update(security_config())
+from myapp.label_studio import integration_config
+app.config.update(integration_config())
 conf = app.config
 
 from myapp import brand as modelone_brand
@@ -272,7 +274,7 @@ def check_login():
     if request.endpoint in ('modelone_brand_config', 'modelone_web_manifest'):
         return
     # /static下面不少地方静态文件直接访问。所以不能加权限限制
-    static_urls = ['/static/', '/logout', '/login','/register', '/health', '/wechat','/wework', '/dingtalk','/proxy','/message_modelview/api/']
+    static_urls = ['/static/', '/aihub/assets/', '/logout', '/login','/register', '/health', '/wechat','/wework', '/dingtalk','/proxy','/message_modelview/api/']
     for url in static_urls:
         if url in request.path:
             return
@@ -295,6 +297,10 @@ def check_login():
             except Exception as e:
                 print(e)
 
+        if request.path.startswith('/aihub/api/'):
+            return {'error': {'code': 'unauthorized', 'message': '请先登录'}}, 401
+        if request.path == '/aihub/':
+            return redirect('/login/?next=/aihub/')
         abort(401)
 
     # # 判断静态文件只能访问自己的静态文件，这样代码层面的访问就都要加请求header了，比如dataset任务模板

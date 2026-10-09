@@ -1,0 +1,164 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: label-studio-data
+  namespace: kubeflow
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: label-studio-db
+  namespace: kubeflow
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: label-studio-db
+  namespace: kubeflow
+spec:
+  selector:
+    app: modelone-label-studio-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: label-studio-db
+  namespace: kubeflow
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: modelone-label-studio-db
+  template:
+    metadata:
+      labels:
+        app: modelone-label-studio-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - {name: POSTGRES_DB, value: labelstudio}
+            - {name: POSTGRES_USER, value: labelstudio}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: modelone-label-studio
+                  key: LABEL_STUDIO_DB_PASSWORD
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+          ports:
+            - {containerPort: 5432}
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, labelstudio, -d, labelstudio]
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: '1', memory: 1Gi}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: label-studio-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: label-studio
+  namespace: kubeflow
+spec:
+  selector:
+    app: modelone-label-studio
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: label-studio
+  namespace: kubeflow
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: modelone-label-studio
+  template:
+    metadata:
+      labels:
+        app: modelone-label-studio
+    spec:
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: label-studio
+          image: heartexlabs/label-studio:1.23.2
+          env:
+            - {name: DJANGO_DB, value: postgresql}
+            - {name: POSTGRE_NAME, value: labelstudio}
+            - {name: POSTGRE_USER, value: labelstudio}
+            - {name: POSTGRE_HOST, value: label-studio-db}
+            - {name: POSTGRE_PORT, value: '5432'}
+            - name: POSTGRE_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: modelone-label-studio, key: LABEL_STUDIO_DB_PASSWORD}
+            - name: LABEL_STUDIO_HOST
+              valueFrom:
+                secretKeyRef: {name: modelone-label-studio, key: LABEL_STUDIO_HOST}
+            - name: LABEL_STUDIO_USERNAME
+              valueFrom:
+                secretKeyRef: {name: modelone-label-studio, key: LABEL_STUDIO_ADMIN_EMAIL}
+            - name: LABEL_STUDIO_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: modelone-label-studio, key: LABEL_STUDIO_ADMIN_PASSWORD}
+            - name: LABEL_STUDIO_SESSION_COOKIE_SECURE
+              valueFrom:
+                secretKeyRef: {name: modelone-label-studio, key: LABEL_STUDIO_COOKIE_SECURE}
+            - name: LABEL_STUDIO_CSRF_COOKIE_SECURE
+              valueFrom:
+                secretKeyRef: {name: modelone-label-studio, key: LABEL_STUDIO_COOKIE_SECURE}
+            - {name: LABEL_STUDIO_DISABLE_SIGNUP_WITHOUT_LINK, value: 'true'}
+            - {name: LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED, value: 'false'}
+            - {name: LABEL_STUDIO_COLLECT_ANALYTICS, value: 'false'}
+            - {name: LABEL_STUDIO_SENTRY_DSN, value: ''}
+            - {name: LABEL_STUDIO_FRONTEND_SENTRY_DSN, value: ''}
+          ports:
+            - {containerPort: 8080}
+          startupProbe:
+            httpGet: {path: /health, port: 8080}
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /health, port: 8080}
+            periodSeconds: 15
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            periodSeconds: 30
+            failureThreshold: 5
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {cpu: '2', memory: 2Gi}
+          volumeMounts:
+            - {name: data, mountPath: /label-studio/data}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: label-studio-data

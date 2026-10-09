@@ -1,0 +1,426 @@
+/* Compact the Label Studio 1.23.2 UI when it is embedded in modelOne.
+   Keep project creation, project cards, breadcrumbs, and the annotation editor. */
+
+:root {
+  --modelone-bg: #f5f6f7;
+  --modelone-surface: #ffffff;
+  --modelone-surface-muted: #f0f2f4;
+  --modelone-surface-hover: #f8f9fa;
+  --modelone-surface-selected: #e9eaec;
+  --modelone-border: #e5e6eb;
+  --modelone-border-strong: #c9cdd4;
+  --modelone-ink: #17191d;
+  --modelone-text-secondary: #50545c;
+  --modelone-text-tertiary: #737985;
+  --modelone-primary: #17191d;
+  --modelone-primary-hover: #262a31;
+  --modelone-radius: 4px;
+  --modelone-font-sans: Inter, "PingFang SC", "Microsoft YaHei",
+    "Noto Sans CJK SC", sans-serif;
+}
+
+body,
+.app-wrapper {
+  font-family: var(--modelone-font-sans) !important;
+  font-size: 14px !important;
+  color: var(--modelone-ink) !important;
+  background: var(--modelone-bg) !important;
+}
+
+html,
+body,
+.app-wrapper,
+.lsf-content-wrapper,
+.lsf-content-wrapper__body,
+.lsf-content-wrapper__content {
+  min-height: 100% !important;
+  background: var(--modelone-bg) !important;
+}
+
+/* Some Label Studio typography classes set their own Figtree font and
+   oversized heading scale. Embedded pages inherit modelOne's admin type. */
+.lsf-content-wrapper *:not(pre):not(code):not(textarea) {
+  font-family: var(--modelone-font-sans) !important;
+}
+.lsf-content-wrapper h1,
+.lsf-content-wrapper h2,
+.lsf-content-wrapper h3,
+.lsf-content-wrapper [class*="typography-headline"] {
+  color: var(--modelone-ink) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+.lsf-content-wrapper h1,
+.lsf-content-wrapper [class*="headline-large"] {
+  font-size: 24px !important;
+  line-height: 32px !important;
+}
+.lsf-content-wrapper h2,
+.lsf-content-wrapper [class*="headline-medium"] {
+  font-size: 20px !important;
+  line-height: 28px !important;
+}
+.lsf-content-wrapper h3,
+.lsf-content-wrapper [class*="headline-small"] {
+  font-size: 16px !important;
+  line-height: 24px !important;
+}
+
+/* Match modelOne's compact admin scale instead of Label Studio's spacious
+   standalone layout. Keep the editor's controls usable while reducing chrome. */
+.lsf-content-wrapper,
+.lsf-content-wrapper main,
+.lsf-content-wrapper .p-6 {
+  font-size: 14px !important;
+}
+.lsf-content-wrapper main.p-6,
+.lsf-content-wrapper main[class*="p-"] {
+  padding: 16px !important;
+}
+.lsf-content-wrapper [class*="gap-6"] {
+  gap: 16px !important;
+}
+.lsf-content-wrapper [class*="gap-4"] {
+  gap: 12px !important;
+}
+.lsf-content-wrapper [class*="p-4"] {
+  padding: 12px !important;
+}
+.lsf-content-wrapper [class*="text-2xl"],
+.lsf-content-wrapper [class*="headline-small"] {
+  font-size: 20px !important;
+  line-height: 28px !important;
+}
+.lsf-content-wrapper button {
+  font-size: 14px !important;
+  min-height: 32px;
+}
+.lsf-content-wrapper input,
+.lsf-content-wrapper textarea,
+.lsf-content-wrapper select {
+  font-size: 14px !important;
+}
+.lsf-menu-header {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 20px !important;
+  background: var(--modelone-surface) !important;
+  border-bottom: 1px solid var(--modelone-border) !important;
+  box-shadow: none !important;
+  color: var(--modelone-ink) !important;
+}
+
+/* modelOne already supplies the product identity, primary navigation, and
+   session lifecycle. Label Studio's own account menu (password, local logout,
+   notification promo) is redundant under platform SSO. */
+.lsf-menu-header__logo,
+.lsf-menu-header__hotkeys,
+.lsf-menu-header__user,
+button[class*="themeToggle--"] {
+  display: none !important;
+}
+
+.lsf-menu-header__trigger {
+  display: none !important;
+}
+
+/* The project breadcrumb is the only Label Studio context that remains in
+   the embedded header. Let it occupy the space left by the product menu. */
+.lsf-menu-header__context {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  color: var(--modelone-text-secondary) !important;
+  font-size: 14px !important;
+  line-height: 32px !important;
+}
+.lsf-menu-header__context a,
+.lsf-menu-header__context button,
+.lsf-breadcrumbs,
+.lsf-breadcrumbs__label {
+  color: var(--modelone-text-secondary) !important;
+  font-size: 14px !important;
+  line-height: 32px !important;
+}
+.lsf-menu-header__context a:hover,
+.lsf-menu-header__context button:hover {
+  color: var(--modelone-ink) !important;
+}
+.lsf-menu-header__context-item_right a,
+.lsf-menu-header__context-item_right button {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 32px !important;
+  padding: 0 10px !important;
+  border: 1px solid var(--modelone-border-strong) !important;
+  border-radius: var(--modelone-radius) !important;
+  background: var(--modelone-surface) !important;
+  color: var(--modelone-ink) !important;
+  line-height: 20px !important;
+}
+.lsf-menu-header__context-item_right a:hover,
+.lsf-menu-header__context-item_right button:hover {
+  background: var(--modelone-surface-hover) !important;
+  border-color: var(--modelone-ink) !important;
+}
+
+body,
+.app-wrapper,
+.lsf-content-wrapper,
+.lsf-content-wrapper main {
+  background: var(--modelone-bg) !important;
+}
+
+.lsf-content-wrapper button,
+.lsf-content-wrapper input,
+.lsf-content-wrapper textarea,
+.lsf-content-wrapper select {
+  border-radius: var(--modelone-radius) !important;
+}
+.lsf-content-wrapper button[data-variant="primary"],
+.lsf-content-wrapper button[data-look="filled"] {
+  background: var(--modelone-primary) !important;
+  border-color: var(--modelone-primary) !important;
+  color: #fff !important;
+}
+.lsf-content-wrapper button[data-variant="primary"],
+.lsf-content-wrapper button[data-variant="neutral"],
+.lsf-content-wrapper button[data-look="outlined"],
+.lsf-content-wrapper button[data-look="filled"],
+.lsf-content-wrapper a[class*="base--"] {
+  min-height: 32px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  box-shadow: none !important;
+}
+.lsf-content-wrapper button[data-variant="primary"]:hover,
+.lsf-content-wrapper button[data-look="filled"]:hover {
+  background: var(--modelone-primary-hover) !important;
+  border-color: var(--modelone-primary-hover) !important;
+}
+.lsf-content-wrapper button[data-look="outlined"] {
+  background: var(--modelone-surface) !important;
+  border: 1px solid var(--modelone-border-strong) !important;
+  color: var(--modelone-ink) !important;
+}
+.lsf-content-wrapper .lsf-radio-group-dm__button_checked {
+  box-shadow: none !important;
+}
+.lsf-content-wrapper input,
+.lsf-content-wrapper textarea,
+.lsf-content-wrapper select {
+  background: var(--modelone-surface) !important;
+  border-color: var(--modelone-border-strong) !important;
+  color: var(--modelone-ink) !important;
+}
+.lsf-content-wrapper input:focus,
+.lsf-content-wrapper textarea:focus,
+.lsf-content-wrapper select:focus {
+  border-color: var(--modelone-ink) !important;
+  box-shadow: 0 0 0 2px rgba(23, 25, 29, 0.08) !important;
+}
+
+/* Project cards and settings panels should read as modelOne surfaces rather
+   than a second product shell. Keep the selector limited to content panels. */
+.lsf-content-wrapper main > section,
+.lsf-content-wrapper main > div > section,
+.lsf-content-wrapper [data-testid="project-card"],
+.lsf-content-wrapper [data-testid="settings-sidebar"] {
+  border-radius: var(--modelone-radius) !important;
+  border-color: var(--modelone-border) !important;
+  box-shadow: none !important;
+}
+
+/* Settings pages contain a second navigation and a content column. Treat
+   them as the modelOne secondary rail and a quiet work surface. */
+.lsf-content-wrapper__content {
+  width: 100% !important;
+}
+.lsf-sidebar-menu {
+  width: 100% !important;
+  background: var(--modelone-bg) !important;
+}
+.lsf-sidebar-menu__navigation {
+  flex: 0 0 208px !important;
+  width: 208px !important;
+  padding: 8px !important;
+  background: var(--modelone-surface) !important;
+  border-right: 1px solid var(--modelone-border) !important;
+}
+.lsf-main-menu {
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.lsf-main-menu__item {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 40px !important;
+  height: 40px !important;
+  margin: 0 0 2px !important;
+  padding: 0 12px !important;
+  border-radius: var(--modelone-radius) !important;
+  color: var(--modelone-text-secondary) !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+}
+.lsf-main-menu__item:hover {
+  color: var(--modelone-ink) !important;
+  background: var(--modelone-surface-hover) !important;
+}
+.lsf-main-menu__item_active,
+.lsf-main-menu__item[aria-current="page"] {
+  color: var(--modelone-ink) !important;
+  background: var(--modelone-surface-selected) !important;
+  font-weight: 600 !important;
+}
+.lsf-sidebar-menu__content {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  padding: 24px !important;
+  background: var(--modelone-bg) !important;
+}
+.lsf-sidebar-menu__content > section {
+  max-width: none !important;
+  width: 100% !important;
+}
+.lsf-sidebar-menu__content [class*="bg-primary-background"][class*="border-primary-border"] {
+  background: var(--modelone-surface) !important;
+  border: 1px solid var(--modelone-border) !important;
+  border-radius: var(--modelone-radius) !important;
+  box-shadow: none !important;
+}
+.lsf-sidebar-menu__content .empty-state__title,
+.lsf-sidebar-menu__content .empty-state__description {
+  color: var(--modelone-ink) !important;
+}
+.lsf-sidebar-menu__content .empty-state__description {
+  color: var(--modelone-text-secondary) !important;
+}
+.lsf-sidebar-menu__content .empty-state__icon {
+  background: var(--modelone-surface-muted) !important;
+  color: var(--modelone-ink) !important;
+}
+
+/* Keep technical editors readable while matching the surrounding controls. */
+.lsf-content-wrapper pre,
+.lsf-content-wrapper code,
+.lsf-content-wrapper textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace !important;
+}
+
+@media (max-width: 900px) {
+  .lsf-sidebar-menu__navigation {
+    flex-basis: 176px !important;
+    width: 176px !important;
+  }
+  .lsf-sidebar-menu__content {
+    padding: 16px !important;
+  }
+  .lsf-configure__container {
+    display: block !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .lsf-configure__preview {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 16px !important;
+  }
+}
+
+/* The home page has a Resources card; project and annotation pages do not. */
+body:has(main.p-6 [data-testid="resources-card"]) .lsf-menu-header,
+main.p-6:has([data-testid="resources-card"]) > div.grid > section:nth-child(2),
+main.p-6:has([data-testid="resources-card"]) > div.grid > section:first-child > div:first-child,
+main.p-6:has([data-testid="resources-card"]) > div.grid > section:first-child > div:nth-child(2) > button:nth-child(2) {
+  display: none !important;
+}
+
+main.p-6:has([data-testid="resources-card"]) > div.grid {
+  display: block;
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+/* The empty state already has a primary Create Project action. */
+main.p-6:has([data-testid="resources-card"]):has(button[aria-label="Create new project"])
+  > div.grid > section:first-child > div:nth-child(2) {
+  display: none !important;
+}
+
+main.p-6:has(button[aria-label="Create new project"]) > div.grid {
+  max-width: 760px;
+}
+
+/* Remove Label Studio's Heidi mascot from the empty project state while
+   keeping the message and primary create action. */
+.lsf-empty-projects-page {
+  padding-top: 72px !important;
+}
+
+.lsf-empty-projects-page__heidi,
+.lsf-empty-projects-page img[alt="Heidi looking for projects"] {
+  display: none !important;
+}
+
+/* Empty Data Manager: keep local Import only. Cloud storage setup stays
+   available under project Settings when operators need it. */
+[data-testid="dm-connect-source-storage-button"],
+[data-testid="dm-storage-provider-icons"] {
+  display: none !important;
+}
+
+[data-testid="empty-state-label"] [data-testid="dm-import-button"] {
+  flex: 0 1 auto;
+  min-width: 160px;
+}
+
+/* Promotional tips can also appear inside project pages. */
+.lsf-heidy-tip {
+  display: none !important;
+}
+
+/* These controls only advertise Label Studio documentation or Enterprise
+   workspaces. The actual project and import/export actions stay visible. */
+div:has(> label):has(> button[data-testid="select-trigger"][disabled]):has(> p a[href*="manage_projects"]),
+.lsf-workspace-placeholder,
+.tips:has(> ul a[href*="labelstud.io"]),
+.lsf-formats__feedback,
+.lsf-export-page__recent,
+.lsf-configure__tags-link {
+  display: none !important;
+}
+
+/* Enterprise-only cards and notices are removed by the runtime translator;
+   this selector covers the stable badge class before JavaScript finishes. */
+.badge-content--msE6Z:has(.badge-text--aJcLb) {
+  display: none !important;
+}
+
+/* Replace Label Studio's animated four-part logo with the same quiet spinner
+   used by modelOne while data and routes are loading. */
+.lsf-spinner-ls__body {
+  box-sizing: border-box !important;
+  width: 24px !important;
+  height: 24px !important;
+  margin: -12px 0 0 -12px !important;
+  background: none !important;
+  border: 2px solid rgba(23, 25, 29, 0.12) !important;
+  border-top-color: var(--modelone-ink) !important;
+  border-radius: 50% !important;
+  animation: modelone-loading-spin 0.8s linear infinite !important;
+}
+
+.lsf-spinner-ls__body > span {
+  display: none !important;
+}
+
+@keyframes modelone-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

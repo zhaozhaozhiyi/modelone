@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@fluentui/react';
 import style from './style';
+import { getTemplateIcon } from '../../icon';
 
 interface ModelProps {
   model: any;
@@ -21,7 +22,7 @@ const SearchItem: React.FC<ModelProps> = props => {
           <div className={style.moduleListModuleCard} onClick={props.onClick}>
             <div>
               <Icon
-                iconName="Database"
+                iconName={getTemplateIcon(modelInfo)}
                 styles={{
                   root: {
                     marginRight: '4px',

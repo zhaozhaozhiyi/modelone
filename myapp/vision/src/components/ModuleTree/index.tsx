@@ -65,7 +65,7 @@ const ModuleTree: React.FC = () => {
         imagesName: ele.images.name,
         createdBy: ele.created_by.username,
         lastChanged: ele.changed_on,
-        expand: JSON.parse(ele.expand),
+        expand: ele.expand ? JSON.parse(ele.expand) : {},
         color: ColorList[ele.project.id % ColorList.length]
       };
       if (!dataSet.has(ele.project.id)) {

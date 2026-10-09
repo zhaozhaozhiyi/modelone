@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>AIHub</title>
+  <link rel="stylesheet" href="/aihub/assets/styles.css">
+  <script defer src="/aihub/assets/app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="AIHub 导航">
+      <div class="identity"><span class="identity-mark" aria-hidden="true">AI</span><span>AIHub</span></div>
+      <nav class="primary-nav" aria-label="主导航">
+        <button id="nav-catalog" class="nav-item active" type="button">应用目录</button>
+        <button id="nav-admin" class="nav-item" type="button" hidden>应用管理</button>
+      </nav>
+      <div class="sidebar-foot"><span class="sidebar-foot-label">当前账号</span><strong id="username">—</strong></div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar"><div><span class="overline">AIHub</span><h1 id="page-title">应用目录</h1></div><span id="page-context" class="topbar-context">已发布的模型应用</span></header>
+
+      <section id="catalog-view" class="view" aria-labelledby="page-title">
+        <div class="toolbar">
+          <label class="search-field"><span class="sr-only">搜索应用</span><input id="search" type="search" placeholder="搜索应用名称、任务或描述" autocomplete="off"></label>
+          <label class="filter-field"><span class="sr-only">应用分类</span><select id="category"><option value="">全部分类</option></select></label>
+        </div>
+        <div class="content-grid">
+          <section class="list-pane" aria-label="应用列表"><div class="pane-heading"><strong>应用</strong><span id="catalog-count">—</span></div><div id="catalog-list" class="catalog-list" aria-live="polite"></div><div id="pagination" class="pagination" hidden><button id="prev-page" type="button">上一页</button><span id="page-indicator"></span><button id="next-page" type="button">下一页</button></div></section>
+          <section id="detail-pane" class="detail-pane" aria-label="应用详情"><div class="detail-placeholder"><h2>选择一个应用</h2><p>查看版本、接口和在线体验。</p></div></section>
+        </div>
+      </section>
+
+      <section id="admin-view" class="view admin-view" hidden aria-label="应用管理">
+        <div class="admin-toolbar"><div><h2>应用版本</h2><p>草稿通过端点校验后才能发布。</p></div><button id="new-app" class="button primary" type="button">登记应用</button></div>
+        <div id="admin-list" class="admin-list" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="notice" class="notice" role="status" aria-live="polite"></div>
+  <dialog id="editor" class="editor-dialog" aria-labelledby="editor-title">
+    <form id="app-form" method="dialog" novalidate>
+      <div class="dialog-head"><div><span class="overline">AIHub · 应用接入</span><h2 id="editor-title">登记应用</h2></div><button id="close-editor" class="button" type="button">关闭</button></div>
+      <div class="dialog-body">
+        <div id="form-error" class="form-error" role="alert" hidden></div>
+        <div class="form-grid">
+          <label>应用 ID<input name="slug" required pattern="[a-z][a-z0-9-]{2,79}" placeholder="text-classifier"></label>
+          <label>版本<input name="version" required placeholder="1.0.0"></label>
+          <label>名称<input name="name" required maxlength="200" placeholder="文本分类"></label>
+          <label>分类<select name="category" required></select></label>
+          <label>任务<input name="task" maxlength="100" placeholder="情感分析"></label>
+          <label>可见范围<select name="visibility"><option value="public">平台可见</option><option value="project">项目可见</option><option value="private">仅创建者</option></select></label>
+          <label id="project-row" hidden>项目空间 ID<input name="project_id" type="number" min="1" step="1"></label>
+          <label class="wide">简介<textarea name="summary" rows="2" maxlength="2000"></textarea></label>
+          <label class="wide">模型来源<input name="model_source" required type="url" placeholder="https://models.example.org/model"></label>
+          <label>许可名称<input name="license_name" required maxlength="100" placeholder="Apache-2.0"></label>
+          <label>权重摘要<input name="weight_digest" maxlength="200" placeholder="sha256:..."></label>
+          <label class="wide">运行端点地址<input name="endpoint_url" required type="url" placeholder="https://inference.example.internal"></label>
+          <label>端点修订<input name="endpoint_revision" required placeholder="镜像或权重摘要"></label>
+          <label>凭据环境变量名<input name="credential_env" placeholder="AIHUB_MODEL_TOKEN"></label>
+          <label class="wide">输入 JSON Schema<textarea name="input_schema" rows="7" spellcheck="false" required></textarea></label>
+          <label class="wide">输出 JSON Schema<textarea name="output_schema" rows="5" spellcheck="false" required></textarea></label>
+        </div>
+      </div>
+      <div class="dialog-actions"><button id="cancel-editor" class="button" type="button">取消</button><button id="save-app" class="button primary" type="submit">保存草稿</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

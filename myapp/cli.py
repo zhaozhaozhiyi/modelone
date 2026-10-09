@@ -31,8 +31,8 @@ def make_shell_context():
 
 
 def replace_git(content):
-    from myapp.brand import resolve_resources
-    return resolve_resources(content)
+    from myapp.brand import render_brand, resolve_resources
+    return render_brand(resolve_resources(content))
 
 
 def workspace_by_name(name):
@@ -718,7 +718,7 @@ def init():
                             chat.icon = data.get('icon', '')
                             chat.session_num = int(data.get('session_num', '0'))
                             chat.chat_type = data.get('chat_type', 'text')
-                            chat.hello = data.get('hello', '这里是 modelOne 平台支持，请问有什么可以帮您的？')
+                            chat.hello = data.get('hello', '这里是 %s 平台支持，请问有什么可以帮您的？' % conf.get('APP_NAME', 'modelOne'))
                             chat.tips = data.get('tips', '')
                             chat.prompt = data.get('prompt', '')
                             chat.knowledge = knowledge

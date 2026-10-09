@@ -213,7 +213,7 @@ def run_smoke(args):
         mysqlenv.chmod(384)
         appenv = folder / 'app.env'
         stage = 'prod' if args.https else 'dev'
-        appenv.write_text('STAGE=' + stage + '\nENVIRONMENT=DEV\nMYSQL_SERVICE=mysql+pymysql://root:' + password + '@db:3306/kubeflow?charset=utf8mb4\nREDIS_HOST=redis\nREDIS_PORT=6379\nREDIS_PASSWORD=' + redis_password + '\nMODELONE_COPYRIGHT_HOLDER=Validation Company\nMODELONE_TITLE=modelOne Runtime Validation\nMODELONE_PRIMARY_COLOR=#123456\n' + ''.join(k + '=' + v + '\n' for k, v in credentials.items()))
+        appenv.write_text('STAGE=' + stage + '\nENVIRONMENT=DEV\nMYSQL_SERVICE=mysql+pymysql://root:' + password + '@db:3306/kubeflow?charset=utf8mb4\nREDIS_HOST=redis\nREDIS_PORT=6379\nREDIS_PASSWORD=' + redis_password + '\nMODELONE_TITLE=modelOne Runtime Validation\nMODELONE_PRIMARY_COLOR=#123456\n' + ''.join(k + '=' + v + '\n' for k, v in credentials.items()))
         appenv.chmod(384)
         run(['docker', 'network', 'create', '--label', 'modelone.validation=true', prefix])
         try:

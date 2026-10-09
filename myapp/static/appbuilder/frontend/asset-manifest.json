@@ -1,15 +1,16 @@
 {
   "files": {
-    "main.css": "/frontend/static/css/main.d4bbe658.css",
-    "main.js": "/frontend/static/js/main.994a95fe.js",
+    "main.css": "/frontend/static/css/main.0af67dd6.css",
+    "main.js": "/frontend/static/js/main.d29e91a5.js",
     "static/css/152.80e63bbf.chunk.css": "/frontend/static/css/152.80e63bbf.chunk.css",
     "static/js/152.f8a4cd10.chunk.js": "/frontend/static/js/152.f8a4cd10.chunk.js",
     "static/css/316.60f4363b.chunk.css": "/frontend/static/css/316.60f4363b.chunk.css",
     "static/js/316.2f1a40b3.chunk.js": "/frontend/static/js/316.2f1a40b3.chunk.js",
-    "static/css/802.07155932.chunk.css": "/frontend/static/css/802.07155932.chunk.css",
+    "static/css/802.79ea868a.chunk.css": "/frontend/static/css/802.79ea868a.chunk.css",
     "static/js/802.4864a8d6.chunk.js": "/frontend/static/js/802.4864a8d6.chunk.js",
     "static/js/130.ff7a1751.chunk.js": "/frontend/static/js/130.ff7a1751.chunk.js",
-    "static/js/655.9c6cd2e0.chunk.js": "/frontend/static/js/655.9c6cd2e0.chunk.js",
+    "static/css/595.2ee56025.chunk.css": "/frontend/static/css/595.2ee56025.chunk.css",
+    "static/js/595.f9e03588.chunk.js": "/frontend/static/js/595.f9e03588.chunk.js",
     "static/css/527.06117f8c.chunk.css": "/frontend/static/css/527.06117f8c.chunk.css",
     "static/js/527.20163a8a.chunk.js": "/frontend/static/js/527.20163a8a.chunk.js",
     "static/css/162.d61dd3ef.chunk.css": "/frontend/static/css/162.d61dd3ef.chunk.css",
@@ -22,19 +23,20 @@
     "static/js/336.41a0f2dd.chunk.js": "/frontend/static/js/336.41a0f2dd.chunk.js",
     "static/js/220.3ad5db59.chunk.js": "/frontend/static/js/220.3ad5db59.chunk.js",
     "static/js/380.d2c60280.chunk.js": "/frontend/static/js/380.d2c60280.chunk.js",
-    "static/js/300.d7f5cc05.chunk.js": "/frontend/static/js/300.d7f5cc05.chunk.js",
+    "static/js/300.c195e5d1.chunk.js": "/frontend/static/js/300.c195e5d1.chunk.js",
     "static/js/795.78ca0667.chunk.js": "/frontend/static/js/795.78ca0667.chunk.js",
     "static/js/47.4a65767d.chunk.js": "/frontend/static/js/47.4a65767d.chunk.js",
     "static/js/928.cda69c8a.chunk.js": "/frontend/static/js/928.cda69c8a.chunk.js",
+    "static/media/home-glass-tech-background.png": "/frontend/static/media/home-glass-tech-background.215d81decf52219e181e.png",
     "static/media/workData.png": "/frontend/static/media/workData.843bb6c11aef95dddbdb.png",
     "static/media/findData.png": "/frontend/static/media/findData.b0a05be8356e8f3f8208.png",
     "static/media/emptyBg.png": "/frontend/static/media/emptyBg.15fdf5f39309784ac66e.png",
-    "static/media/modelone-logo.svg": "/frontend/static/media/modelone-logo.8a75992dd20e43be5b9cda198978daa3.svg",
-    "static/media/modelone-mark.svg": "/frontend/static/media/modelone-mark.0e3de1255978551d8789b878b73a77e7.svg",
+    "static/media/modelone-logo.svg": "/frontend/static/media/modelone-logo.e55d84a23d06354ef48b7ef1e437da10.svg",
+    "static/media/modelone-mark.svg": "/frontend/static/media/modelone-mark.f57c6e9dd77c0ebb71c25302cc2e69ce.svg",
     "index.html": "/frontend/index.html"
   },
   "entrypoints": [
-    "static/css/main.d4bbe658.css",
-    "static/js/main.994a95fe.js"
+    "static/css/main.0af67dd6.css",
+    "static/js/main.d29e91a5.js"
   ]
 }

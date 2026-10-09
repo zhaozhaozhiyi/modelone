@@ -3,6 +3,7 @@ import { Icon } from '@fluentui/react';
 import { useAppDispatch } from '@src/models/hooks';
 import { updateCallout, updateCurrent, updateInfo } from '@src/models/template';
 import style from './style';
+import { getTemplateIcon } from '../../icon';
 
 interface ModelProps {
   model: any;
@@ -50,7 +51,7 @@ const ModuleItem: React.FC<ModelProps> = props => {
           >
             <div>
               <Icon
-                iconName="Database"
+                iconName={getTemplateIcon(modelInfo)}
                 styles={{
                   root: {
                     marginRight: '4px',

@@ -13,3 +13,4 @@ myapp/project-*
 install/docker/file
 install/docker/data
 dist
+external

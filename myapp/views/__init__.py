@@ -7,6 +7,7 @@ from . import view_metadata
 from . import view_metadata_metric
 from . import view_dimension
 from . import view_dataset
+from . import view_label_studio
 from . import view_images
 from . import view_etl_pipeline
 from . import view_notebook
@@ -27,7 +28,6 @@ from . import view_user_role
 
 from . import view_sqllab
 from . import view_aihub
+from . import view_aihub_portal
 from . import view_total_resource
 from . import view_chat
-
-
