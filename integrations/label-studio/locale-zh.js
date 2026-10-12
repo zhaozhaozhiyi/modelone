@@ -518,6 +518,19 @@
     });
   }
 
+  function translateLeafText(element) {
+    const nodes = Array.from(element.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE);
+    if (!nodes.length) return;
+
+    const current = nodes.map((node) => node.nodeValue).join('');
+    const next = translate(current);
+    if (next === current) return;
+
+    // Keep React's text-node references attached while translating split labels.
+    nodes[0].nodeValue = next;
+    nodes.slice(1).forEach((node) => { node.nodeValue = ''; });
+  }
+
   function visit(root) {
     hideEnterprise(root);
     hideWorkspaceFields(root);
@@ -541,8 +554,7 @@
     root.querySelectorAll && root.querySelectorAll('*').forEach((element) => {
       if (element.children.length || /^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION)$/i.test(element.tagName)
         || isProjectName(element)) return;
-      const next = translate(element.textContent || '');
-      if (next !== element.textContent) element.textContent = next;
+      translateLeafText(element);
     });
     root.querySelectorAll && root.querySelectorAll('input,textarea,[aria-label],[title],img[alt]').forEach((element) => {
       ['placeholder', 'aria-label', 'title', 'alt'].forEach((name) => {
